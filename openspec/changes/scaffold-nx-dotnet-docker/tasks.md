@@ -63,7 +63,7 @@
 - [x] 6.3 Document .NET API conventions (namespaces, controller routes, logging)
 - [x] 6.4 Create CONTRIBUTING.md with commit conventions (Conventional Commits)
 - [x] 6.5 Add inline code comments for device adapter pattern
-- [ ] 6.6 Create architecture diagram (monorepo, API layers, device adapters)
+- [x] 6.6 Create architecture diagram (monorepo, API layers, device adapters)
 
 ## 7. Validation & Sign-Off
 
