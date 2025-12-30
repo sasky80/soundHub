@@ -252,5 +252,14 @@ public class FileDeviceRepository : IDeviceRepository
 
 public class FileDeviceRepositoryOptions
 {
+    /// <summary>
+    /// Path to the devices.json file.
+    /// </summary>
     public string FilePath { get; set; } = "/data/devices.json";
+
+    /// <summary>
+    /// When enabled, the system watches for external changes to devices.json
+    /// and notifies subscribers via <see cref="DeviceFileWatcher"/>.
+    /// </summary>
+    public bool EnableHotReload { get; set; } = true;
 }

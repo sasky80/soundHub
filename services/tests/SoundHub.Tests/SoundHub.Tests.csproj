@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
@@ -20,10 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SoundHub.Api\SoundHub.Api.csproj" />
-    <ProjectReference Include="..\..\src\SoundHub.Application\SoundHub.Application.csproj" />
-    <ProjectReference Include="..\..\src\SoundHub.Domain\SoundHub.Domain.csproj" />
-    <ProjectReference Include="..\..\src\SoundHub.Infrastructure\SoundHub.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\SoundHub.Api\SoundHub.Api.csproj" />
+    <ProjectReference Include="..\..\SoundHub.Application\SoundHub.Application.csproj" />
+    <ProjectReference Include="..\..\SoundHub.Domain\SoundHub.Domain.csproj" />
+    <ProjectReference Include="..\..\SoundHub.Infrastructure\SoundHub.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@ using SoundHub.Application.Services;
 using SoundHub.Domain.Entities;
 using SoundHub.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 
 namespace SoundHub.Tests.Application;
 
@@ -11,17 +11,17 @@ namespace SoundHub.Tests.Application;
 /// </summary>
 public class DeviceServiceTests
 {
-    private readonly Mock<IDeviceRepository> _mockRepository;
-    private readonly Mock<DeviceAdapterRegistry> _mockRegistry;
-    private readonly Mock<ILogger<DeviceService>> _mockLogger;
+    private readonly IDeviceRepository _repository;
+    private readonly DeviceAdapterRegistry _registry;
+    private readonly ILogger<DeviceService> _logger;
     private readonly DeviceService _service;
 
     public DeviceServiceTests()
     {
-        _mockRepository = new Mock<IDeviceRepository>();
-        _mockRegistry = new Mock<DeviceAdapterRegistry>();
-        _mockLogger = new Mock<ILogger<DeviceService>>();
-        _service = new DeviceService(_mockRepository.Object, _mockRegistry.Object, _mockLogger.Object);
+        _repository = Substitute.For<IDeviceRepository>();
+        _registry = new DeviceAdapterRegistry();
+        _logger = Substitute.For<ILogger<DeviceService>>();
+        _service = new DeviceService(_repository, _registry, _logger);
     }
 
     [Fact]
@@ -33,8 +33,8 @@ public class DeviceServiceTests
             new Device { Id = "1", Vendor = "bose-soundtouch", Name = "Speaker 1", IpAddress = "192.168.1.10" },
             new Device { Id = "2", Vendor = "bose-soundtouch", Name = "Speaker 2", IpAddress = "192.168.1.11" }
         };
-        _mockRepository.Setup(r => r.GetAllDevicesAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedDevices);
+        _repository.GetAllDevicesAsync(Arg.Any<CancellationToken>())
+            .Returns(expectedDevices);
 
         // Act
         var result = await _service.GetAllDevicesAsync();
@@ -56,8 +56,8 @@ public class DeviceServiceTests
             Name = "Test Speaker",
             IpAddress = "192.168.1.100"
         };
-        _mockRepository.Setup(r => r.GetDeviceAsync("123", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedDevice);
+        _repository.GetDeviceAsync("123", Arg.Any<CancellationToken>())
+            .Returns(expectedDevice);
 
         // Act
         var result = await _service.GetDeviceAsync("123");
@@ -72,8 +72,8 @@ public class DeviceServiceTests
     public async Task GetDeviceAsync_WhenDeviceDoesNotExist_ReturnsNull()
     {
         // Arrange
-        _mockRepository.Setup(r => r.GetDeviceAsync("nonexistent", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Device?)null);
+        _repository.GetDeviceAsync("nonexistent", Arg.Any<CancellationToken>())
+            .Returns((Device?)null);
 
         // Act
         var result = await _service.GetDeviceAsync("nonexistent");
@@ -94,8 +94,8 @@ public class DeviceServiceTests
             IpAddress = "192.168.1.50",
             Port = 8090
         };
-        _mockRepository.Setup(r => r.AddDeviceAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Device d, CancellationToken ct) => d);
+        _repository.AddDeviceAsync(Arg.Any<Device>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => callInfo.Arg<Device>());
 
         // Act
         var result = await _service.AddDeviceAsync("New Speaker", "192.168.1.50", "bose-soundtouch", 8090);
@@ -104,30 +104,30 @@ public class DeviceServiceTests
         Assert.NotNull(result);
         Assert.Equal("New Speaker", result.Name);
         Assert.Equal("192.168.1.50", result.IpAddress);
-        _mockRepository.Verify(r => r.AddDeviceAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()), Times.Once);
+        await _repository.Received(1).AddDeviceAsync(Arg.Any<Device>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task RemoveDeviceAsync_WhenDeviceExists_ReturnsTrue()
     {
         // Arrange
-        _mockRepository.Setup(r => r.RemoveDeviceAsync("123", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        _repository.RemoveDeviceAsync("123", Arg.Any<CancellationToken>())
+            .Returns(true);
 
         // Act
         var result = await _service.RemoveDeviceAsync("123");
 
         // Assert
         Assert.True(result);
-        _mockRepository.Verify(r => r.RemoveDeviceAsync("123", It.IsAny<CancellationToken>()), Times.Once);
+        await _repository.Received(1).RemoveDeviceAsync("123", Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task RemoveDeviceAsync_WhenDeviceDoesNotExist_ReturnsFalse()
     {
         // Arrange
-        _mockRepository.Setup(r => r.RemoveDeviceAsync("nonexistent", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+        _repository.RemoveDeviceAsync("nonexistent", Arg.Any<CancellationToken>())
+            .Returns(false);
 
         // Act
         var result = await _service.RemoveDeviceAsync("nonexistent");

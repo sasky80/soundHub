@@ -124,7 +124,7 @@ Implementations (e.g., `SoundTouchAdapter`) query each device to discover its ac
 
 **Encryption Architecture:**
 - Algorithm: AES-256-CBC for secret values
-- Encryption key: Stored in `key4.db` (SQLite database)
+- Encryption key: Stored in `key4.db` (SQLite NSS key database)
 - Master password: Retrieved from Docker secret (secure, not in codebase)
 - Key derivation: Master password → encryption key (using PBKDF2 or similar)
 
@@ -149,7 +149,7 @@ public class EncryptionKeyStore
 /data/
   ├── devices.json          # Device configurations (plain)
   ├── secrets.json          # Encrypted secrets
-  └── key4.db              # SQLite: encryption key storage
+  └── key4.db               # SQLite: NSS key database
 ```
 
 **Rationale:**

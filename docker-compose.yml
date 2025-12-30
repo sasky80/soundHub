@@ -10,7 +10,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DevicesFilePath=/data/devices.json
       - SecretsFilePath=/data/secrets.json
-      - MasterPassword=${MASTER_PASSWORD:-default-dev-password}
+      - KeyDbPath=/data/key4.db
+      - MasterPasswordFile=/run/secrets/master_password
+    secrets:
+      - master_password
     volumes:
       - ./data:/data
       - ./src:/src:ro  # For hot-reload in development
@@ -42,3 +45,7 @@ networks:
 
 volumes:
   data:
+
+secrets:
+  master_password:
+    file: ./secrets/master_password.txt

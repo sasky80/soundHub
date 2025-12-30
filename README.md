@@ -131,7 +131,37 @@ npx nx serve web
 | `ASPNETCORE_ENVIRONMENT` | `Production` | ASP.NET Core environment |
 | `DevicesFilePath` | `/data/devices.json` | Path to device configuration |
 | `SecretsFilePath` | `/data/secrets.json` | Path to encrypted secrets |
-| `MasterPassword` | `default-dev-password` | Master password for secret encryption |
+| `MasterPasswordFile` | `/run/secrets/master_password` | Path to Docker secret file containing master password |
+| `MasterPassword` | `default-dev-password` | Fallback master password (used when file not available) |
+
+### Docker Secrets (Recommended for Production)
+
+The master password for encrypting secrets is managed via Docker secrets:
+
+**Development Setup:**
+1. Create a secrets directory and password file:
+   ```bash
+   mkdir -p secrets
+   echo "your-secure-password" > secrets/master_password.txt
+   ```
+
+2. The `docker-compose.yml` is pre-configured to use this file as a Docker secret.
+
+**Production Setup (Docker Swarm):**
+```bash
+# Create a Docker secret
+echo "your-production-password" | docker secret create master_password -
+
+# Reference in docker-compose.yml:
+secrets:
+  master_password:
+    external: true
+```
+
+**How it works:**
+- Docker mounts the secret file at `/run/secrets/master_password` inside the container
+- The API reads the password from this file (via `MasterPasswordFile` configuration)
+- If the file doesn't exist, it falls back to the `MasterPassword` environment variable
 
 ### Configuration Files
 
@@ -197,7 +227,8 @@ Once the API is running, access interactive documentation:
 ## 🔒 Security
 
 - **Secrets Encryption**: AES-256-CBC with PBKDF2 key derivation
-- **Master Password**: Retrieved from Docker secret (production) or environment variable (dev)
+- **Master Password**: Retrieved from Docker secret file (`/run/secrets/master_password`) with fallback to environment variable
+- **Key Storage**: SQLite-based NSS-style key4.db for encrypted key storage
 - **CORS**: Configured for frontend origin only
 - **HTTPS**: Enabled in production (configure certificates in appsettings)
 

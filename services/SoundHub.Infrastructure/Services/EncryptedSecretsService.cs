@@ -9,22 +9,24 @@ namespace SoundHub.Infrastructure.Services;
 
 /// <summary>
 /// Secrets service with AES-256-CBC encryption.
-/// Stores encrypted secrets in secrets.json and encryption key in key4.db (SQLite).
+/// Stores encrypted secrets in secrets.json and uses EncryptionKeyStore for key management.
 /// </summary>
 public class EncryptedSecretsService : ISecretsService
 {
     private readonly string _secretsFilePath;
     private readonly ILogger<EncryptedSecretsService> _logger;
-    private readonly byte[] _encryptionKey;
+    private readonly EncryptionKeyStore _keyStore;
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private byte[]? _encryptionKey;
 
     public EncryptedSecretsService(
         IOptions<SecretsServiceOptions> options,
+        EncryptionKeyStore keyStore,
         ILogger<EncryptedSecretsService> logger)
     {
         _secretsFilePath = options.Value.SecretsFilePath;
+        _keyStore = keyStore;
         _logger = logger;
-        _encryptionKey = DeriveKeyFromMasterPassword(options.Value.MasterPassword);
         EnsureFileExists();
     }
 
@@ -42,15 +44,15 @@ public class EncryptedSecretsService : ISecretsService
         }
     }
 
-    private static byte[] DeriveKeyFromMasterPassword(string masterPassword)
+    private async Task<byte[]> GetEncryptionKeyAsync(CancellationToken ct)
     {
-        // Use PBKDF2 to derive a 256-bit key from the master password
-        using var pbkdf2 = new Rfc2898DeriveBytes(
-            masterPassword,
-            Encoding.UTF8.GetBytes("SoundHub-Salt-V1"), // Fixed salt (in production, store per-installation)
-            100000, // Iterations
-            HashAlgorithmName.SHA256);
-        return pbkdf2.GetBytes(32); // 256 bits
+        if (_encryptionKey != null)
+        {
+            return _encryptionKey;
+        }
+
+        _encryptionKey = await _keyStore.GetEncryptionKeyAsync(ct);
+        return _encryptionKey;
     }
 
     public async Task<string?> GetSecretAsync(string secretName, CancellationToken ct = default)
@@ -65,7 +67,7 @@ public class EncryptedSecretsService : ISecretsService
                 return null;
             }
 
-            return DecryptValue(secret.SecretValue);
+            return await DecryptValueAsync(secret.SecretValue, ct);
         }
         finally
         {
@@ -81,7 +83,7 @@ public class EncryptedSecretsService : ISecretsService
             var secrets = await LoadSecretsAsync(ct);
             var existingIndex = secrets.FindIndex(s => s.SecretName == secretName);
 
-            var encryptedValue = EncryptValue(value);
+            var encryptedValue = await EncryptValueAsync(value, ct);
             var secretEntry = new SecretEntry { SecretName = secretName, SecretValue = encryptedValue };
 
             if (existingIndex >= 0)
@@ -140,10 +142,11 @@ public class EncryptedSecretsService : ISecretsService
         await File.WriteAllTextAsync(_secretsFilePath, json, ct);
     }
 
-    private string EncryptValue(string plainText)
+    private async Task<string> EncryptValueAsync(string plainText, CancellationToken ct)
     {
+        var key = await GetEncryptionKeyAsync(ct);
         using var aes = Aes.Create();
-        aes.Key = _encryptionKey;
+        aes.Key = key;
         aes.GenerateIV();
 
         using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
@@ -159,12 +162,13 @@ public class EncryptedSecretsService : ISecretsService
         return Convert.ToBase64String(ms.ToArray());
     }
 
-    private string DecryptValue(string cipherText)
+    private async Task<string> DecryptValueAsync(string cipherText, CancellationToken ct)
     {
+        var key = await GetEncryptionKeyAsync(ct);
         var fullCipher = Convert.FromBase64String(cipherText);
 
         using var aes = Aes.Create();
-        aes.Key = _encryptionKey;
+        aes.Key = key;
 
         // Extract IV from the beginning of the ciphertext
         var iv = new byte[aes.BlockSize / 8];
@@ -175,7 +179,7 @@ public class EncryptedSecretsService : ISecretsService
         using var ms = new MemoryStream(fullCipher, iv.Length, fullCipher.Length - iv.Length);
         using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
         using var reader = new StreamReader(cs);
-        return reader.ReadToEnd();
+        return await reader.ReadToEndAsync(ct);
     }
 
     private class SecretEntry
@@ -188,5 +192,4 @@ public class EncryptedSecretsService : ISecretsService
 public class SecretsServiceOptions
 {
     public string SecretsFilePath { get; set; } = "/data/secrets.json";
-    public string MasterPassword { get; set; } = "default-dev-password"; // Override with Docker secret in production
 }

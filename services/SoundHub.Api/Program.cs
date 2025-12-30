@@ -43,18 +43,30 @@ builder.Services.AddHealthChecks()
 builder.Services.Configure<FileDeviceRepositoryOptions>(options =>
 {
     options.FilePath = builder.Configuration.GetValue<string>("DevicesFilePath") ?? "/data/devices.json";
+    options.EnableHotReload = builder.Configuration.GetValue<bool?>("EnableDeviceHotReload") ?? true;
 });
 
 builder.Services.Configure<SecretsServiceOptions>(options =>
 {
     options.SecretsFilePath = builder.Configuration.GetValue<string>("SecretsFilePath") ?? "/data/secrets.json";
+});
+
+builder.Services.Configure<EncryptionKeyStoreOptions>(options =>
+{
+    options.KeyDbPath = builder.Configuration.GetValue<string>("KeyDbPath") ?? "/data/key4.db";
+    options.MasterPasswordFile = builder.Configuration.GetValue<string>("MasterPasswordFile");
     options.MasterPassword = builder.Configuration.GetValue<string>("MasterPassword") ?? "default-dev-password";
 });
 
 // Register application services
+builder.Services.AddSingleton<EncryptionKeyStore>();
 builder.Services.AddSingleton<IDeviceRepository, FileDeviceRepository>();
 builder.Services.AddSingleton<ISecretsService, EncryptedSecretsService>();
 builder.Services.AddScoped<DeviceService>();
+
+// Register file watcher for hot-reload of devices.json
+builder.Services.AddSingleton<DeviceFileWatcher>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<DeviceFileWatcher>());
 
 // Register device adapters
 builder.Services.AddHttpClient("SoundTouch", client =>

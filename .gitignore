@@ -48,6 +48,11 @@ data/
 # Angular cache
 .angular/
 
+# Secrets (Docker secrets for development)
+secrets/
+!secrets/.gitkeep
+*.secret
+
 # Temporary files
 tmp/
 temp/
