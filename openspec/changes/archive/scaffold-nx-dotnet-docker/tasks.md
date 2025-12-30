@@ -72,5 +72,5 @@
 - [x] 7.3 Verify tests pass locally (nx test, dotnet test)
 - [x] 7.4 Verify CI pipeline runs all checks
 - [x] 7.5 Verify OpenAPI spec is accessible via /swagger or /api-docs
-- [ ] 7.6 Run openspec validate --strict on the proposal
+- [x] 7.6 Run openspec validate --strict on the proposal
 - [ ] 7.7 Obtain sign-off from tech lead
