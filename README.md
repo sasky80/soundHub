@@ -1,6 +1,6 @@
 # SoundHub
 
-SoundHub is a local-network control application for smart audio devices, starting with Bose SoundTouch speakers. Built with a modern tech stack featuring Angular frontend, .NET 9 backend, and Docker deployment.
+SoundHub is a local-network control application for smart audio devices, starting with Bose SoundTouch speakers. Built with a modern tech stack featuring Angular frontend, .NET 8 backend, and Docker deployment.
 
 ## 🎯 Features
 
@@ -14,6 +14,8 @@ SoundHub is a local-network control application for smart audio devices, startin
 
 ## 🏗️ Architecture
 
+For a detailed architecture overview including layered diagrams, monorepo structure, device adapter pattern, and data flow, see [docs/architecture.md](docs/architecture.md).
+
 ### Tech Stack
 
 **Frontend:**
@@ -23,7 +25,7 @@ SoundHub is a local-network control application for smart audio devices, startin
 - Jest for testing
 
 **Backend:**
-- .NET 9 Web API
+- .NET 8 Web API
 - Clean Architecture (Domain, Application, Infrastructure, Presentation)
 - Structured logging (JSON format)
 - Health checks for Docker
@@ -39,23 +41,27 @@ SoundHub is a local-network control application for smart audio devices, startin
 
 ```
 soundHub/
-├── frontend/                   # Nx Angular workspace
-│   ├── apps/web/              # Main Angular application
-│   └── libs/frontend/         # Shared libraries
-│       ├── feature/           # Feature modules
-│       ├── data-access/       # Services & state management
-│       ├── ui/                # UI components
-│       └── shared/            # Utilities & types
-├── src/                       # .NET backend
-│   ├── SoundHub.Api/          # Web API controllers
-│   ├── SoundHub.Application/  # Business logic & services
-│   ├── SoundHub.Domain/       # Entities & interfaces
-│   └── SoundHub.Infrastructure/ # Adapters & persistence
-├── tests/                     # Unit & integration tests
-├── data/                      # Volume mount for config & secrets
-├── docker-compose.yml         # Local development environment
-├── Dockerfile.api             # API container
-└── Dockerfile.web             # Web container
+├── frontend/                          # Nx Angular workspace
+│   ├── src/                           # Main Angular application
+│   ├── e2e/                           # Playwright E2E tests
+│   └── libs/frontend/                 # Shared libraries
+│       ├── feature/                   # Feature modules
+│       ├── data-access/               # Services & state management
+│       ├── ui/                        # UI components
+│       └── shared/                    # Utilities & types
+├── services/                          # .NET backend solution
+│   ├── SoundHub.Api/                  # Web API controllers & startup
+│   ├── SoundHub.Application/          # Business logic & services
+│   ├── SoundHub.Domain/               # Entities & interfaces
+│   ├── SoundHub.Infrastructure/       # Adapters & persistence
+│   └── tests/SoundHub.Tests/          # xUnit test project
+├── data/                              # Volume mount for config & secrets
+├── docs/                              # Documentation & diagrams
+│   └── architecture.md                # Architecture overview with Mermaid diagrams
+├── openspec/                          # OpenSpec change proposals
+├── docker-compose.yml                 # Local development environment
+├── Dockerfile.api                     # API container
+└── Dockerfile.web                     # Web container
 ```
 
 ### Device Adapter Pattern
@@ -80,7 +86,7 @@ Each vendor (e.g., Bose SoundTouch) implements this interface. The adapter regis
 ### Prerequisites
 
 - Docker & Docker Compose
-- (Optional) .NET 9 SDK for local API development
+- (Optional) .NET 8 SDK for local API development
 - (Optional) Node.js 20+ for local frontend development
 
 ### Run with Docker Compose
