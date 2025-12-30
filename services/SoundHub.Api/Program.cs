@@ -52,7 +52,6 @@ builder.Services.Configure<SecretsServiceOptions>(options =>
 });
 
 // Register application services
-builder.Services.AddSingleton<DeviceAdapterRegistry>();
 builder.Services.AddSingleton<IDeviceRepository, FileDeviceRepository>();
 builder.Services.AddSingleton<ISecretsService, EncryptedSecretsService>();
 builder.Services.AddScoped<DeviceService>();
@@ -64,10 +63,10 @@ builder.Services.AddHttpClient("SoundTouch", client =>
 });
 builder.Services.AddSingleton<IDeviceAdapter, SoundTouchAdapter>();
 
-// Register adapters with the registry
-builder.Services.AddSingleton(sp =>
+// Register the adapter registry and populate it with all adapters
+builder.Services.AddSingleton<DeviceAdapterRegistry>(sp =>
 {
-    var registry = sp.GetRequiredService<DeviceAdapterRegistry>();
+    var registry = new DeviceAdapterRegistry();
     var adapters = sp.GetServices<IDeviceAdapter>();
     foreach (var adapter in adapters)
     {
