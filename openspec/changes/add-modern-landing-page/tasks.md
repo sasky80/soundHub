@@ -1,0 +1,26 @@
+## Tasks
+
+- [ ] 1. Add frontend routes for landing, settings, device config, and device details
+- [ ] 2. Implement Landing page UI
+  - [ ] 2.1 Fetch configured devices from API and display device names
+  - [ ] 2.2 Add navigation to Settings
+  - [ ] 2.3 Add navigation to Device details
+- [ ] 3. Implement Settings page UI
+  - [ ] 3.1 Add language selector (English/Polish)
+  - [ ] 3.2 Persist selected language (localStorage)
+  - [ ] 3.3 Add navigation to Device configuration page
+- [ ] 4. Implement Device configuration page (initial)
+  - [ ] 4.1 Display configured devices list
+  - [ ] 4.2 Provide navigation to Device details
+- [ ] 5. Implement Device details page (power only)
+  - [ ] 5.1 Display device name and current power status
+  - [ ] 5.2 Add power on/off toggle calling API
+- [ ] 6. Backend: add power control endpoint
+  - [ ] 6.1 Add `POST /api/devices/{id}/power` endpoint
+  - [ ] 6.2 Add application service method to toggle power via adapter
+  - [ ] 6.3 Add/update unit tests for power toggle
+- [ ] 7. Add frontend tests for new routes and components
+- [ ] 8. Update documentation (README, architecture)
+  - [ ] 8.1 Update `README.md` with new routes and language settings
+  - [ ] 8.2 Update `docs/architecture.md` to include new UI pages/routes and power-toggle flow
+- [ ] 9. Run `openspec validate add-modern-landing-page --strict`
