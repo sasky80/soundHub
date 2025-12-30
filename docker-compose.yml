@@ -1,0 +1,44 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: soundhub-api
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DevicesFilePath=/data/devices.json
+      - SecretsFilePath=/data/secrets.json
+      - MasterPassword=${MASTER_PASSWORD:-default-dev-password}
+    volumes:
+      - ./data:/data
+      - ./src:/src:ro  # For hot-reload in development
+    networks:
+      - soundhub-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: soundhub-web
+    ports:
+      - "4200:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - soundhub-network
+
+networks:
+  soundhub-network:
+    driver: bridge
+
+volumes:
+  data:

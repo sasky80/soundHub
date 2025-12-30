@@ -1,0 +1,46 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+*.dll
+*.pdb
+*.exe
+
+# Node - exclude all node_modules directories
+**/node_modules/
+
+# Nx cache and Angular cache
+**/.nx/
+**/.angular/
+
+# Build outputs
+**/dist/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Data files (will be on volumes)
+data/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Tests
+tests/
+*.Tests/
+
+# CI/CD
+.github/

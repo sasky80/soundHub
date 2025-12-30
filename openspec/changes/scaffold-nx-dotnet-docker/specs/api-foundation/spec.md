@@ -67,6 +67,15 @@ The system SHALL provide a status endpoint that returns the current state of a d
 - **THEN** the API returns 200 OK with a JSON object including power state, volume, current preset/input, and connection status
 - **AND** the response is cached for up to 5 seconds to avoid excessive device polling
 
+### Requirement: Device Discovery on LAN
+The system SHALL discover Bose SoundTouch devices available on the local network.
+
+#### Scenario: Scan and collect SoundTouch devices
+- **WHEN** the system initiates device discovery on the local network
+- **THEN** it probes every reachable IPv4 address on the LAN by issuing an HTTP GET to `http://<ip>:8090/name`
+- **AND** if a host responds successfully, the system adds the device name returned by the endpoint and its `ip:8090` address to the discovery results list
+- **AND** hosts with no response or non-success status are skipped without failing the discovery operation
+
 ### Requirement: Structured Logging
 The system SHALL log API requests, errors, and device adapter interactions with structured (JSON) output for observability.
 

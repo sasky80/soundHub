@@ -1,0 +1,6 @@
+@SoundHub.Api_HostAddress = http://localhost:5031
+
+GET {{SoundHub.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,20 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": false,
+    "target": "es2022",
+    "module": "preserve",
+    "lib": ["es2020", "dom"],
+    "baseUrl": ".",
+    "paths": {
+      "@soundhub/frontend/feature": ["libs/frontend/feature/src/index.ts"],
+      "@soundhub/frontend/data-access": [
+        "libs/frontend/data-access/src/index.ts"
+      ],
+      "@soundhub/frontend/ui": ["libs/frontend/ui/src/index.ts"],
+      "@soundhub/frontend/shared": ["libs/frontend/shared/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

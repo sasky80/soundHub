@@ -85,6 +85,11 @@ Here is a link to the most recent Angular style guide https://angular.dev/style-
 - Use `NgOptimizedImage` for all static images.
   - `NgOptimizedImage` does not work for inline base64 images.
 
+### User Experience Requirements
+
+- The application MUST be responsive and function well on both desktop and mobile devices.
+- It MUST provide smooth navigation with minimal load times.
+
 ### Accessibility Requirements
 
 - It MUST pass all AXE checks.

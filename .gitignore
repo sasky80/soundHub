@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test coverage
+coverage/
+*.coverage
+TestResults/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+
+# Data files
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Nx cache
+.nx/
+
+# Angular cache
+.angular/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

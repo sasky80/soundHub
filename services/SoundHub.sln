@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundHub.Api", "SoundHub.Api\SoundHub.Api.csproj", "{D66A5DC7-4944-4F95-9C31-AF7B6958BE0D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundHub.Domain", "SoundHub.Domain\SoundHub.Domain.csproj", "{D36F0984-470A-488B-9440-27041A7BE672}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundHub.Application", "SoundHub.Application\SoundHub.Application.csproj", "{2D69E913-5FC6-443A-A31D-B4911699E8B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundHub.Infrastructure", "SoundHub.Infrastructure\SoundHub.Infrastructure.csproj", "{69C035A4-F38B-4816-A7FF-F412B57FB526}"
+EndProject
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundHub.Tests", "tests\SoundHub.Tests\SoundHub.Tests.csproj", "{F286CE2C-5822-42EC-B29D-ACD3BA8A2BCE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D66A5DC7-4944-4F95-9C31-AF7B6958BE0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D66A5DC7-4944-4F95-9C31-AF7B6958BE0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D66A5DC7-4944-4F95-9C31-AF7B6958BE0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D66A5DC7-4944-4F95-9C31-AF7B6958BE0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D36F0984-470A-488B-9440-27041A7BE672}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D36F0984-470A-488B-9440-27041A7BE672}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D36F0984-470A-488B-9440-27041A7BE672}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D36F0984-470A-488B-9440-27041A7BE672}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D69E913-5FC6-443A-A31D-B4911699E8B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D69E913-5FC6-443A-A31D-B4911699E8B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D69E913-5FC6-443A-A31D-B4911699E8B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D69E913-5FC6-443A-A31D-B4911699E8B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69C035A4-F38B-4816-A7FF-F412B57FB526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69C035A4-F38B-4816-A7FF-F412B57FB526}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69C035A4-F38B-4816-A7FF-F412B57FB526}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69C035A4-F38B-4816-A7FF-F412B57FB526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F286CE2C-5822-42EC-B29D-ACD3BA8A2BCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F286CE2C-5822-42EC-B29D-ACD3BA8A2BCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F286CE2C-5822-42EC-B29D-ACD3BA8A2BCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F286CE2C-5822-42EC-B29D-ACD3BA8A2BCE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

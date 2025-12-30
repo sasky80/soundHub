@@ -1,0 +1,220 @@
+# SoundHub
+
+SoundHub is a local-network control application for smart audio devices, starting with Bose SoundTouch speakers. Built with a modern tech stack featuring Angular frontend, .NET 9 backend, and Docker deployment.
+
+## 🎯 Features
+
+- **Device Management**: Add, remove, and discover smart audio devices on your local network
+- **Device Control**: Power, volume, presets, and Bluetooth pairing
+- **Vendor Abstraction**: Extensible device adapter pattern for supporting multiple vendors
+- **Secure Secrets**: AES-256-CBC encrypted secrets storage
+- **File-Based Configuration**: Simple devices.json for device metadata
+- **REST API**: Well-documented OpenAPI/Swagger endpoints
+- **Containerized**: Docker-ready for easy deployment
+
+## 🏗️ Architecture
+
+### Tech Stack
+
+**Frontend:**
+- Angular (standalone components)
+- Nx monorepo for code organization
+- TypeScript, SCSS
+- Jest for testing
+
+**Backend:**
+- .NET 9 Web API
+- Clean Architecture (Domain, Application, Infrastructure, Presentation)
+- Structured logging (JSON format)
+- Health checks for Docker
+- Swashbuckle/OpenAPI documentation
+
+**Deployment:**
+- Docker & Docker Compose
+- Multi-stage builds for optimized images
+- Volume mounts for persistent data
+- Health checks and auto-restart
+
+### Project Structure
+
+```
+soundHub/
+├── frontend/                   # Nx Angular workspace
+│   ├── apps/web/              # Main Angular application
+│   └── libs/frontend/         # Shared libraries
+│       ├── feature/           # Feature modules
+│       ├── data-access/       # Services & state management
+│       ├── ui/                # UI components
+│       └── shared/            # Utilities & types
+├── src/                       # .NET backend
+│   ├── SoundHub.Api/          # Web API controllers
+│   ├── SoundHub.Application/  # Business logic & services
+│   ├── SoundHub.Domain/       # Entities & interfaces
+│   └── SoundHub.Infrastructure/ # Adapters & persistence
+├── tests/                     # Unit & integration tests
+├── data/                      # Volume mount for config & secrets
+├── docker-compose.yml         # Local development environment
+├── Dockerfile.api             # API container
+└── Dockerfile.web             # Web container
+```
+
+### Device Adapter Pattern
+
+The core abstraction for vendor-specific device control:
+
+```csharp
+public interface IDeviceAdapter
+{
+    string VendorId { get; }
+    Task<IReadOnlySet<string>> GetCapabilitiesAsync(string deviceId);
+    Task<DeviceStatus> GetStatusAsync(string deviceId);
+    Task SetPowerAsync(string deviceId, bool on);
+    // ... other control methods
+}
+```
+
+Each vendor (e.g., Bose SoundTouch) implements this interface. The adapter registry resolves the correct implementation at runtime.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Docker & Docker Compose
+- (Optional) .NET 9 SDK for local API development
+- (Optional) Node.js 20+ for local frontend development
+
+### Run with Docker Compose
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/soundHub.git
+   cd soundHub
+   ```
+
+2. **Start all services**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application**
+   - Web UI: http://localhost:4200
+   - API: http://localhost:5000
+   - Swagger UI: http://localhost:5000/swagger
+
+4. **Stop services**
+   ```bash
+   docker-compose down
+   ```
+
+### Local Development (Without Docker)
+
+**Backend (.NET API):**
+```bash
+cd soundHub
+dotnet build
+dotnet run --project src/SoundHub.Api
+```
+
+**Frontend (Angular):**
+```bash
+cd frontend
+npm install
+npx nx serve web
+```
+
+## 📝 Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ASPNETCORE_ENVIRONMENT` | `Production` | ASP.NET Core environment |
+| `DevicesFilePath` | `/data/devices.json` | Path to device configuration |
+| `SecretsFilePath` | `/data/secrets.json` | Path to encrypted secrets |
+| `MasterPassword` | `default-dev-password` | Master password for secret encryption |
+
+### Configuration Files
+
+**`data/devices.json`** - Device metadata (vendor-grouped):
+```json
+{
+  "bose-soundtouch": {
+    "Devices": [
+      {
+        "Id": "...",
+        "Name": "Living Room Speaker",
+        "IpAddress": "192.168.1.131",
+        "Port": 8090
+      }
+    ]
+  }
+}
+```
+
+**`data/secrets.json`** - Encrypted secrets (AES-256-CBC):
+```json
+[
+  {
+    "SecretName": "SpotifyAccountPassword",
+    "SecretValue": "<encrypted-base64>"
+  }
+]
+```
+
+## 🧪 Testing
+
+**Backend:**
+```bash
+dotnet test
+```
+
+**Frontend:**
+```bash
+cd frontend
+npx nx test
+```
+
+**Run all tests in CI:**
+```bash
+# See .github/workflows/ci.yml
+```
+
+## 📖 API Documentation
+
+Once the API is running, access interactive documentation:
+- Swagger UI: http://localhost:5000/swagger
+- OpenAPI JSON: http://localhost:5000/swagger/v1/swagger.json
+
+### Key Endpoints
+
+- `GET /api/devices` - List all devices
+- `POST /api/devices` - Add a device
+- `DELETE /api/devices/{id}` - Remove a device
+- `GET /api/devices/discover` - Discover devices on LAN
+- `GET /api/devices/{id}/status` - Get device status
+- `GET /health` - Health check
+
+## 🔒 Security
+
+- **Secrets Encryption**: AES-256-CBC with PBKDF2 key derivation
+- **Master Password**: Retrieved from Docker secret (production) or environment variable (dev)
+- **CORS**: Configured for frontend origin only
+- **HTTPS**: Enabled in production (configure certificates in appsettings)
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, commit conventions, and testing practices.
+
+## 📄 License
+
+[Your License Here]
+
+## 🙏 Acknowledgments
+
+- Bose SoundTouch API documentation
+- Nx for monorepo tooling
+- .NET community for clean architecture patterns
+
+---
+
+**Questions or issues?** Open an issue on GitHub!

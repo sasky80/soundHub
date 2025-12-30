@@ -51,10 +51,13 @@ Track these steps as TODOs and complete them one by one.
 1. **Read proposal.md** - Understand what's being built
 2. **Read design.md** (if exists) - Review technical decisions
 3. **Read tasks.md** - Get implementation checklist
-4. **Implement tasks sequentially** - Complete in order
-5. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
+4. **Choose UI agent** - Before implementing frontend changes read `./github/agents/angularExpert.agent.md`
+4. **Choose backend agent** - Before implementing backend changes read `./github/agents/CSharpExpert.agent.md`
+5. **Implement tasks sequentially** - Complete in order
+6. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
 6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
 7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+
 
 ### Stage 3: Archiving Changes
 After deployment, create separate PR to:
