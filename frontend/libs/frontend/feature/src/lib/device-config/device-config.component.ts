@@ -163,21 +163,26 @@ export class DeviceConfigComponent implements OnInit {
 
   protected openAddDevice(): void {
     this.editingDevice.set(null);
+    const emptyCapabilities = this.availableCapabilities.map(() => false);
     this.deviceForm.reset({
       name: '',
       ipAddress: '',
       vendor: this.vendors()[0]?.id || '',
-      capabilities: [],
+      capabilities: emptyCapabilities,
     });
     this.showDeviceForm.set(true);
   }
 
   protected openEditDevice(device: Device): void {
     this.editingDevice.set(device);
+    const capabilitiesState = this.availableCapabilities.map((cap) =>
+      device.capabilities.includes(cap)
+    );
     this.deviceForm.patchValue({
       name: device.name,
       ipAddress: device.ipAddress,
       vendor: device.vendor,
+      capabilities: capabilitiesState,
     });
     this.showDeviceForm.set(true);
   }
