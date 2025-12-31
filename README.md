@@ -212,6 +212,7 @@ secrets:
 
 **Backend:**
 ```bash
+cd services
 dotnet test
 ```
 
@@ -220,6 +221,46 @@ dotnet test
 cd frontend
 npx nx test
 ```
+
+### Testing with Real SoundTouch Devices
+
+For integration testing against real Bose SoundTouch devices:
+
+1. **Ensure device is on the network** - The device should be reachable via its IP address on port 8090.
+
+2. **Add the device** via API:
+   ```bash
+   curl -X POST http://localhost:5000/api/devices \
+     -H "Content-Type: application/json" \
+     -d '{"name": "Living Room", "ipAddress": "192.168.1.100", "vendor": "bose-soundtouch", "port": 8090}'
+   ```
+
+3. **Test device endpoints**:
+   ```bash
+   # Get device info
+   curl http://localhost:5000/api/devices/{id}/info
+
+   # Get now playing
+   curl http://localhost:5000/api/devices/{id}/nowPlaying
+
+   # Get volume
+   curl http://localhost:5000/api/devices/{id}/volume
+
+   # Set volume to 30%
+   curl -X POST http://localhost:5000/api/devices/{id}/volume \
+     -H "Content-Type: application/json" \
+     -d '{"level": 30}'
+
+   # Play preset 1
+   curl -X POST http://localhost:5000/api/devices/{id}/presets/1/play
+   ```
+
+4. **Device discovery** - Scan your local network for SoundTouch devices:
+   ```bash
+   curl http://localhost:5000/api/devices/discover?vendor=bose-soundtouch
+   ```
+
+**Note:** Integration tests require a real SoundTouch device on the network. Unit tests use mocked HTTP responses and don't require hardware.
 
 **Run all tests in CI:**
 ```bash
@@ -234,11 +275,29 @@ Once the API is running, access interactive documentation:
 
 ### Key Endpoints
 
+#### Device Management
 - `GET /api/devices` - List all devices
 - `POST /api/devices` - Add a device
+- `GET /api/devices/{id}` - Get device by ID
 - `DELETE /api/devices/{id}` - Remove a device
 - `GET /api/devices/discover` - Discover devices on LAN
-- `GET /api/devices/{id}/status` - Get device status
+
+#### Device Status & Info
+- `GET /api/devices/{id}/status` - Get device status (power, volume, source)
+- `GET /api/devices/{id}/info` - Get detailed device info (name, type, MAC, software version)
+- `GET /api/devices/{id}/nowPlaying` - Get current playback info (track, artist, album, source)
+
+#### Device Control
+- `POST /api/devices/{id}/power` - Set power state (`{ "on": true|false }`)
+- `GET /api/devices/{id}/volume` - Get volume info (target, actual, mute state)
+- `POST /api/devices/{id}/volume` - Set volume (`{ "level": 0-100 }`)
+- `POST /api/devices/{id}/bluetooth/pairing` - Enter Bluetooth pairing mode
+
+#### Presets
+- `GET /api/devices/{id}/presets` - List device presets (1-6)
+- `POST /api/devices/{id}/presets/{presetNumber}/play` - Play a preset (1-6)
+
+#### Health
 - `GET /health` - Health check
 
 ## 🔒 Security

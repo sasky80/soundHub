@@ -1,5 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
+using System.Text;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using SoundHub.Domain.Entities;
@@ -9,103 +9,372 @@ namespace SoundHub.Infrastructure.Adapters;
 
 /// <summary>
 /// Adapter for Bose SoundTouch devices.
-/// This is a stub implementation with mock methods for initial scaffolding.
-/// Real implementation will follow in a separate change.
+/// Communicates with devices via HTTP on port 8090 using the SoundTouch WebServices API.
 /// </summary>
 public class SoundTouchAdapter : IDeviceAdapter
 {
     private readonly ILogger<SoundTouchAdapter> _logger;
     private readonly HttpClient _httpClient;
+    private readonly IDeviceRepository _deviceRepository;
+    private const int DefaultPort = 8090;
 
     public string VendorId => "bose-soundtouch";
 
-    public SoundTouchAdapter(ILogger<SoundTouchAdapter> logger, IHttpClientFactory httpClientFactory)
+    public SoundTouchAdapter(
+        ILogger<SoundTouchAdapter> logger,
+        IHttpClientFactory httpClientFactory,
+        IDeviceRepository deviceRepository)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("SoundTouch");
+        _deviceRepository = deviceRepository;
     }
+
+    #region Private Helpers
+
+    private async Task<Device> GetDeviceOrThrowAsync(string deviceId, CancellationToken ct)
+    {
+        var device = await _deviceRepository.GetDeviceAsync(deviceId, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {deviceId} not found");
+        }
+        return device;
+    }
+
+    private static string GetDeviceUrl(string ipAddress, int port, string endpoint)
+    {
+        return $"http://{ipAddress}:{port}{endpoint}";
+    }
+
+    private async Task<string> GetAsync(string url, CancellationToken ct)
+    {
+        var response = await _httpClient.GetAsync(url, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync(ct);
+    }
+
+    private async Task PostXmlAsync(string url, string xmlContent, CancellationToken ct)
+    {
+        var content = new StringContent(xmlContent, Encoding.UTF8, "application/xml");
+        var response = await _httpClient.PostAsync(url, content, ct);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task SendKeyPressAsync(string ipAddress, int port, string keyName, CancellationToken ct)
+    {
+        var url = GetDeviceUrl(ipAddress, port, "/key");
+
+        // Send key press
+        var pressXml = $"<key state=\"press\" sender=\"Gabbo\">{keyName}</key>";
+        await PostXmlAsync(url, pressXml, ct);
+
+        // Small delay between press and release
+        await Task.Delay(100, ct);
+
+        // Send key release
+        var releaseXml = $"<key state=\"release\" sender=\"Gabbo\">{keyName}</key>";
+        await PostXmlAsync(url, releaseXml, ct);
+    }
+
+    #endregion
+
+    #region IDeviceAdapter Implementation
 
     public Task<IReadOnlySet<string>> GetCapabilitiesAsync(string deviceId, CancellationToken ct = default)
     {
-        // Mock capabilities - real implementation will query device
+        // SoundTouch devices support these capabilities
         var capabilities = new HashSet<string>
         {
-            "power", "volume", "presets", "pairing", "status"
+            "power", "volume", "presets", "pairing", "status", "info", "nowPlaying"
         };
         return Task.FromResult<IReadOnlySet<string>>(capabilities);
     }
 
-    public Task<DeviceStatus> GetStatusAsync(string deviceId, CancellationToken ct = default)
+    public async Task<DeviceInfo> GetDeviceInfoAsync(string deviceId, CancellationToken ct = default)
     {
-        _logger.LogInformation("GetStatusAsync called for device {DeviceId} (mock)", deviceId);
-        
-        // Mock status - real implementation will query device via HTTP
-        var status = new DeviceStatus
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, device.Port, "/info");
+
+        _logger.LogDebug("Getting device info from {Url}", url);
+
+        try
         {
-            DeviceId = deviceId,
-            PowerState = true,
-            Volume = 50,
-            CurrentSource = "INTERNET_RADIO",
-            IsOnline = true,
-            Timestamp = DateTime.UtcNow
-        };
-        return Task.FromResult(status);
+            var response = await GetAsync(url, ct);
+            var doc = XDocument.Parse(response);
+
+            var deviceIdAttr = doc.Root?.Attribute("deviceID")?.Value ?? deviceId;
+            var name = doc.Root?.Element("name")?.Value ?? "Unknown";
+            var type = doc.Root?.Element("type")?.Value ?? "Unknown";
+
+            // Get network info
+            var networkInfo = doc.Root?.Elements("networkInfo").FirstOrDefault();
+            var macAddress = networkInfo?.Attribute("macAddress")?.Value;
+            var ipAddress = networkInfo?.Element("ipAddress")?.Value ?? device.IpAddress;
+
+            // Get software version from components
+            var scmComponent = doc.Root?.Element("components")?
+                .Elements("component")
+                .FirstOrDefault(c => c.Element("componentCategory")?.Value == "SCM");
+            var softwareVersion = scmComponent?.Element("softwareVersion")?.Value;
+
+            return new DeviceInfo
+            {
+                DeviceId = deviceIdAttr,
+                Name = name,
+                Type = type,
+                MacAddress = macAddress,
+                IpAddress = ipAddress,
+                SoftwareVersion = softwareVersion
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to get device info for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
     }
 
-    public Task SetPowerAsync(string deviceId, bool on, CancellationToken ct = default)
+    public async Task<NowPlayingInfo> GetNowPlayingAsync(string deviceId, CancellationToken ct = default)
     {
-        _logger.LogInformation("SetPowerAsync called for device {DeviceId}: {On} (mock)", deviceId, on);
-        // Real implementation: POST to http://<ip>:8090/key with XML body <key state="press" sender="Gabbo">POWER</key>
-        return Task.CompletedTask;
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, device.Port, "/nowPlaying");
+
+        _logger.LogDebug("Getting now playing from {Url}", url);
+
+        try
+        {
+            var response = await GetAsync(url, ct);
+            var doc = XDocument.Parse(response);
+
+            var source = doc.Root?.Attribute("source")?.Value ?? "STANDBY";
+            var track = doc.Root?.Element("track")?.Value;
+            var artist = doc.Root?.Element("artist")?.Value;
+            var album = doc.Root?.Element("album")?.Value;
+            var stationName = doc.Root?.Element("stationName")?.Value;
+            var playStatus = doc.Root?.Element("playStatus")?.Value;
+            var artUrl = doc.Root?.Element("art")?.Value;
+
+            return new NowPlayingInfo
+            {
+                Source = source,
+                Track = track,
+                Artist = artist,
+                Album = album,
+                StationName = stationName,
+                PlayStatus = playStatus,
+                ArtUrl = artUrl
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to get now playing for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
     }
 
-    public Task SetVolumeAsync(string deviceId, int level, CancellationToken ct = default)
+    public async Task<VolumeInfo> GetVolumeAsync(string deviceId, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, device.Port, "/volume");
+
+        _logger.LogDebug("Getting volume from {Url}", url);
+
+        try
+        {
+            var response = await GetAsync(url, ct);
+            var doc = XDocument.Parse(response);
+
+            var targetVolume = int.TryParse(doc.Root?.Element("targetvolume")?.Value, out var tv) ? tv : 0;
+            var actualVolume = int.TryParse(doc.Root?.Element("actualvolume")?.Value, out var av) ? av : 0;
+            var isMuted = doc.Root?.Element("muteenabled")?.Value?.ToLowerInvariant() == "true";
+
+            return new VolumeInfo
+            {
+                TargetVolume = targetVolume,
+                ActualVolume = actualVolume,
+                IsMuted = isMuted
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to get volume for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    public async Task<DeviceStatus> GetStatusAsync(string deviceId, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+
+        _logger.LogDebug("Getting status for device {DeviceId}", deviceId);
+
+        try
+        {
+            // Get volume and now playing info in parallel
+            var volumeTask = GetVolumeAsync(deviceId, ct);
+            var nowPlayingTask = GetNowPlayingAsync(deviceId, ct);
+
+            await Task.WhenAll(volumeTask, nowPlayingTask);
+
+            var volume = await volumeTask;
+            var nowPlaying = await nowPlayingTask;
+
+            var isStandby = nowPlaying.Source == "STANDBY";
+
+            return new DeviceStatus
+            {
+                DeviceId = deviceId,
+                PowerState = !isStandby,
+                Volume = volume.ActualVolume,
+                CurrentSource = nowPlaying.Source,
+                CurrentPreset = null, // Would need to correlate with presets
+                IsOnline = true,
+                Timestamp = DateTime.UtcNow
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get status for device {DeviceId}, returning offline status", deviceId);
+            return new DeviceStatus
+            {
+                DeviceId = deviceId,
+                PowerState = false,
+                Volume = 0,
+                CurrentSource = null,
+                CurrentPreset = null,
+                IsOnline = false,
+                Timestamp = DateTime.UtcNow
+            };
+        }
+    }
+
+    public async Task SetPowerAsync(string deviceId, bool on, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+
+        _logger.LogInformation("Setting power for device {DeviceId} to {On}", deviceId, on);
+
+        try
+        {
+            if (on)
+            {
+                // Send POWER key to toggle on
+                await SendKeyPressAsync(device.IpAddress, device.Port, "POWER", ct);
+            }
+            else
+            {
+                // Use standby endpoint to turn off
+                var url = GetDeviceUrl(device.IpAddress, device.Port, "/standby");
+                await GetAsync(url, ct);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to set power for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    public async Task SetVolumeAsync(string deviceId, int level, CancellationToken ct = default)
     {
         if (level < 0 || level > 100)
         {
             throw new ArgumentOutOfRangeException(nameof(level), "Volume must be between 0 and 100");
         }
 
-        _logger.LogInformation("SetVolumeAsync called for device {DeviceId}: {Level} (mock)", deviceId, level);
-        // Real implementation: POST to http://<ip>:8090/volume with XML body <volume>{level}</volume>
-        return Task.CompletedTask;
-    }
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, device.Port, "/volume");
 
-    public Task EnterPairingModeAsync(string deviceId, CancellationToken ct = default)
-    {
-        _logger.LogInformation("EnterPairingModeAsync called for device {DeviceId} (mock)", deviceId);
-        // Real implementation: POST to http://<ip>:8090/key with XML body <key state="press" sender="Gabbo">BLUETOOTH</key>
-        return Task.CompletedTask;
-    }
+        _logger.LogInformation("Setting volume for device {DeviceId} to {Level}", deviceId, level);
 
-    public Task<IReadOnlyList<Preset>> ListPresetsAsync(string deviceId, CancellationToken ct = default)
-    {
-        _logger.LogInformation("ListPresetsAsync called for device {DeviceId} (mock)", deviceId);
-        
-        // Mock presets - real implementation will query device
-        var presets = new List<Preset>
+        try
         {
-            new Preset
+            var xml = $"<volume>{level}</volume>";
+            await PostXmlAsync(url, xml, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to set volume for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    public async Task EnterPairingModeAsync(string deviceId, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, device.Port, "/enterBluetoothPairing");
+
+        _logger.LogInformation("Entering Bluetooth pairing mode for device {DeviceId}", deviceId);
+
+        try
+        {
+            await GetAsync(url, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to enter pairing mode for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    public async Task<IReadOnlyList<Preset>> ListPresetsAsync(string deviceId, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, device.Port, "/presets");
+
+        _logger.LogDebug("Getting presets from {Url}", url);
+
+        try
+        {
+            var response = await GetAsync(url, ct);
+            var doc = XDocument.Parse(response);
+
+            var presets = new List<Preset>();
+            var presetElements = doc.Root?.Elements("preset");
+
+            if (presetElements != null)
             {
-                Id = "1",
-                DeviceId = deviceId,
-                Name = "BBC Radio 1",
-                Url = "http://bbc.co.uk/radio1",
-                Type = "InternetRadio",
-                Position = 1
+                foreach (var presetElement in presetElements)
+                {
+                    var id = presetElement.Attribute("id")?.Value;
+                    if (string.IsNullOrEmpty(id)) continue;
+
+                    var contentItem = presetElement.Element("ContentItem");
+                    var itemName = contentItem?.Element("itemName")?.Value ?? "Unknown";
+                    var source = contentItem?.Attribute("source")?.Value ?? "Unknown";
+                    var location = contentItem?.Attribute("location")?.Value ?? "";
+
+                    presets.Add(new Preset
+                    {
+                        Id = id,
+                        DeviceId = deviceId,
+                        Name = itemName,
+                        Url = location,
+                        Type = source,
+                        Position = int.TryParse(id, out var pos) ? pos : null
+                    });
+                }
             }
-        };
-        return Task.FromResult<IReadOnlyList<Preset>>(presets);
+
+            return presets;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to get presets for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
     }
 
     public Task<Preset> ConfigurePresetAsync(string deviceId, string name, string url, string type, int? position = null, CancellationToken ct = default)
     {
-        _logger.LogInformation("ConfigurePresetAsync called for device {DeviceId}: {Name} (mock)", deviceId, name);
-        
-        // Mock preset creation
+        // SoundTouch doesn't support configuring presets via API in the same way
+        // Presets are typically set through the device or app
+        _logger.LogWarning("ConfigurePresetAsync is not fully supported for SoundTouch devices");
+
         var preset = new Preset
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = position?.ToString() ?? Guid.NewGuid().ToString(),
             DeviceId = deviceId,
             Name = name,
             Url = url,
@@ -115,22 +384,37 @@ public class SoundTouchAdapter : IDeviceAdapter
         return Task.FromResult(preset);
     }
 
-    public Task PlayPresetAsync(string deviceId, string presetId, CancellationToken ct = default)
+    public async Task PlayPresetAsync(string deviceId, string presetId, CancellationToken ct = default)
     {
-        _logger.LogInformation("PlayPresetAsync called for device {DeviceId}: preset {PresetId} (mock)", deviceId, presetId);
-        // Real implementation: POST to http://<ip>:8090/select with XML preset content
-        return Task.CompletedTask;
+        if (!int.TryParse(presetId, out var presetNumber) || presetNumber < 1 || presetNumber > 6)
+        {
+            throw new ArgumentOutOfRangeException(nameof(presetId), "Preset ID must be a number between 1 and 6");
+        }
+
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+
+        _logger.LogInformation("Playing preset {PresetId} on device {DeviceId}", presetId, deviceId);
+
+        try
+        {
+            var keyName = $"PRESET_{presetNumber}";
+            await SendKeyPressAsync(device.IpAddress, device.Port, keyName, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to play preset for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
     }
 
     public async Task<IReadOnlyList<Device>> DiscoverDevicesAsync(CancellationToken ct = default)
     {
         _logger.LogInformation("DiscoverDevicesAsync called for vendor {Vendor} (scanning network)", VendorId);
-        
+
         var devices = new List<Device>();
-        
-        // Scan local network by probing common IP ranges
-        // For SoundTouch, we check http://<ip>:8090/info or http://<ip>:8090/name
-        var localIp = "192.168.1.1";
+
+        // Get local IP to determine subnet
+        var localIp = GetLocalIpAddress();
         if (localIp == null)
         {
             _logger.LogWarning("Could not determine local IP address for discovery");
@@ -150,31 +434,41 @@ public class SoundTouchAdapter : IDeviceAdapter
 
         var results = await Task.WhenAll(tasks);
         devices.AddRange(results.Where(d => d != null)!);
-        
+
         _logger.LogInformation("Discovery complete: found {Count} SoundTouch devices", devices.Count);
         return devices;
     }
+
+    #endregion
+
+    #region Discovery Helpers
 
     private async Task<Device?> TryDiscoverDeviceAtIpAsync(string ip, CancellationToken ct)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"http://{ip}:8090/info", ct);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(2)); // Short timeout for discovery
+
+            var url = $"http://{ip}:{DefaultPort}/info";
+            var response = await _httpClient.GetAsync(url, cts.Token);
+
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync(ct);
+                var content = await response.Content.ReadAsStringAsync(cts.Token);
                 var xml = XDocument.Parse(content);
                 var name = xml.Root?.Element("name")?.Value ?? "Unknown Device";
-                
+                var deviceIdAttr = xml.Root?.Attribute("deviceID")?.Value ?? Guid.NewGuid().ToString();
+
                 _logger.LogInformation("Discovered SoundTouch device at {Ip}: {Name}", ip, name);
-                
+
                 return new Device
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = deviceIdAttr,
                     Vendor = VendorId,
                     Name = name,
                     IpAddress = ip,
-                    Port = 8090,
+                    Port = DefaultPort,
                     IsOnline = true,
                     PowerState = false,
                     Volume = 0,
@@ -216,4 +510,6 @@ public class SoundTouchAdapter : IDeviceAdapter
         var parts = ip.Split('.');
         return $"{parts[0]}.{parts[1]}.{parts[2]}";
     }
+
+    #endregion
 }

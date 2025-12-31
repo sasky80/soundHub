@@ -149,7 +149,250 @@ public class DevicesController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to set power state" });
         }
     }
+
+    /// <summary>
+    /// Gets detailed info for a device.
+    /// </summary>
+    [HttpGet("{id}/info")]
+    [ProducesResponseType(typeof(DeviceInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> GetDeviceInfo(string id, CancellationToken ct)
+    {
+        try
+        {
+            var info = await _deviceService.GetDeviceInfoAsync(id, ct);
+            return Ok(info);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting device info for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to get device info" });
+        }
+    }
+
+    /// <summary>
+    /// Gets the now playing information for a device.
+    /// </summary>
+    [HttpGet("{id}/nowPlaying")]
+    [ProducesResponseType(typeof(NowPlayingInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> GetNowPlaying(string id, CancellationToken ct)
+    {
+        try
+        {
+            var nowPlaying = await _deviceService.GetNowPlayingAsync(id, ct);
+            return Ok(nowPlaying);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting now playing for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to get now playing" });
+        }
+    }
+
+    /// <summary>
+    /// Gets the volume information for a device.
+    /// </summary>
+    [HttpGet("{id}/volume")]
+    [ProducesResponseType(typeof(VolumeInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> GetVolume(string id, CancellationToken ct)
+    {
+        try
+        {
+            var volume = await _deviceService.GetVolumeAsync(id, ct);
+            return Ok(volume);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting volume for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to get volume" });
+        }
+    }
+
+    /// <summary>
+    /// Sets the volume for a device.
+    /// </summary>
+    [HttpPost("{id}/volume")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> SetVolume(string id, [FromBody] SetVolumeRequest request, CancellationToken ct)
+    {
+        if (request.Level < 0 || request.Level > 100)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Volume level must be between 0 and 100" });
+        }
+
+        try
+        {
+            await _deviceService.SetVolumeAsync(id, request.Level, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting volume for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to set volume" });
+        }
+    }
+
+    /// <summary>
+    /// Enters Bluetooth pairing mode for a device.
+    /// </summary>
+    [HttpPost("{id}/bluetooth/pairing")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> EnterBluetoothPairing(string id, CancellationToken ct)
+    {
+        try
+        {
+            await _deviceService.EnterPairingModeAsync(id, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error entering Bluetooth pairing for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to enter Bluetooth pairing mode" });
+        }
+    }
+
+    /// <summary>
+    /// Gets the presets for a device.
+    /// </summary>
+    [HttpGet("{id}/presets")]
+    [ProducesResponseType(typeof(IEnumerable<Preset>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> GetPresets(string id, CancellationToken ct)
+    {
+        try
+        {
+            var presets = await _deviceService.ListPresetsAsync(id, ct);
+            return Ok(presets);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting presets for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to get presets" });
+        }
+    }
+
+    /// <summary>
+    /// Plays a preset on a device.
+    /// </summary>
+    [HttpPost("{id}/presets/{presetId}/play")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> PlayPreset(string id, string presetId, CancellationToken ct)
+    {
+        try
+        {
+            await _deviceService.PlayPresetAsync(id, presetId, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = ex.Message });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error playing preset for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to play preset" });
+        }
+    }
 }
 
 public record AddDeviceRequest(string Name, string IpAddress, string Vendor, int? Port);
 public record SetPowerRequest(bool On);
+public record SetVolumeRequest(int Level);

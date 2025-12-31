@@ -136,4 +136,123 @@ public class DeviceService
 
         await adapter.SetPowerAsync(id, on, ct);
     }
+
+    public async Task<DeviceInfo> GetDeviceInfoAsync(string id, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        return await adapter.GetDeviceInfoAsync(id, ct);
+    }
+
+    public async Task<NowPlayingInfo> GetNowPlayingAsync(string id, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        return await adapter.GetNowPlayingAsync(id, ct);
+    }
+
+    public async Task<VolumeInfo> GetVolumeAsync(string id, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        return await adapter.GetVolumeAsync(id, ct);
+    }
+
+    public async Task SetVolumeAsync(string id, int level, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        await adapter.SetVolumeAsync(id, level, ct);
+    }
+
+    public async Task EnterPairingModeAsync(string id, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        await adapter.EnterPairingModeAsync(id, ct);
+    }
+
+    public async Task<IReadOnlyList<Preset>> ListPresetsAsync(string id, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        return await adapter.ListPresetsAsync(id, ct);
+    }
+
+    public async Task PlayPresetAsync(string id, string presetId, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        await adapter.PlayPresetAsync(id, presetId, ct);
+    }
 }

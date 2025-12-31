@@ -101,6 +101,9 @@ flowchart TB
         subgraph Entities["Entities"]
             Device["Device"]
             DeviceStatus["DeviceStatus"]
+            DeviceInfo["DeviceInfo"]
+            NowPlayingInfo["NowPlayingInfo"]
+            VolumeInfo["VolumeInfo"]
             Preset["Preset"]
         end
         subgraph Interfaces["Interfaces"]
@@ -143,24 +146,33 @@ classDiagram
         +VendorId: string
         +GetCapabilitiesAsync(deviceId, ct): Task~IReadOnlySet~string~~
         +GetStatusAsync(deviceId, ct): Task~DeviceStatus~
+        +GetDeviceInfoAsync(deviceId, ct): Task~DeviceInfo~
+        +GetNowPlayingAsync(deviceId, ct): Task~NowPlayingInfo~
+        +GetVolumeAsync(deviceId, ct): Task~VolumeInfo~
         +SetPowerAsync(deviceId, on, ct): Task
         +SetVolumeAsync(deviceId, level, ct): Task
         +EnterPairingModeAsync(deviceId, ct): Task
-        +GetPresetsAsync(deviceId, ct): Task~IReadOnlyList~Preset~~
+        +ListPresetsAsync(deviceId, ct): Task~IReadOnlyList~Preset~~
         +PlayPresetAsync(deviceId, presetId, ct): Task
         +DiscoverDevicesAsync(ct): Task~IReadOnlyList~Device~~
     }
 
     class SoundTouchAdapter {
         +VendorId: "bose-soundtouch"
+        -_httpClient: HttpClient
+        -_deviceRepository: IDeviceRepository
         +GetCapabilitiesAsync()
         +GetStatusAsync()
+        +GetDeviceInfoAsync()
+        +GetNowPlayingAsync()
+        +GetVolumeAsync()
         +SetPowerAsync()
         +SetVolumeAsync()
         +EnterPairingModeAsync()
-        +GetPresetsAsync()
+        +ListPresetsAsync()
         +PlayPresetAsync()
         +DiscoverDevicesAsync()
+        -SendKeyPressAsync(ip, keyName)
     }
 
     class FutureVendorAdapter {
@@ -253,6 +265,53 @@ sequenceDiagram
     API-->>WebApp: 204 No Content
     WebApp-->>User: Power state updated
 ```
+
+## SoundTouch API Communication
+
+The SoundTouchAdapter communicates with Bose SoundTouch devices via HTTP on port 8090:
+
+```mermaid
+sequenceDiagram
+    participant Adapter as SoundTouchAdapter
+    participant Device as SoundTouch Device<br/>(port 8090)
+
+    Note over Adapter,Device: GET Requests (status, info, presets)
+    Adapter->>Device: GET /info
+    Device-->>Adapter: XML (deviceID, name, type, version)
+    
+    Adapter->>Device: GET /nowPlaying
+    Device-->>Adapter: XML (source, track, artist, album)
+    
+    Adapter->>Device: GET /volume
+    Device-->>Adapter: XML (targetvolume, actualvolume, muteenabled)
+    
+    Adapter->>Device: GET /presets
+    Device-->>Adapter: XML (preset 1-6 with ContentItem)
+
+    Note over Adapter,Device: POST Requests (control)
+    Adapter->>Device: POST /volume<br/>&lt;volume&gt;50&lt;/volume&gt;
+    Device-->>Adapter: 200 OK
+
+    Note over Adapter,Device: Key Press Pattern (power, presets)
+    Adapter->>Device: POST /key<br/>&lt;key state="press"&gt;PRESET_1&lt;/key&gt;
+    Device-->>Adapter: 200 OK
+    Note over Adapter: Wait 100ms
+    Adapter->>Device: POST /key<br/>&lt;key state="release"&gt;PRESET_1&lt;/key&gt;
+    Device-->>Adapter: 200 OK
+```
+
+### SoundTouch Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/info` | GET | Device info (name, type, MAC, software version) |
+| `/nowPlaying` | GET | Current playback (source, track, artist, album) |
+| `/volume` | GET | Volume state (target, actual, mute) |
+| `/volume` | POST | Set volume (`<volume>0-100</volume>`) |
+| `/presets` | GET | List presets 1-6 |
+| `/key` | POST | Key press/release (POWER, PRESET_1-6) |
+| `/standby` | GET | Enter standby mode |
+| `/enterBluetoothPairing` | GET | Enter Bluetooth pairing mode |
 
 ## Frontend Library Architecture
 

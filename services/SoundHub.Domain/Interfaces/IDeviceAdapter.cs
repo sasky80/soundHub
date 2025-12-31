@@ -31,6 +31,30 @@ public interface IDeviceAdapter
     Task<DeviceStatus> GetStatusAsync(string deviceId, CancellationToken ct = default);
 
     /// <summary>
+    /// Gets detailed device information.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Device information including name, type, firmware version, and network info.</returns>
+    Task<DeviceInfo> GetDeviceInfoAsync(string deviceId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the current playback state of a device.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Now playing information including source, track, artist, and play status.</returns>
+    Task<NowPlayingInfo> GetNowPlayingAsync(string deviceId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the current volume level and mute state of a device.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Volume information including target volume, actual volume, and mute state.</returns>
+    Task<VolumeInfo> GetVolumeAsync(string deviceId, CancellationToken ct = default);
+
+    /// <summary>
     /// Sets the power state of a device.
     /// </summary>
     /// <param name="deviceId">The device identifier.</param>
