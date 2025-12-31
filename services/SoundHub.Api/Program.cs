@@ -58,6 +58,9 @@ builder.Services.Configure<EncryptionKeyStoreOptions>(options =>
     options.MasterPassword = builder.Configuration.GetValue<string>("MasterPassword") ?? "default-dev-password";
 });
 
+// Configure SoundTouch adapter options
+builder.Services.Configure<SoundTouchAdapterOptions>(builder.Configuration.GetSection("SoundTouch"));
+
 // Register application services
 builder.Services.AddSingleton<EncryptionKeyStore>();
 builder.Services.AddSingleton<IDeviceRepository, FileDeviceRepository>();

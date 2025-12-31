@@ -1,39 +1,39 @@
 # Tasks: Device Configuration Management
 
 ## 1. Backend - Data Model Updates
-- [ ] 1.1 Add `NetworkMask` property to configuration model
-- [ ] 1.2 Add `DateTimeAdded` property to Device entity (set on creation, never changes)
-- [ ] 1.3 Update `JsonDeviceRepository` to read/write NetworkMask from devices.json root
-- [ ] 1.4 Remove from Device entity: `Port`, `Volume`, `IsOnline`, `PowerState`, `LastSeen`
-- [ ] 1.5 Move port constant to adapter (SoundTouch = 8090)
+- [x] 1.1 Add `NetworkMask` property to configuration model
+- [x] 1.2 Add `DateTimeAdded` property to Device entity (set on creation, never changes)
+- [x] 1.3 Update `JsonDeviceRepository` to read/write NetworkMask from devices.json root
+- [x] 1.4 Remove from Device entity: `Port`, `Volume`, `IsOnline`, `PowerState`, `LastSeen`
+- [x] 1.5 Move port constant to adapter (SoundTouch = 8090)
 
 ## 2. Backend - IDeviceAdapter Updates
-- [ ] 2.1 Add `PingAsync(string deviceId)` method to `IDeviceAdapter` interface
-- [ ] 2.2 Add `DiscoverDevicesAsync(string networkMask)` method signature with mask parameter
+- [x] 2.1 Add `PingAsync(string deviceId)` method to `IDeviceAdapter` interface
+- [x] 2.2 Add `DiscoverDevicesAsync(string networkMask)` method signature with mask parameter
 
 ## 3. Backend - SoundTouchAdapter Implementation
-- [ ] 3.1 Implement `PingAsync` using HTTP GET to `/playNotification` (audible beep)
-- [ ] 3.2 Implement `DiscoverDevicesAsync` to scan IP range and probe port 8090
-- [ ] 3.3 Define base capabilities constant: `["power", "volume"]`
-- [ ] 3.4 Query `/supportedUrls` to determine additional capabilities:
+- [x] 3.1 Implement `PingAsync` using HTTP GET to `/playNotification` (audible beep)
+- [x] 3.2 Implement `DiscoverDevicesAsync` to scan IP range and probe port 8090
+- [x] 3.3 Define base capabilities constant: `["power", "volume"]`
+- [x] 3.4 Query `/supportedUrls` to determine additional capabilities:
   - `/presets` → add "presets" capability
   - `/enterBluetoothPairing` → add "bluetoothPairing" capability
   - `/playNotification` → add "ping" capability
 
 ## 4. Backend - API Endpoints
-- [ ] 4.1 Add `GET /api/devices/{id}/ping` endpoint
-- [ ] 4.2 Add `POST /api/devices/discover` endpoint
-- [ ] 4.3 Add `GET /api/config/network-mask` endpoint
-- [ ] 4.4 Add `PUT /api/config/network-mask` endpoint
-- [ ] 4.5 Add `GET /api/vendors` endpoint to list supported vendors
-- [ ] 4.6 Implement `POST /api/devices` for creating new device
-- [ ] 4.7 Implement `PUT /api/devices/{id}` for updating device
-- [ ] 4.8 Implement `DELETE /api/devices/{id}` for removing device
+- [x] 4.1 Add `GET /api/devices/{id}/ping` endpoint
+- [x] 4.2 Add `POST /api/devices/discover` endpoint
+- [x] 4.3 Add `GET /api/config/network-mask` endpoint
+- [x] 4.4 Add `PUT /api/config/network-mask` endpoint
+- [x] 4.5 Add `GET /api/vendors` endpoint to list supported vendors
+- [x] 4.6 Implement `POST /api/devices` for creating new device
+- [x] 4.7 Implement `PUT /api/devices/{id}` for updating device
+- [x] 4.8 Implement `DELETE /api/devices/{id}` for removing device
 
 ## 5. Backend - Validation
-- [ ] 5.1 Add network mask format validation (CIDR notation)
-- [ ] 5.2 Add IP address / FQDN validation for device creation
-- [ ] 5.3 Ensure discovery skips already-configured IPs
+- [x] 5.1 Add network mask format validation (CIDR notation)
+- [x] 5.2 Add IP address / FQDN validation for device creation
+- [x] 5.3 Ensure discovery skips already-configured IPs
 
 ## 6. Frontend - Data Access Layer
 - [ ] 6.1 Create `DeviceConfigService` in data-access library

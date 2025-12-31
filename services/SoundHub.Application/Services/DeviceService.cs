@@ -33,19 +33,18 @@ public class DeviceService
         return await _repository.GetDeviceAsync(id, ct);
     }
 
-    public async Task<Device> AddDeviceAsync(string name, string ipAddress, string vendor, int port = 8090, CancellationToken ct = default)
+    public async Task<Device> AddDeviceAsync(string name, string ipAddress, string vendor, CancellationToken ct = default)
     {
+        // Resolve FQDN to IP address if needed
+        var resolvedIpAddress = await ResolveHostnameAsync(ipAddress, ct);
+
         var device = new Device
         {
             Id = Guid.NewGuid().ToString(),
             Name = name,
-            IpAddress = ipAddress,
+            IpAddress = resolvedIpAddress,
             Vendor = vendor,
-            Port = port,
-            IsOnline = false,
-            PowerState = false,
-            Volume = 0,
-            LastSeen = DateTime.UtcNow
+            DateTimeAdded = DateTime.UtcNow
         };
 
         // Query capabilities from adapter if available
@@ -54,16 +53,56 @@ public class DeviceService
         {
             try
             {
-                var capabilities = await adapter.GetCapabilitiesAsync(device.Id, ct);
+                var capabilities = await adapter.GetCapabilitiesAsync(resolvedIpAddress, ct);
                 device.Capabilities = new HashSet<string>(capabilities);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to query capabilities for device {DeviceId}", device.Id);
+                _logger.LogWarning(ex, "Failed to query capabilities for device at {IpAddress}", resolvedIpAddress);
+                device.Capabilities = new HashSet<string> { "power", "volume" };
             }
         }
 
         return await _repository.AddDeviceAsync(device, ct);
+    }
+
+    public async Task<Device> UpdateDeviceAsync(string id, string name, string ipAddress, IEnumerable<string>? capabilities = null, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct)
+            ?? throw new KeyNotFoundException($"Device with ID {id} not found");
+
+        // Resolve FQDN to IP address if needed
+        var resolvedIpAddress = await ResolveHostnameAsync(ipAddress, ct);
+
+        device.Name = name;
+        device.IpAddress = resolvedIpAddress;
+        if (capabilities != null)
+        {
+            device.Capabilities = new HashSet<string>(capabilities);
+        }
+
+        return await _repository.UpdateDeviceAsync(device, ct);
+    }
+
+    private static async Task<string> ResolveHostnameAsync(string hostOrIp, CancellationToken ct)
+    {
+        // Check if it's already an IP address
+        if (System.Net.IPAddress.TryParse(hostOrIp, out _))
+        {
+            return hostOrIp;
+        }
+
+        // Resolve hostname to IP
+        try
+        {
+            var addresses = await System.Net.Dns.GetHostAddressesAsync(hostOrIp, ct);
+            var ipv4 = addresses.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            return ipv4?.ToString() ?? throw new ArgumentException($"Could not resolve hostname: {hostOrIp}");
+        }
+        catch (System.Net.Sockets.SocketException ex)
+        {
+            throw new ArgumentException($"Could not resolve hostname: {hostOrIp}", ex);
+        }
     }
 
     public async Task<bool> RemoveDeviceAsync(string id, CancellationToken ct = default)
@@ -71,28 +110,50 @@ public class DeviceService
         return await _repository.RemoveDeviceAsync(id, ct);
     }
 
-    public async Task<IReadOnlyList<Device>> DiscoverDevicesAsync(string? vendor = null, CancellationToken ct = default)
+    public async Task<PingResult> PingDeviceAsync(string id, CancellationToken ct = default)
     {
-        var discoveredDevices = new List<Device>();
+        var device = await _repository.GetDeviceAsync(id, ct)
+            ?? throw new KeyNotFoundException($"Device with ID {id} not found");
 
-        var vendors = vendor != null
-            ? new[] { vendor }
-            : _adapterRegistry.GetRegisteredVendors();
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor)
+            ?? throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
 
-        foreach (var vendorId in vendors)
+        return await adapter.PingAsync(id, ct);
+    }
+
+    public async Task<DiscoveryResult> DiscoverAndSaveDevicesAsync(CancellationToken ct = default)
+    {
+        var networkMask = await _repository.GetNetworkMaskAsync(ct);
+        var existingDevices = await _repository.GetAllDevicesAsync(ct);
+        var existingIps = existingDevices.Select(d => d.IpAddress).ToHashSet();
+
+        var allDiscovered = new List<Device>();
+        var newDevices = new List<Device>();
+
+        foreach (var vendorId in _adapterRegistry.GetRegisteredVendors())
         {
             var adapter = _adapterRegistry.GetAdapter(vendorId);
-            if (adapter == null)
-            {
-                _logger.LogWarning("No adapter found for vendor {Vendor}", vendorId);
-                continue;
-            }
+            if (adapter == null) continue;
 
             try
             {
-                var devices = await adapter.DiscoverDevicesAsync(ct);
-                discoveredDevices.AddRange(devices);
-                _logger.LogInformation("Discovered {Count} devices for vendor {Vendor}", devices.Count, vendorId);
+                var devices = await adapter.DiscoverDevicesAsync(networkMask, ct);
+                foreach (var device in devices)
+                {
+                    allDiscovered.Add(device);
+
+                    // Skip if device already exists (by IP)
+                    if (existingIps.Contains(device.IpAddress))
+                    {
+                        continue;
+                    }
+
+                    // Save new device
+                    await _repository.AddDeviceAsync(device, ct);
+                    newDevices.Add(device);
+                    existingIps.Add(device.IpAddress);
+                    _logger.LogInformation("Auto-saved discovered device: {Name} at {IpAddress}", device.Name, device.IpAddress);
+                }
             }
             catch (Exception ex)
             {
@@ -100,7 +161,51 @@ public class DeviceService
             }
         }
 
-        return discoveredDevices;
+        return new DiscoveryResult(allDiscovered.Count, newDevices.Count, newDevices);
+    }
+
+    public async Task<string?> GetNetworkMaskAsync(CancellationToken ct = default)
+    {
+        return await _repository.GetNetworkMaskAsync(ct);
+    }
+
+    public async Task SetNetworkMaskAsync(string networkMask, CancellationToken ct = default)
+    {
+        // Validate network mask format
+        if (!IsValidNetworkMask(networkMask))
+        {
+            throw new ArgumentException($"Invalid network mask format: {networkMask}. Expected CIDR notation (e.g., 192.168.1.0/24)");
+        }
+
+        await _repository.SetNetworkMaskAsync(networkMask, ct);
+    }
+
+    public IReadOnlyList<VendorInfo> GetVendors()
+    {
+        return _adapterRegistry.GetRegisteredVendors()
+            .Select(vendorId =>
+            {
+                var adapter = _adapterRegistry.GetAdapter(vendorId);
+                return new VendorInfo(vendorId, adapter?.VendorName ?? vendorId);
+            })
+            .ToList();
+    }
+
+    private static bool IsValidNetworkMask(string networkMask)
+    {
+        var parts = networkMask.Split('/');
+        if (parts.Length != 2) return false;
+        if (!int.TryParse(parts[1], out var cidr) || cidr < 0 || cidr > 32) return false;
+
+        var ipParts = parts[0].Split('.');
+        if (ipParts.Length != 4) return false;
+
+        foreach (var part in ipParts)
+        {
+            if (!byte.TryParse(part, out _)) return false;
+        }
+
+        return true;
     }
 
     public async Task<DeviceStatus> GetDeviceStatusAsync(string id, CancellationToken ct = default)

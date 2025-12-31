@@ -91,14 +91,13 @@ public class DeviceServiceTests
             Id = "new-id",
             Vendor = "bose-soundtouch",
             Name = "New Speaker",
-            IpAddress = "192.168.1.50",
-            Port = 8090
+            IpAddress = "192.168.1.50"
         };
         _repository.AddDeviceAsync(Arg.Any<Device>(), Arg.Any<CancellationToken>())
             .Returns(callInfo => callInfo.Arg<Device>());
 
         // Act
-        var result = await _service.AddDeviceAsync("New Speaker", "192.168.1.50", "bose-soundtouch", 8090);
+        var result = await _service.AddDeviceAsync("New Speaker", "192.168.1.50", "bose-soundtouch");
 
         // Assert
         Assert.NotNull(result);

@@ -60,8 +60,44 @@ public class DevicesController : ControllerBase
             return BadRequest(new { code = "INVALID_INPUT", message = "Name, IpAddress, and Vendor are required" });
         }
 
-        var device = await _deviceService.AddDeviceAsync(request.Name, request.IpAddress, request.Vendor, request.Port ?? 8090, ct);
-        return CreatedAtAction(nameof(GetDevice), new { id = device.Id }, device);
+        try
+        {
+            var device = await _deviceService.AddDeviceAsync(request.Name, request.IpAddress, request.Vendor, ct);
+            return CreatedAtAction(nameof(GetDevice), new { id = device.Id }, device);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing device.
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(Device), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateDevice(string id, [FromBody] UpdateDeviceRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.IpAddress))
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Name and IpAddress are required" });
+        }
+
+        try
+        {
+            var device = await _deviceService.UpdateDeviceAsync(id, request.Name, request.IpAddress, request.Capabilities, ct);
+            return Ok(device);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = ex.Message });
+        }
     }
 
     /// <summary>
@@ -81,15 +117,39 @@ public class DevicesController : ControllerBase
     }
 
     /// <summary>
-    /// Discovers devices on the local network.
+    /// Pings a device for audible connectivity verification.
     /// </summary>
-    [HttpGet("discover")]
-    [ProducesResponseType(typeof(IEnumerable<Device>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> DiscoverDevices([FromQuery] string? vendor = null, CancellationToken ct = default)
+    [HttpGet("{id}/ping")]
+    [ProducesResponseType(typeof(PingResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> PingDevice(string id, CancellationToken ct)
     {
-        _logger.LogInformation("Starting device discovery (vendor: {Vendor})", vendor ?? "all");
-        var devices = await _deviceService.DiscoverDevicesAsync(vendor, ct);
-        return Ok(devices);
+        try
+        {
+            var result = await _deviceService.PingDeviceAsync(id, ct);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Discovers devices on the local network and auto-saves new devices.
+    /// </summary>
+    [HttpPost("discover")]
+    [ProducesResponseType(typeof(DiscoveryResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DiscoverDevices(CancellationToken ct)
+    {
+        _logger.LogInformation("Starting device discovery");
+        var result = await _deviceService.DiscoverAndSaveDevicesAsync(ct);
+        return Ok(result);
     }
 
     /// <summary>
@@ -393,6 +453,7 @@ public class DevicesController : ControllerBase
     }
 }
 
-public record AddDeviceRequest(string Name, string IpAddress, string Vendor, int? Port);
+public record AddDeviceRequest(string Name, string IpAddress, string Vendor);
+public record UpdateDeviceRequest(string Name, string IpAddress, IEnumerable<string>? Capabilities);
 public record SetPowerRequest(bool On);
 public record SetVolumeRequest(int Level);

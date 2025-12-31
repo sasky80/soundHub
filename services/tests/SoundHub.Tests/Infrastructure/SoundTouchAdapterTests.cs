@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using SoundHub.Domain.Entities;
 using SoundHub.Domain.Interfaces;
@@ -22,7 +23,6 @@ public class SoundTouchAdapterTests
 
     private const string TestDeviceId = "test-device-123";
     private const string TestDeviceIp = "192.168.1.100";
-    private const int TestDevicePort = 8090;
 
     public SoundTouchAdapterTests()
     {
@@ -40,13 +40,13 @@ public class SoundTouchAdapterTests
             Id = TestDeviceId,
             Name = "Test SoundTouch",
             IpAddress = TestDeviceIp,
-            Port = TestDevicePort,
             Vendor = "bose-soundtouch"
         };
         _deviceRepository.GetDeviceAsync(TestDeviceId, Arg.Any<CancellationToken>())
             .Returns(testDevice);
 
-        _adapter = new SoundTouchAdapter(_logger, _httpClientFactory, _deviceRepository);
+        var options = Options.Create(new SoundTouchAdapterOptions { PingTimeoutSeconds = 10 });
+        _adapter = new SoundTouchAdapter(_logger, _httpClientFactory, _deviceRepository, options);
     }
 
     #region GetDeviceInfoAsync Tests
@@ -590,19 +590,46 @@ public class SoundTouchAdapterTests
     #region Capabilities Tests
 
     [Fact]
-    public async Task GetCapabilitiesAsync_ReturnsExpectedCapabilities()
+    public async Task GetCapabilitiesAsync_WithSupportedUrls_ReturnsAllCapabilities()
     {
-        // Act
-        var capabilities = await _adapter.GetCapabilitiesAsync(TestDeviceId);
+        // Arrange - mock /supportedURLs response with all capabilities
+        const string supportedUrlsResponse = """
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <supportedURLs deviceID="C8DF84AE0B6E">
+                <supportedURL>/info</supportedURL>
+                <supportedURL>/volume</supportedURL>
+                <supportedURL>/presets</supportedURL>
+                <supportedURL>/enterBluetoothPairing</supportedURL>
+                <supportedURL>/playNotification</supportedURL>
+            </supportedURLs>
+            """;
 
-        // Assert
+        _mockHandler.SetResponse(supportedUrlsResponse, HttpStatusCode.OK);
+
+        // Act
+        var capabilities = await _adapter.GetCapabilitiesAsync(TestDeviceIp);
+
+        // Assert - base capabilities plus dynamic ones
         Assert.Contains("power", capabilities);
         Assert.Contains("volume", capabilities);
         Assert.Contains("presets", capabilities);
-        Assert.Contains("pairing", capabilities);
-        Assert.Contains("status", capabilities);
-        Assert.Contains("info", capabilities);
-        Assert.Contains("nowPlaying", capabilities);
+        Assert.Contains("bluetoothPairing", capabilities);
+        Assert.Contains("ping", capabilities);
+    }
+
+    [Fact]
+    public async Task GetCapabilitiesAsync_WhenSupportedUrlsFails_ReturnsBaseCapabilities()
+    {
+        // Arrange - mock failure
+        _mockHandler.SetResponse("error", HttpStatusCode.InternalServerError);
+
+        // Act
+        var capabilities = await _adapter.GetCapabilitiesAsync(TestDeviceIp);
+
+        // Assert - only base capabilities
+        Assert.Contains("power", capabilities);
+        Assert.Contains("volume", capabilities);
+        Assert.Equal(2, capabilities.Count);
     }
 
     #endregion

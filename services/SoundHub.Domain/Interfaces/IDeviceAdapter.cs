@@ -18,12 +18,24 @@ public interface IDeviceAdapter
     string VendorId { get; }
 
     /// <summary>
-    /// Queries the capabilities supported by a specific device.
+    /// Gets the human-readable vendor name (e.g., "Bose SoundTouch").
     /// </summary>
-    /// <param name="deviceId">The device identifier.</param>
+    string VendorName { get; }
+
+    /// <summary>
+    /// Gets the default port for this vendor's devices.
+    /// </summary>
+    int DefaultPort { get; }
+
+    /// <summary>
+    /// Queries the capabilities supported by a specific device by probing the device.
+    /// Base capabilities (power, volume) are always included.
+    /// Additional capabilities are determined dynamically from the device.
+    /// </summary>
+    /// <param name="ipAddress">The device IP address.</param>
     /// <param name="ct">Cancellation token.</param>
-    /// <returns>Set of capability names (e.g., "power", "volume", "presets").</returns>
-    Task<IReadOnlySet<string>> GetCapabilitiesAsync(string deviceId, CancellationToken ct = default);
+    /// <returns>Set of capability names (e.g., "power", "volume", "presets", "ping").</returns>
+    Task<IReadOnlySet<string>> GetCapabilitiesAsync(string ipAddress, CancellationToken ct = default);
 
     /// <summary>
     /// Gets the current status of a device.
@@ -91,9 +103,18 @@ public interface IDeviceAdapter
     Task PlayPresetAsync(string deviceId, string presetId, CancellationToken ct = default);
 
     /// <summary>
-    /// Discovers devices of this vendor on the local network.
+    /// Pings a device to verify connectivity with audible feedback.
     /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Ping result with reachability and latency.</returns>
+    Task<PingResult> PingAsync(string deviceId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Discovers devices of this vendor on the local network within the specified IP range.
+    /// </summary>
+    /// <param name="networkMask">Network mask in CIDR notation (e.g., "192.168.1.0/24"). If null, uses local subnet.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>List of discovered devices.</returns>
-    Task<IReadOnlyList<Device>> DiscoverDevicesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<Device>> DiscoverDevicesAsync(string? networkMask = null, CancellationToken ct = default);
 }

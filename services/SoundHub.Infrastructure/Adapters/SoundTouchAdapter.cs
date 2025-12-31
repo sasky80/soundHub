@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SoundHub.Domain.Entities;
 using SoundHub.Domain.Interfaces;
 
@@ -16,18 +18,27 @@ public class SoundTouchAdapter : IDeviceAdapter
     private readonly ILogger<SoundTouchAdapter> _logger;
     private readonly HttpClient _httpClient;
     private readonly IDeviceRepository _deviceRepository;
-    private const int DefaultPort = 8090;
+    private readonly SoundTouchAdapterOptions _options;
+
+    /// <summary>
+    /// Base capabilities that all SoundTouch devices support.
+    /// </summary>
+    private static readonly HashSet<string> BaseCapabilities = new() { "power", "volume" };
 
     public string VendorId => "bose-soundtouch";
+    public string VendorName => "Bose SoundTouch";
+    public int DefaultPort => 8090;
 
     public SoundTouchAdapter(
         ILogger<SoundTouchAdapter> logger,
         IHttpClientFactory httpClientFactory,
-        IDeviceRepository deviceRepository)
+        IDeviceRepository deviceRepository,
+        IOptions<SoundTouchAdapterOptions> options)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient("SoundTouch");
         _deviceRepository = deviceRepository;
+        _options = options.Value;
     }
 
     #region Private Helpers
@@ -81,20 +92,47 @@ public class SoundTouchAdapter : IDeviceAdapter
 
     #region IDeviceAdapter Implementation
 
-    public Task<IReadOnlySet<string>> GetCapabilitiesAsync(string deviceId, CancellationToken ct = default)
+    /// <inheritdoc />
+    public async Task<IReadOnlySet<string>> GetCapabilitiesAsync(string ipAddress, CancellationToken ct = default)
     {
-        // SoundTouch devices support these capabilities
-        var capabilities = new HashSet<string>
+        var capabilities = new HashSet<string>(BaseCapabilities);
+
+        try
         {
-            "power", "volume", "presets", "pairing", "status", "info", "nowPlaying"
-        };
-        return Task.FromResult<IReadOnlySet<string>>(capabilities);
+            var url = GetDeviceUrl(ipAddress, DefaultPort, "/supportedURLs");
+            var response = await GetAsync(url, ct);
+            var doc = XDocument.Parse(response);
+
+            var supportedUrls = doc.Root?.Elements("supportedURL")
+                .Select(e => e.Value)
+                .ToHashSet() ?? new HashSet<string>();
+
+            // Map supported URLs to capabilities
+            if (supportedUrls.Contains("/presets"))
+            {
+                capabilities.Add("presets");
+            }
+            if (supportedUrls.Contains("/enterBluetoothPairing"))
+            {
+                capabilities.Add("bluetoothPairing");
+            }
+            if (supportedUrls.Contains("/playNotification"))
+            {
+                capabilities.Add("ping");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to query supported URLs for device at {IpAddress}, using base capabilities", ipAddress);
+        }
+
+        return capabilities;
     }
 
     public async Task<DeviceInfo> GetDeviceInfoAsync(string deviceId, CancellationToken ct = default)
     {
         var device = await GetDeviceOrThrowAsync(deviceId, ct);
-        var url = GetDeviceUrl(device.IpAddress, device.Port, "/info");
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/info");
 
         _logger.LogDebug("Getting device info from {Url}", url);
 
@@ -138,7 +176,7 @@ public class SoundTouchAdapter : IDeviceAdapter
     public async Task<NowPlayingInfo> GetNowPlayingAsync(string deviceId, CancellationToken ct = default)
     {
         var device = await GetDeviceOrThrowAsync(deviceId, ct);
-        var url = GetDeviceUrl(device.IpAddress, device.Port, "/nowPlaying");
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/nowPlaying");
 
         _logger.LogDebug("Getting now playing from {Url}", url);
 
@@ -176,7 +214,7 @@ public class SoundTouchAdapter : IDeviceAdapter
     public async Task<VolumeInfo> GetVolumeAsync(string deviceId, CancellationToken ct = default)
     {
         var device = await GetDeviceOrThrowAsync(deviceId, ct);
-        var url = GetDeviceUrl(device.IpAddress, device.Port, "/volume");
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/volume");
 
         _logger.LogDebug("Getting volume from {Url}", url);
 
@@ -260,12 +298,12 @@ public class SoundTouchAdapter : IDeviceAdapter
             if (on)
             {
                 // Send POWER key to toggle on
-                await SendKeyPressAsync(device.IpAddress, device.Port, "POWER", ct);
+                await SendKeyPressAsync(device.IpAddress, DefaultPort, "POWER", ct);
             }
             else
             {
                 // Use standby endpoint to turn off
-                var url = GetDeviceUrl(device.IpAddress, device.Port, "/standby");
+                var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/standby");
                 await GetAsync(url, ct);
             }
         }
@@ -284,7 +322,7 @@ public class SoundTouchAdapter : IDeviceAdapter
         }
 
         var device = await GetDeviceOrThrowAsync(deviceId, ct);
-        var url = GetDeviceUrl(device.IpAddress, device.Port, "/volume");
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/volume");
 
         _logger.LogInformation("Setting volume for device {DeviceId} to {Level}", deviceId, level);
 
@@ -303,7 +341,7 @@ public class SoundTouchAdapter : IDeviceAdapter
     public async Task EnterPairingModeAsync(string deviceId, CancellationToken ct = default)
     {
         var device = await GetDeviceOrThrowAsync(deviceId, ct);
-        var url = GetDeviceUrl(device.IpAddress, device.Port, "/enterBluetoothPairing");
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/enterBluetoothPairing");
 
         _logger.LogInformation("Entering Bluetooth pairing mode for device {DeviceId}", deviceId);
 
@@ -321,7 +359,7 @@ public class SoundTouchAdapter : IDeviceAdapter
     public async Task<IReadOnlyList<Preset>> ListPresetsAsync(string deviceId, CancellationToken ct = default)
     {
         var device = await GetDeviceOrThrowAsync(deviceId, ct);
-        var url = GetDeviceUrl(device.IpAddress, device.Port, "/presets");
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/presets");
 
         _logger.LogDebug("Getting presets from {Url}", url);
 
@@ -398,7 +436,7 @@ public class SoundTouchAdapter : IDeviceAdapter
         try
         {
             var keyName = $"PRESET_{presetNumber}";
-            await SendKeyPressAsync(device.IpAddress, device.Port, keyName, ct);
+            await SendKeyPressAsync(device.IpAddress, DefaultPort, keyName, ct);
         }
         catch (HttpRequestException ex)
         {
@@ -407,31 +445,63 @@ public class SoundTouchAdapter : IDeviceAdapter
         }
     }
 
-    public async Task<IReadOnlyList<Device>> DiscoverDevicesAsync(CancellationToken ct = default)
+    /// <inheritdoc />
+    public async Task<PingResult> PingAsync(string deviceId, CancellationToken ct = default)
     {
-        _logger.LogInformation("DiscoverDevicesAsync called for vendor {Vendor} (scanning network)", VendorId);
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/playNotification");
+
+        _logger.LogInformation("Pinging device {DeviceId} via playNotification", deviceId);
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(_options.PingTimeoutSeconds));
+
+            await GetAsync(url, timeoutCts.Token);
+            sw.Stop();
+
+            _logger.LogInformation("Device {DeviceId} responded in {LatencyMs}ms", deviceId, sw.ElapsedMilliseconds);
+            return new PingResult(true, sw.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            _logger.LogWarning(ex, "Ping failed for device {DeviceId}", deviceId);
+            return new PingResult(false, sw.ElapsedMilliseconds);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Device>> DiscoverDevicesAsync(string? networkMask = null, CancellationToken ct = default)
+    {
+        _logger.LogInformation("DiscoverDevicesAsync called for vendor {Vendor} with networkMask: {NetworkMask}", VendorId, networkMask ?? "auto-detect");
 
         var devices = new List<Device>();
+        IEnumerable<string> ipRange;
 
-        // Get local IP to determine subnet
-        var localIp = GetLocalIpAddress();
-        if (localIp == null)
+        if (!string.IsNullOrEmpty(networkMask))
         {
-            _logger.LogWarning("Could not determine local IP address for discovery");
-            return devices;
+            ipRange = ParseNetworkMask(networkMask);
+        }
+        else
+        {
+            // Get local IP to determine subnet
+            var localIp = GetLocalIpAddress();
+            if (localIp == null)
+            {
+                _logger.LogWarning("Could not determine local IP address for discovery");
+                return devices;
+            }
+
+            var subnet = GetSubnet(localIp);
+            _logger.LogInformation("Scanning subnet {Subnet} for SoundTouch devices", subnet);
+            ipRange = Enumerable.Range(1, 254).Select(i => $"{subnet}.{i}");
         }
 
-        var subnet = GetSubnet(localIp);
-        _logger.LogInformation("Scanning subnet {Subnet} for SoundTouch devices", subnet);
-
-        // Scan a reasonable range (e.g., .1 to .254)
-        var tasks = new List<Task<Device?>>();
-        for (int i = 1; i <= 254; i++)
-        {
-            var ip = $"{subnet}.{i}";
-            tasks.Add(TryDiscoverDeviceAtIpAsync(ip, ct));
-        }
-
+        // Scan all IPs in range
+        var tasks = ipRange.Select(ip => TryDiscoverDeviceAtIpAsync(ip, ct)).ToList();
         var results = await Task.WhenAll(tasks);
         devices.AddRange(results.Where(d => d != null)!);
 
@@ -442,6 +512,39 @@ public class SoundTouchAdapter : IDeviceAdapter
     #endregion
 
     #region Discovery Helpers
+
+    private static IEnumerable<string> ParseNetworkMask(string networkMask)
+    {
+        // Parse CIDR notation (e.g., "192.168.1.0/24")
+        var parts = networkMask.Split('/');
+        if (parts.Length != 2 || !int.TryParse(parts[1], out var cidr) || cidr < 0 || cidr > 32)
+        {
+            throw new ArgumentException($"Invalid network mask format: {networkMask}", nameof(networkMask));
+        }
+
+        var ipParts = parts[0].Split('.');
+        if (ipParts.Length != 4)
+        {
+            throw new ArgumentException($"Invalid IP address in network mask: {networkMask}", nameof(networkMask));
+        }
+
+        var baseIp = ipParts.Select(p => byte.Parse(p)).ToArray();
+        var hostBits = 32 - cidr;
+        var hostCount = (int)Math.Pow(2, hostBits);
+
+        // Convert base IP to uint32
+        var baseIpNum = ((uint)baseIp[0] << 24) | ((uint)baseIp[1] << 16) | ((uint)baseIp[2] << 8) | baseIp[3];
+
+        // Generate all IPs in range (skip network and broadcast addresses for /24 and smaller)
+        var start = cidr >= 24 ? 1 : 0;
+        var end = cidr >= 24 ? hostCount - 1 : hostCount;
+
+        for (int i = start; i < end; i++)
+        {
+            var ipNum = baseIpNum + (uint)i;
+            yield return $"{(ipNum >> 24) & 0xFF}.{(ipNum >> 16) & 0xFF}.{(ipNum >> 8) & 0xFF}.{ipNum & 0xFF}";
+        }
+    }
 
     private async Task<Device?> TryDiscoverDeviceAtIpAsync(string ip, CancellationToken ct)
     {
@@ -462,17 +565,17 @@ public class SoundTouchAdapter : IDeviceAdapter
 
                 _logger.LogInformation("Discovered SoundTouch device at {Ip}: {Name}", ip, name);
 
+                // Query capabilities for this device
+                var capabilities = await GetCapabilitiesAsync(ip, cts.Token);
+
                 return new Device
                 {
                     Id = deviceIdAttr,
                     Vendor = VendorId,
                     Name = name,
                     IpAddress = ip,
-                    Port = DefaultPort,
-                    IsOnline = true,
-                    PowerState = false,
-                    Volume = 0,
-                    LastSeen = DateTime.UtcNow
+                    Capabilities = new HashSet<string>(capabilities),
+                    DateTimeAdded = DateTime.UtcNow
                 };
             }
         }
