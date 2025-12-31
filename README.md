@@ -8,6 +8,7 @@ SoundHub is a local-network control application for smart audio devices, startin
 - **Device Discovery**: Automatic network scanning to find compatible devices
 - **Ping Verification**: Audible connectivity test for devices
 - **Device Control**: Power, volume, presets, and Bluetooth pairing
+- **Volume Control**: Adjustable volume slider with mute toggle on device details page
 - **Web Interface**: Modern landing page with device list, settings, and device control
 - **Internationalization**: Runtime language switching (English and Polish)
 - **Vendor Abstraction**: Extensible device adapter pattern for supporting multiple vendors
@@ -30,7 +31,7 @@ SoundHub is a local-network control application for smart audio devices, startin
 | `/` | Landing page – displays list of configured devices |
 | `/settings` | Settings page – language selection, navigation to device config |
 | `/settings/devices` | Device configuration page – manage configured devices |
-| `/devices/:id` | Device details page – view and control a specific device (power toggle) |
+| `/devices/:id` | Device details page – view and control a specific device (power toggle, volume slider, mute) |
 
 ## 🏗️ Architecture
 

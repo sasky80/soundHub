@@ -136,4 +136,33 @@ describe('DeviceService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });
+
+  it('should get volume', () => {
+    const mockVolume = { targetVolume: 50, actualVolume: 50, isMuted: false };
+
+    service.getVolume('1').subscribe((result) => {
+      expect(result).toEqual(mockVolume);
+    });
+
+    const req = httpMock.expectOne('/api/devices/1/volume');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockVolume);
+  });
+
+  it('should set volume', () => {
+    service.setVolume('1', 75).subscribe();
+
+    const req = httpMock.expectOne('/api/devices/1/volume');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ level: 75 });
+    req.flush(null);
+  });
+
+  it('should toggle mute', () => {
+    service.toggleMute('1').subscribe();
+
+    const req = httpMock.expectOne('/api/devices/1/mute');
+    expect(req.request.method).toBe('POST');
+    req.flush(null);
+  });
 });

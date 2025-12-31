@@ -365,7 +365,7 @@ flowchart TB
 | `/` | LandingComponent | Displays list of configured devices with navigation to settings and device details |
 | `/settings` | SettingsComponent | Language selection (English/Polish) and navigation to device configuration |
 | `/settings/devices` | DeviceConfigComponent | Lists configured devices with navigation to device details |
-| `/devices/:id` | DeviceDetailsComponent | Device control page with power on/off toggle |
+| `/devices/:id` | DeviceDetailsComponent | Device control page with power toggle, volume slider, and mute button |
 
 ## Internationalization (i18n)
 

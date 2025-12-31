@@ -91,40 +91,40 @@
 
 ## Phase 5: Testing
 
-- [ ] 5.1 Add unit tests for `DeviceDetailsComponent` volume controls
+- [x] 5.1 Add unit tests for `DeviceDetailsComponent` volume controls
   - Test slider disabled when device off
   - Test mute button state reflects `isMuted`
   - Test volume change calls service
   - Verification: Unit tests pass
 
-- [ ] 5.2 Add unit tests for new `DeviceService` methods
+- [x] 5.2 Add unit tests for new `DeviceService` methods
   - Test `getVolume` makes correct HTTP call
   - Test `setVolume` sends correct payload
   - Test `toggleMute` calls correct endpoint
   - Verification: Unit tests pass
 
-- [ ] 5.3 Add E2E test for volume control flow
+- [x] 5.3 Add E2E test for volume control flow
   - Navigate to device details
   - Verify slider present and interactive
   - Verification: E2E test passes
 
 ## Phase 6: Documentation
 
-- [ ] 6.1 Update API reference documentation
+- [x] 6.1 Update API reference documentation
   - Add `POST /api/devices/{id}/mute` endpoint documentation
   - Document request/response format and error codes
   - Verification: `docs/api-reference.md` includes mute endpoint
 
-- [ ] 6.2 Update architecture documentation
+- [x] 6.2 Update architecture documentation
   - Add volume slider to frontend library architecture diagram
   - Update Web UI Routes table if needed
   - Verification: `docs/architecture.md` reflects volume control feature
 
-- [ ] 6.3 Update README features list
+- [x] 6.3 Update README features list
   - Add volume control to Features section
   - Verification: `README.md` mentions volume control capability
 
-- [ ] 6.4 Update device configuration guide
+- [x] 6.4 Update device configuration guide
   - Document volume control usage in device details page
   - Note disabled state when device is off
   - Verification: `docs/device-configuration-guide.md` covers volume control

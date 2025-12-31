@@ -98,6 +98,37 @@ The ping feature helps verify that a device is reachable and responding.
 
 **Note:** Not all devices support audible ping. The button only appears for devices with the "ping" capability.
 
+## Volume Control
+
+The device details page includes controls for adjusting volume and muting the device.
+
+### Volume Slider
+
+1. Navigate to a device's details page by clicking on it from the landing page
+2. The **Volume** slider shows the current volume level (0-100)
+3. Drag the slider to adjust the volume
+4. The volume value updates as you move the slider
+5. Volume changes are sent to the device with a 300ms debounce to prevent rapid API calls
+
+### Mute Toggle
+
+1. Click the **Mute** button to toggle mute on/off
+2. When muted, the button displays "Unmute" with a red highlight
+3. When unmuted, the button displays "Mute"
+4. Click again to restore the previous volume
+
+### Volume Controls Disabled State
+
+**Important:** Volume controls are disabled when the device is powered off.
+
+- The slider becomes unresponsive and appears dimmed
+- The mute button becomes unclickable
+- A tooltip indicates "Volume control unavailable when device is off"
+
+To enable volume controls, turn the device on using the **Power** button first.
+
+**Note:** Volume control is only available for devices with the "volume" capability.
+
 ## Device Capabilities
 
 Capabilities define what features are available for each device:

@@ -375,6 +375,28 @@ Content-Type: application/json
 **Response**
 - `204 No Content` - Successfully set
 
+### Toggle Mute
+
+Toggles the mute state of a device. If muted, unmutes; if unmuted, mutes.
+
+```http
+POST /api/devices/{id}/mute
+```
+
+**Request Body**
+- No body required
+
+**Response**
+- `204 No Content` - Successfully toggled
+
+**Error Responses**
+- `404 Not Found` - Device not found
+- `501 Not Implemented` - Device vendor does not support mute
+
+**Notes**
+- For SoundTouch devices, sends a MUTE key press via the `/key` endpoint
+- Mute state can be retrieved via `GET /api/devices/{id}/volume` (check `isMuted` field)
+
 ---
 
 ## Presets
