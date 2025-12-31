@@ -30,13 +30,14 @@ The system SHALL provide a device configuration page that lists configured devic
 ## ADDED Requirements
 
 ### Requirement: Ping device from configuration page
-The system SHALL allow users to verify device connectivity via the ping button.
+The system SHALL allow users to verify device connectivity via the ping button, triggering an audible beep on the device.
 
 #### Scenario: Ping device successfully
 - **GIVEN** the user is on the device configuration page
 - **AND** a device has the "ping" capability
 - **WHEN** the user clicks the ping button
 - **THEN** the system sends a ping request to the backend
+- **AND** the device emits a double beep sound
 - **AND** displays a success indicator when the device is reachable
 
 #### Scenario: Ping device fails
@@ -129,7 +130,12 @@ The system SHALL allow users to launch device discovery process.
 - **GIVEN** device discovery has completed
 - **WHEN** new devices are found
 - **THEN** the newly discovered devices appear in the device list
-- **AND** newly discovered devices are highlighted in the UI
+- **AND** devices added within the last 5 minutes are highlighted in the UI
+
+#### Scenario: Highlight recently added devices
+- **GIVEN** a device has a `DateTimeAdded` within the last 5 minutes
+- **WHEN** the device list is displayed
+- **THEN** the device is visually highlighted as recently added
 
 #### Scenario: Discovery does not overwrite existing devices
 - **GIVEN** devices are already configured

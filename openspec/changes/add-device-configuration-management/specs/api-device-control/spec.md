@@ -3,13 +3,15 @@
 ## ADDED Requirements
 
 ### Requirement: Ping device endpoint
-The system SHALL expose an endpoint to verify device connectivity.
+The system SHALL expose an endpoint to verify device connectivity with audible feedback.
 
 #### Scenario: Device is reachable
 - **GIVEN** a configured device exists with id `id`
-- **AND** the device is responding on the network
+- **AND** the device has the "ping" capability
 - **WHEN** a client sends `GET /api/devices/{id}/ping`
-- **THEN** the system returns `{ "reachable": true, "latencyMs": <number> }`
+- **THEN** the system invokes `/playNotification` on the device
+- **AND** the device emits a double beep sound
+- **AND** the system returns `{ "reachable": true, "latencyMs": <number> }`
 
 #### Scenario: Device is not reachable
 - **GIVEN** a configured device exists with id `id`
@@ -77,10 +79,14 @@ The system SHALL expose an endpoint to create a new device configuration.
 - **WHEN** a client sends `POST /api/devices`
 - **THEN** the system returns a 400 response with validation error
 
-#### Scenario: Create SoundTouch device with default capabilities
+#### Scenario: Create SoundTouch device determines capabilities dynamically
 - **GIVEN** a device payload with vendor `bose-soundtouch` and no capabilities specified
 - **WHEN** a client sends `POST /api/devices`
-- **THEN** the device is created with default capabilities `["power", "volume", "presets", "bluetoothPairing", "ping"]`
+- **THEN** the device is created with base capabilities `["power", "volume"]`
+- **AND** the system queries the device's `/supportedUrls` endpoint
+- **AND** adds "presets" if `/presets` is supported
+- **AND** adds "bluetoothPairing" if `/enterBluetoothPairing` is supported
+- **AND** adds "ping" if `/playNotification` is supported
 
 ### Requirement: Update device endpoint
 The system SHALL expose an endpoint to update an existing device configuration.

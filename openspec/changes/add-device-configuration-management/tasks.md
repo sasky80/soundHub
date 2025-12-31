@@ -2,18 +2,23 @@
 
 ## 1. Backend - Data Model Updates
 - [ ] 1.1 Add `NetworkMask` property to configuration model
-- [ ] 1.2 Add `IsNewlyDiscovered` property to Device entity
+- [ ] 1.2 Add `DateTimeAdded` property to Device entity (set on creation, never changes)
 - [ ] 1.3 Update `JsonDeviceRepository` to read/write NetworkMask from devices.json root
-- [ ] 1.4 Add `DeviceType` property to Device entity (optional descriptive field)
+- [ ] 1.4 Remove from Device entity: `Port`, `Volume`, `IsOnline`, `PowerState`, `LastSeen`
+- [ ] 1.5 Move port constant to adapter (SoundTouch = 8090)
 
 ## 2. Backend - IDeviceAdapter Updates
 - [ ] 2.1 Add `PingAsync(string deviceId)` method to `IDeviceAdapter` interface
 - [ ] 2.2 Add `DiscoverDevicesAsync(string networkMask)` method signature with mask parameter
 
 ## 3. Backend - SoundTouchAdapter Implementation
-- [ ] 3.1 Implement `PingAsync` using HTTP GET to `/info` with timeout
+- [ ] 3.1 Implement `PingAsync` using HTTP GET to `/playNotification` (audible beep)
 - [ ] 3.2 Implement `DiscoverDevicesAsync` to scan IP range and probe port 8090
-- [ ] 3.3 Define default capabilities constant: `["power", "volume", "presets", "bluetoothPairing", "ping"]`
+- [ ] 3.3 Define base capabilities constant: `["power", "volume"]`
+- [ ] 3.4 Query `/supportedUrls` to determine additional capabilities:
+  - `/presets` → add "presets" capability
+  - `/enterBluetoothPairing` → add "bluetoothPairing" capability
+  - `/playNotification` → add "ping" capability
 
 ## 4. Backend - API Endpoints
 - [ ] 4.1 Add `GET /api/devices/{id}/ping` endpoint
@@ -53,7 +58,7 @@
 - [ ] 7.10 Implement delete device with confirmation dialog
 - [ ] 7.11 Create network mask input field
 - [ ] 7.12 Create discover devices button with loading state
-- [ ] 7.13 Implement newly discovered device highlighting
+- [ ] 7.13 Highlight devices where `DateTimeAdded` is within last 5 minutes
 - [ ] 7.14 Add route for device configuration page
 - [ ] 7.15 Add navigation from settings page to device configuration
 
@@ -76,3 +81,5 @@
 - [ ] 10.1 Update API documentation with new endpoints
 - [ ] 10.2 Update devices.json schema documentation
 - [ ] 10.3 Add user guide for device configuration
+- [ ] 10.4 Update README.md with device configuration feature
+- [ ] 10.5 Update docs/architecture.md with device management components

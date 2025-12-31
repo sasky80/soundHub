@@ -24,8 +24,11 @@ Users need a comprehensive UI and API for managing device configuration. Current
 
 ### Data Model
 - Add `NetworkMask` attribute to devices.json root for discovery configuration
-- Add "ping" and "bluetoothPairing" capabilities to SoundTouch device definitions
-- Default capabilities for new SoundTouch devices: `["power", "volume", "presets", "bluetoothPairing", "ping"]`
+- Base capabilities for all devices: `["power", "volume"]`
+- SoundTouch additional capabilities determined dynamically via `/supportedUrls`:
+  - `/presets` → "presets"
+  - `/enterBluetoothPairing` → "bluetoothPairing"
+  - `/playNotification` → "ping"
 
 ### Infrastructure
 - Implement ping operation in device adapters
