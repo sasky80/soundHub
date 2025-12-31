@@ -310,6 +310,28 @@ public class DeviceService
         await adapter.SetVolumeAsync(id, level, ct);
     }
 
+    /// <summary>
+    /// Toggles the mute state of a device.
+    /// </summary>
+    /// <param name="id">The device ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async Task MuteAsync(string id, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        await adapter.MuteAsync(id, ct);
+    }
+
     public async Task EnterPairingModeAsync(string id, CancellationToken ct = default)
     {
         var device = await _repository.GetDeviceAsync(id, ct);

@@ -47,7 +47,7 @@ public class SoundTouchAdapterDiscoveryTests
     }
 
     [Fact]
-    public async Task DiscoverDevicesAsync_FoundDevice_ReturnsDeviceWithCapabilities()
+    public void DiscoverDevicesAsync_FoundDevice_ReturnsDeviceWithCapabilities()
     {
         // Arrange - mock a device response
         const string infoResponse = """

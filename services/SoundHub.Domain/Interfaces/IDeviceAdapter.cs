@@ -83,6 +83,13 @@ public interface IDeviceAdapter
     Task SetVolumeAsync(string deviceId, int level, CancellationToken ct = default);
 
     /// <summary>
+    /// Toggles the mute state of a device.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task MuteAsync(string deviceId, CancellationToken ct = default);
+
+    /// <summary>
     /// Puts a device into Bluetooth pairing mode.
     /// </summary>
     Task EnterPairingModeAsync(string deviceId, CancellationToken ct = default);

@@ -55,7 +55,7 @@ public class NetworkMaskValidationTests
     [InlineData("", "Empty string")]
     [InlineData("   ", "Whitespace only")]
     [InlineData("not-a-cidr", "Invalid format")]
-    public async Task SetNetworkMaskAsync_InvalidCidr_ThrowsArgumentException(string networkMask, string testCase)
+    public async Task SetNetworkMaskAsync_InvalidCidr_ThrowsArgumentException(string networkMask, string _)
     {
         // Act & Assert
         var ex = await Assert.ThrowsAsync<ArgumentException>(

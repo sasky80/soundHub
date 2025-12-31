@@ -349,6 +349,39 @@ public class DevicesController : ControllerBase
     }
 
     /// <summary>
+    /// Toggles the mute state of a device.
+    /// </summary>
+    [HttpPost("{id}/mute")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> ToggleMute(string id, CancellationToken ct)
+    {
+        try
+        {
+            await _deviceService.MuteAsync(id, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error toggling mute for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to toggle mute" });
+        }
+    }
+
+    /// <summary>
     /// Enters Bluetooth pairing mode for a device.
     /// </summary>
     [HttpPost("{id}/bluetooth/pairing")]

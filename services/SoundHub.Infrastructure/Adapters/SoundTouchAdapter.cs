@@ -338,6 +338,24 @@ public class SoundTouchAdapter : IDeviceAdapter
         }
     }
 
+    /// <inheritdoc />
+    public async Task MuteAsync(string deviceId, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+
+        _logger.LogInformation("Toggling mute for device {DeviceId}", deviceId);
+
+        try
+        {
+            await SendKeyPressAsync(device.IpAddress, DefaultPort, "MUTE", ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to toggle mute for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
     public async Task EnterPairingModeAsync(string deviceId, CancellationToken ct = default)
     {
         var device = await GetDeviceOrThrowAsync(deviceId, ct);

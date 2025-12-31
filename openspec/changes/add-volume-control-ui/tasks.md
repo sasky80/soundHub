@@ -2,15 +2,15 @@
 
 ## Phase 1: Backend - Mute Endpoint
 
-- [ ] 1.1 Add `MuteAsync` method to `IDeviceAdapter` interface
+- [x] 1.1 Add `MuteAsync` method to `IDeviceAdapter` interface
   - Signature: `Task MuteAsync(string deviceId, CancellationToken ct = default)`
   - Verification: Interface compiles
 
-- [ ] 1.2 Implement `MuteAsync` in `SoundTouchAdapter`
+- [x] 1.2 Implement `MuteAsync` in `SoundTouchAdapter`
   - Send `POST /key` with `<key state="press" sender="Gabbo">MUTE</key>` and release
   - Verification: Unit test passes
 
-- [ ] 1.3 Add `POST /api/devices/{id}/mute` endpoint to `DevicesController`
+- [x] 1.3 Add `POST /api/devices/{id}/mute` endpoint to `DevicesController`
   - Returns 200 on success, 404 if device not found, 501 if not supported
   - Verification: Endpoint accessible via Swagger
 
