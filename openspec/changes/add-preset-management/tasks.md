@@ -1,9 +1,9 @@
 ## 1. Backend API Implementation
-- [ ] 1.1 Create `POST /api/devices/{id}/presets` endpoint for storing/updating presets
-- [ ] 1.2 Create `DELETE /api/devices/{id}/presets/{presetId}` endpoint for removing presets
-- [ ] 1.3 Extend `GET /api/devices/{id}/presets` response to include icon URLs and full preset data
-- [ ] 1.4 Implement SoundTouch adapter methods for `/storePreset` and `/removePreset` WebServices API
-- [ ] 1.5 Add preset model/DTO with fields: id, name, iconUrl, location, type, source (SoundTouch-specific)
+- [x] 1.1 Create `POST /api/devices/{id}/presets` endpoint for storing/updating presets
+- [x] 1.2 Create `DELETE /api/devices/{id}/presets/{presetId}` endpoint for removing presets
+- [x] 1.3 Extend `GET /api/devices/{id}/presets` response to include icon URLs and full preset data
+- [x] 1.4 Implement SoundTouch adapter methods for `/storePreset` and `/removePreset` WebServices API
+- [x] 1.5 Add preset model/DTO with fields: id, name, iconUrl, location, type, source (SoundTouch-specific)
 
 ## 2. Frontend - Preset List Component
 - [ ] 2.1 Create preset list component displaying presets below volume controls

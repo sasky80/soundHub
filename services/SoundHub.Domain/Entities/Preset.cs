@@ -5,10 +5,79 @@ namespace SoundHub.Domain.Entities;
 /// </summary>
 public class Preset
 {
-    public required string Id { get; init; }
+    /// <summary>
+    /// Preset slot ID (1-6 for SoundTouch devices).
+    /// </summary>
+    public required int Id { get; init; }
+
+    /// <summary>
+    /// The device ID this preset belongs to.
+    /// </summary>
     public required string DeviceId { get; init; }
+
+    /// <summary>
+    /// User-friendly name of the preset.
+    /// </summary>
     public required string Name { get; set; }
-    public required string Url { get; set; }
-    public required string Type { get; set; } // "InternetRadio", "Playlist", etc.
-    public int? Position { get; set; } // Preset button number (1-6 for SoundTouch)
+
+    /// <summary>
+    /// URL or location of the content (e.g., stream URL, station path).
+    /// </summary>
+    public required string Location { get; set; }
+
+    /// <summary>
+    /// URL to the preset icon/artwork (containerArt from SoundTouch).
+    /// </summary>
+    public string? IconUrl { get; set; }
+
+    /// <summary>
+    /// Content type (e.g., "stationurl" for SoundTouch).
+    /// </summary>
+    public string Type { get; set; } = "stationurl";
+
+    /// <summary>
+    /// Source type (e.g., "LOCAL_INTERNET_RADIO", "TUNEIN" for SoundTouch).
+    /// </summary>
+    public string Source { get; set; } = "LOCAL_INTERNET_RADIO";
+
+    /// <summary>
+    /// Whether this preset can be stored on the device.
+    /// </summary>
+    public bool IsPresetable { get; set; } = true;
+}
+
+/// <summary>
+/// Request model for creating or updating a preset.
+/// </summary>
+public class StorePresetRequest
+{
+    /// <summary>
+    /// Preset slot ID (1-6 for SoundTouch devices).
+    /// </summary>
+    public required int Id { get; init; }
+
+    /// <summary>
+    /// User-friendly name of the preset.
+    /// </summary>
+    public required string Name { get; init; }
+
+    /// <summary>
+    /// URL or location of the content (e.g., stream URL, station path).
+    /// </summary>
+    public required string Location { get; init; }
+
+    /// <summary>
+    /// URL to the preset icon/artwork (optional).
+    /// </summary>
+    public string? IconUrl { get; init; }
+
+    /// <summary>
+    /// Content type (default: "stationurl" for SoundTouch).
+    /// </summary>
+    public string? Type { get; init; }
+
+    /// <summary>
+    /// Source type (default: "LOCAL_INTERNET_RADIO" for SoundTouch).
+    /// </summary>
+    public string? Source { get; init; }
 }

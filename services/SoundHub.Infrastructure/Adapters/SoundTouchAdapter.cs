@@ -393,22 +393,27 @@ public class SoundTouchAdapter : IDeviceAdapter
             {
                 foreach (var presetElement in presetElements)
                 {
-                    var id = presetElement.Attribute("id")?.Value;
-                    if (string.IsNullOrEmpty(id)) continue;
+                    var idStr = presetElement.Attribute("id")?.Value;
+                    if (string.IsNullOrEmpty(idStr) || !int.TryParse(idStr, out var id)) continue;
 
                     var contentItem = presetElement.Element("ContentItem");
                     var itemName = contentItem?.Element("itemName")?.Value ?? "Unknown";
-                    var source = contentItem?.Attribute("source")?.Value ?? "Unknown";
+                    var source = contentItem?.Attribute("source")?.Value ?? "LOCAL_INTERNET_RADIO";
                     var location = contentItem?.Attribute("location")?.Value ?? "";
+                    var type = contentItem?.Attribute("type")?.Value ?? "stationurl";
+                    var containerArt = contentItem?.Element("containerArt")?.Value;
+                    var isPresetable = contentItem?.Attribute("isPresetable")?.Value?.ToLowerInvariant() == "true";
 
                     presets.Add(new Preset
                     {
                         Id = id,
                         DeviceId = deviceId,
                         Name = itemName,
-                        Url = location,
-                        Type = source,
-                        Position = int.TryParse(id, out var pos) ? pos : null
+                        Location = location,
+                        IconUrl = containerArt,
+                        Type = type,
+                        Source = source,
+                        IsPresetable = isPresetable
                     });
                 }
             }
@@ -422,20 +427,105 @@ public class SoundTouchAdapter : IDeviceAdapter
         }
     }
 
+    /// <inheritdoc />
+    public async Task<Preset> StorePresetAsync(string deviceId, Preset preset, CancellationToken ct = default)
+    {
+        if (preset.Id < 1 || preset.Id > 6)
+        {
+            throw new ArgumentOutOfRangeException(nameof(preset), "Preset ID must be between 1 and 6");
+        }
+
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/storePreset");
+
+        _logger.LogInformation("Storing preset {PresetId} on device {DeviceId}", preset.Id, deviceId);
+
+        try
+        {
+            // Build the XML for /storePreset based on SoundTouch WebServices API
+            var containerArtElement = !string.IsNullOrEmpty(preset.IconUrl)
+                ? $"<containerArt>{System.Security.SecurityElement.Escape(preset.IconUrl)}</containerArt>"
+                : "";
+
+            var xml = $@"<preset id=""{preset.Id}"">
+  <ContentItem source=""{System.Security.SecurityElement.Escape(preset.Source)}"" type=""{System.Security.SecurityElement.Escape(preset.Type)}"" location=""{System.Security.SecurityElement.Escape(preset.Location)}"" isPresetable=""true"">
+    <itemName>{System.Security.SecurityElement.Escape(preset.Name)}</itemName>
+    {containerArtElement}
+  </ContentItem>
+</preset>";
+
+            await PostXmlAsync(url, xml, ct);
+
+            // Return the preset with DeviceId set
+            return new Preset
+            {
+                Id = preset.Id,
+                DeviceId = deviceId,
+                Name = preset.Name,
+                Location = preset.Location,
+                IconUrl = preset.IconUrl,
+                Type = preset.Type,
+                Source = preset.Source,
+                IsPresetable = true
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to store preset for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> RemovePresetAsync(string deviceId, int presetId, CancellationToken ct = default)
+    {
+        if (presetId < 1 || presetId > 6)
+        {
+            throw new ArgumentOutOfRangeException(nameof(presetId), "Preset ID must be between 1 and 6");
+        }
+
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+        var url = GetDeviceUrl(device.IpAddress, DefaultPort, "/removePreset");
+
+        _logger.LogInformation("Removing preset {PresetId} from device {DeviceId}", presetId, deviceId);
+
+        try
+        {
+            // First check if the preset exists
+            var presets = await ListPresetsAsync(deviceId, ct);
+            var existingPreset = presets.FirstOrDefault(p => p.Id == presetId);
+            if (existingPreset == null)
+            {
+                return false; // Preset doesn't exist
+            }
+
+            // Build the XML for /removePreset based on SoundTouch WebServices API
+            var xml = $@"<preset id=""{presetId}""></preset>";
+
+            await PostXmlAsync(url, xml, ct);
+            return true;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to remove preset for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    [Obsolete("Use StorePresetAsync instead")]
     public Task<Preset> ConfigurePresetAsync(string deviceId, string name, string url, string type, int? position = null, CancellationToken ct = default)
     {
         // SoundTouch doesn't support configuring presets via API in the same way
         // Presets are typically set through the device or app
-        _logger.LogWarning("ConfigurePresetAsync is not fully supported for SoundTouch devices");
+        _logger.LogWarning("ConfigurePresetAsync is deprecated, use StorePresetAsync instead");
 
         var preset = new Preset
         {
-            Id = position?.ToString() ?? Guid.NewGuid().ToString(),
+            Id = position ?? 1,
             DeviceId = deviceId,
             Name = name,
-            Url = url,
-            Type = type,
-            Position = position
+            Location = url,
+            Type = type
         };
         return Task.FromResult(preset);
     }

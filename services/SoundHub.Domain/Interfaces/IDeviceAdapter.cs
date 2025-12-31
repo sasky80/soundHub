@@ -100,8 +100,27 @@ public interface IDeviceAdapter
     Task<IReadOnlyList<Preset>> ListPresetsAsync(string deviceId, CancellationToken ct = default);
 
     /// <summary>
+    /// Stores or updates a preset on a device.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="preset">The preset to store.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The stored preset with any server-assigned values.</returns>
+    Task<Preset> StorePresetAsync(string deviceId, Preset preset, CancellationToken ct = default);
+
+    /// <summary>
+    /// Removes a preset from a device.
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="presetId">The preset slot ID (1-6 for SoundTouch).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>True if the preset was removed, false if it didn't exist.</returns>
+    Task<bool> RemovePresetAsync(string deviceId, int presetId, CancellationToken ct = default);
+
+    /// <summary>
     /// Configures a new preset on a device.
     /// </summary>
+    [Obsolete("Use StorePresetAsync instead")]
     Task<Preset> ConfigurePresetAsync(string deviceId, string name, string url, string type, int? position = null, CancellationToken ct = default);
 
     /// <summary>

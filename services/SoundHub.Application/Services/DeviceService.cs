@@ -366,6 +366,40 @@ public class DeviceService
         return await adapter.ListPresetsAsync(id, ct);
     }
 
+    public async Task<Preset> StorePresetAsync(string id, Preset preset, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        return await adapter.StorePresetAsync(id, preset, ct);
+    }
+
+    public async Task<bool> RemovePresetAsync(string id, int presetId, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        return await adapter.RemovePresetAsync(id, presetId, ct);
+    }
+
     public async Task PlayPresetAsync(string id, string presetId, CancellationToken ct = default)
     {
         var device = await _repository.GetDeviceAsync(id, ct);

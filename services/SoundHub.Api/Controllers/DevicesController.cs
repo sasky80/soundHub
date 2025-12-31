@@ -484,6 +484,118 @@ public class DevicesController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to play preset" });
         }
     }
+
+    /// <summary>
+    /// Stores (adds/updates) a preset on a device.
+    /// </summary>
+    [HttpPost("{id}/presets")]
+    [ProducesResponseType(typeof(Preset), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> StorePreset(string id, [FromBody] StorePresetRequest request, CancellationToken ct)
+    {
+        if (request.Id < 1 || request.Id > 6)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Preset ID must be between 1 and 6" });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Preset name is required" });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Location))
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Preset location URL is required" });
+        }
+
+        try
+        {
+            var preset = new Preset
+            {
+                Id = request.Id,
+                DeviceId = id,
+                Name = request.Name,
+                Location = request.Location,
+                IconUrl = request.IconUrl,
+                Type = request.Type ?? "stationurl",
+                Source = request.Source ?? "LOCAL_INTERNET_RADIO",
+                IsPresetable = true
+            };
+
+            var storedPreset = await _deviceService.StorePresetAsync(id, preset, ct);
+            return CreatedAtAction(nameof(GetPresets), new { id }, storedPreset);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = ex.Message });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error storing preset for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to store preset" });
+        }
+    }
+
+    /// <summary>
+    /// Deletes a preset from a device.
+    /// </summary>
+    [HttpDelete("{id}/presets/{presetId:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> DeletePreset(string id, int presetId, CancellationToken ct)
+    {
+        if (presetId < 1 || presetId > 6)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Preset ID must be between 1 and 6" });
+        }
+
+        try
+        {
+            var result = await _deviceService.RemovePresetAsync(id, presetId, ct);
+            if (!result)
+            {
+                return NotFound(new { code = "PRESET_NOT_FOUND", message = $"Preset with ID {presetId} not found on device {id}" });
+            }
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = ex.Message });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting preset for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to delete preset" });
+        }
+    }
 }
 
 public record AddDeviceRequest(string Name, string IpAddress, string Vendor);

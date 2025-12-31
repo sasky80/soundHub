@@ -324,18 +324,17 @@ public class SoundTouchAdapterTests
         // Assert
         Assert.Equal(3, result.Count);
 
-        Assert.Equal("1", result[0].Id);
+        Assert.Equal(1, result[0].Id);
         Assert.Equal("BBC Radio 1", result[0].Name);
-        Assert.Equal("TUNEIN", result[0].Type);
-        Assert.Equal(1, result[0].Position);
+        Assert.Equal("TUNEIN", result[0].Source);
 
-        Assert.Equal("2", result[1].Id);
+        Assert.Equal(2, result[1].Id);
         Assert.Equal("My Playlist", result[1].Name);
-        Assert.Equal("SPOTIFY", result[1].Type);
+        Assert.Equal("SPOTIFY", result[1].Source);
 
-        Assert.Equal("3", result[2].Id);
+        Assert.Equal(3, result[2].Id);
         Assert.Equal("Chill Vibes", result[2].Name);
-        Assert.Equal("AMAZON", result[2].Type);
+        Assert.Equal("AMAZON", result[2].Source);
     }
 
     [Fact]
@@ -384,8 +383,8 @@ public class SoundTouchAdapterTests
 
         // Assert
         Assert.Equal(2, result.Count);
-        Assert.Equal("1", result[0].Id);
-        Assert.Equal("4", result[1].Id);
+        Assert.Equal(1, result[0].Id);
+        Assert.Equal(4, result[1].Id);
     }
 
     #endregion
