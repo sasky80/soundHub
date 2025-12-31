@@ -130,7 +130,7 @@ public class SoundTouchAdapter : IDeviceAdapter
         
         // Scan local network by probing common IP ranges
         // For SoundTouch, we check http://<ip>:8090/info or http://<ip>:8090/name
-        var localIp = GetLocalIpAddress();
+        var localIp = "192.168.1.1";
         if (localIp == null)
         {
             _logger.LogWarning("Could not determine local IP address for discovery");

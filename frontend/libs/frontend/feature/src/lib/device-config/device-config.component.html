@@ -1,0 +1,25 @@
+<div class="device-config-page">
+  <header class="page-header">
+    <a routerLink="/settings" class="back-link">← {{ 'settings.back' | translate }}</a>
+    <h1>{{ 'deviceConfig.title' | translate }}</h1>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ 'common.loading' | translate }}</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else if (devices().length === 0) {
+    <div class="empty-state">{{ 'deviceConfig.noDevices' | translate }}</div>
+  } @else {
+    <ul class="device-list">
+      @for (device of devices(); track device.id) {
+        <li class="device-item">
+          <a [routerLink]="['/devices', device.id]" class="device-link">
+            <span class="device-name">{{ device.name }}</span>
+            <span class="device-vendor">{{ device.vendor }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</div>

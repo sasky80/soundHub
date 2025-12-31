@@ -120,6 +120,36 @@ public class DevicesController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to get device status" });
         }
     }
+
+    /// <summary>
+    /// Sets the power state of a device.
+    /// </summary>
+    [HttpPost("{id}/power")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    public async Task<IActionResult> SetPower(string id, [FromBody] SetPowerRequest request, CancellationToken ct)
+    {
+        try
+        {
+            await _deviceService.SetPowerAsync(id, request.On, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting power state for {DeviceId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to set power state" });
+        }
+    }
 }
 
 public record AddDeviceRequest(string Name, string IpAddress, string Vendor, int? Port);
+public record SetPowerRequest(bool On);

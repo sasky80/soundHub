@@ -6,11 +6,22 @@ SoundHub is a local-network control application for smart audio devices, startin
 
 - **Device Management**: Add, remove, and discover smart audio devices on your local network
 - **Device Control**: Power, volume, presets, and Bluetooth pairing
+- **Web Interface**: Modern landing page with device list, settings, and device control
+- **Internationalization**: Runtime language switching (English and Polish)
 - **Vendor Abstraction**: Extensible device adapter pattern for supporting multiple vendors
 - **Secure Secrets**: AES-256-CBC encrypted secrets storage
 - **File-Based Configuration**: Simple devices.json for device metadata
 - **REST API**: Well-documented OpenAPI/Swagger endpoints
 - **Containerized**: Docker-ready for easy deployment
+
+## 🌐 Web UI Routes
+
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page – displays list of configured devices |
+| `/settings` | Settings page – language selection, navigation to device config |
+| `/settings/devices` | Device configuration page – manage configured devices |
+| `/devices/:id` | Device details page – view and control a specific device (power toggle) |
 
 ## 🏗️ Architecture
 

@@ -1,0 +1,37 @@
+<div class="device-details-page">
+  <header class="page-header">
+    <a routerLink="/" class="back-link">← {{ 'deviceDetails.back' | translate }}</a>
+    <h1>{{ 'deviceDetails.title' | translate }}</h1>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ 'common.loading' | translate }}</div>
+  } @else if (error()) {
+    <div class="error">{{ error() }}</div>
+  } @else if (device(); as d) {
+    <div class="device-info">
+      <h2 class="device-name">{{ d.name }}</h2>
+      <p class="device-vendor">{{ d.vendor }}</p>
+    </div>
+
+    <section class="control-section">
+      <div class="control-row">
+        <span class="control-label">{{ 'deviceDetails.power' | translate }}</span>
+        <button
+          class="power-btn"
+          [class.on]="d.powerState"
+          [disabled]="powerLoading()"
+          (click)="togglePower()"
+        >
+          @if (powerLoading()) {
+            ...
+          } @else if (d.powerState) {
+            {{ 'deviceDetails.powerOn' | translate }}
+          } @else {
+            {{ 'deviceDetails.powerOff' | translate }}
+          }
+        </button>
+      </div>
+    </section>
+  }
+</div>

@@ -1,0 +1,32 @@
+<div class="settings-page">
+  <header class="settings-header">
+    <a routerLink="/" class="back-link">← {{ 'settings.back' | translate }}</a>
+    <h1>{{ 'settings.title' | translate }}</h1>
+  </header>
+
+  <section class="settings-section">
+    <h2>{{ 'settings.language' | translate }}</h2>
+    <div class="language-options">
+      <button
+        class="language-btn"
+        [class.active]="lang.language() === 'en'"
+        (click)="setLanguage('en')"
+      >
+        {{ 'settings.languageEn' | translate }}
+      </button>
+      <button
+        class="language-btn"
+        [class.active]="lang.language() === 'pl'"
+        (click)="setLanguage('pl')"
+      >
+        {{ 'settings.languagePl' | translate }}
+      </button>
+    </div>
+  </section>
+
+  <section class="settings-section">
+    <a routerLink="/settings/devices" class="nav-link">
+      {{ 'settings.deviceConfig' | translate }} →
+    </a>
+  </section>
+</div>

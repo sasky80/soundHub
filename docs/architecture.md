@@ -228,6 +228,32 @@ sequenceDiagram
     WebApp-->>User: Volume updated
 ```
 
+## Data Flow: Power Toggle
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebApp as Angular Web App
+    participant API as SoundHub API
+    participant Service as DeviceService
+    participant Registry as DeviceAdapterRegistry
+    participant Adapter as IDeviceAdapter
+    participant Device as Physical Device
+
+    User->>WebApp: Toggle Power On
+    WebApp->>API: POST /api/devices/{id}/power {"on": true}
+    API->>Service: SetPowerAsync(id, true)
+    Service->>Registry: GetAdapter(device.Vendor)
+    Registry-->>Service: VendorAdapter
+    Service->>Adapter: SetPowerAsync(deviceId, true)
+    Adapter->>Device: Vendor-specific command
+    Device-->>Adapter: OK
+    Adapter-->>Service: Success
+    Service-->>API: Success
+    API-->>WebApp: 204 No Content
+    WebApp-->>User: Power state updated
+```
+
 ## Frontend Library Architecture
 
 ```mermaid
@@ -238,13 +264,19 @@ flowchart TB
     end
 
     subgraph Feature["libs/frontend/feature/"]
-        DeviceList["Device List Feature"]
-        DeviceControl["Device Control Feature"]
+        Landing["LandingComponent"]
+        Settings["SettingsComponent"]
+        DeviceConfig["DeviceConfigComponent"]
+        DeviceDetails["DeviceDetailsComponent"]
     end
 
     subgraph DataAccess["libs/frontend/data-access/"]
-        DeviceAPI["Device API Service"]
-        DeviceState["Device State Store"]
+        DeviceService["DeviceService"]
+    end
+
+    subgraph Shared["libs/frontend/shared/"]
+        LanguageService["LanguageService"]
+        TranslatePipe["TranslatePipe"]
     end
 
     subgraph UI["libs/frontend/ui/"]
@@ -253,21 +285,36 @@ flowchart TB
         PresetButton["Preset Button"]
     end
 
-    subgraph Shared["libs/frontend/shared/"]
-        Utils["Utilities"]
-        Models["Shared Models"]
-    end
-
     AppComponent --> Routes
     Routes --> Feature
-    DeviceList --> DeviceAPI
-    DeviceList --> DeviceCard
-    DeviceControl --> DeviceAPI
-    DeviceControl --> VolumeSlider
-    DeviceControl --> PresetButton
-    DeviceAPI --> Shared
+    Landing --> DeviceService
+    Landing --> TranslatePipe
+    Settings --> LanguageService
+    Settings --> TranslatePipe
+    DeviceConfig --> DeviceService
+    DeviceConfig --> TranslatePipe
+    DeviceDetails --> DeviceService
+    DeviceDetails --> TranslatePipe
+    Feature --> Shared
     UI --> Shared
 ```
+
+## Web UI Routes
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/` | LandingComponent | Displays list of configured devices with navigation to settings and device details |
+| `/settings` | SettingsComponent | Language selection (English/Polish) and navigation to device configuration |
+| `/settings/devices` | DeviceConfigComponent | Lists configured devices with navigation to device details |
+| `/devices/:id` | DeviceDetailsComponent | Device control page with power on/off toggle |
+
+## Internationalization (i18n)
+
+The frontend supports runtime language switching between English and Polish:
+
+- **LanguageService**: Signal-based service that manages current language and translations
+- **TranslatePipe**: Pipe for translating keys in templates
+- **Persistence**: Selected language is stored in `localStorage` under `soundhub-language`
 
 ## Key Design Principles
 

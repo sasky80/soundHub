@@ -119,4 +119,21 @@ public class DeviceService
 
         return await adapter.GetStatusAsync(id, ct);
     }
+
+    public async Task SetPowerAsync(string id, bool on, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        await adapter.SetPowerAsync(id, on, ct);
+    }
 }
