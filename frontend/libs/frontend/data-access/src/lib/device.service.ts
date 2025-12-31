@@ -56,6 +56,16 @@ export interface UpdateDeviceRequest {
   capabilities?: string[];
 }
 
+export interface VolumeInfo {
+  targetVolume: number;
+  actualVolume: number;
+  isMuted: boolean;
+}
+
+export interface SetVolumeRequest {
+  level: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DeviceService {
   private readonly http = inject(HttpClient);
@@ -108,5 +118,17 @@ export class DeviceService {
 
   deleteDevice(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getVolume(id: string): Observable<VolumeInfo> {
+    return this.http.get<VolumeInfo>(`${this.apiUrl}/${id}/volume`);
+  }
+
+  setVolume(id: string, level: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/volume`, { level } as SetVolumeRequest);
+  }
+
+  toggleMute(id: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/mute`, {});
   }
 }

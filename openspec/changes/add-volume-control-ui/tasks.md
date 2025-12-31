@@ -16,61 +16,61 @@
 
 ## Phase 2: Frontend - Data Access Layer
 
-- [ ] 2.1 Add `VolumeInfo` interface to `DeviceService`
+- [x] 2.1 Add `VolumeInfo` interface to `DeviceService`
   - Properties: `targetVolume: number`, `actualVolume: number`, `isMuted: boolean`
   - Verification: Interface compiles
 
-- [ ] 2.2 Add `getVolume(id: string)` method to `DeviceService`
+- [x] 2.2 Add `getVolume(id: string)` method to `DeviceService`
   - Returns `Observable<VolumeInfo>`
   - Calls `GET /api/devices/{id}/volume`
   - Verification: Service method exists
 
-- [ ] 2.3 Add `setVolume(id: string, level: number)` method to `DeviceService`
+- [x] 2.3 Add `setVolume(id: string, level: number)` method to `DeviceService`
   - Returns `Observable<void>`
   - Calls `POST /api/devices/{id}/volume` with `{ level }`
   - Verification: Service method exists
 
-- [ ] 2.4 Add `toggleMute(id: string)` method to `DeviceService`
+- [x] 2.4 Add `toggleMute(id: string)` method to `DeviceService`
   - Returns `Observable<void>`
   - Calls `POST /api/devices/{id}/mute`
   - Verification: Service method exists
 
 ## Phase 3: Frontend - Device Details UI
 
-- [ ] 3.1 Add volume-related signals to `DeviceDetailsComponent`
+- [x] 3.1 Add volume-related signals to `DeviceDetailsComponent`
   - `volumeInfo = signal<VolumeInfo | null>(null)`
   - `volumeLoading = signal(false)`
   - `volumeValue = signal(0)` (for slider binding)
   - Verification: Component compiles
 
-- [ ] 3.2 Fetch volume info on device load
+- [x] 3.2 Fetch volume info on device load
   - Call `getVolume()` after `loadStatus()` succeeds
   - Update `volumeInfo` and `volumeValue` signals
   - Verification: Volume info loads on page open
 
-- [ ] 3.3 Add volume slider to device details template
+- [x] 3.3 Add volume slider to device details template
   - Range input (0-100) bound to `volumeValue`
   - Display current volume value
   - Disabled when `status.powerState === false`
   - Verification: Slider renders and is disabled when device off
 
-- [ ] 3.4 Implement volume change handler
+- [x] 3.4 Implement volume change handler
   - Debounce slider input (e.g., 300ms)
   - Call `setVolume()` on debounced value change
   - Update `volumeInfo` on success
   - Verification: Moving slider updates volume on device
 
-- [ ] 3.5 Add mute button to device details template
+- [x] 3.5 Add mute button to device details template
   - Button with mute/unmute icon based on `volumeInfo.isMuted`
   - Disabled when `status.powerState === false`
   - Verification: Mute button renders with correct state
 
-- [ ] 3.6 Implement mute toggle handler
+- [x] 3.6 Implement mute toggle handler
   - Call `toggleMute()` on click
   - Refetch volume info on success to update mute state
   - Verification: Clicking mute toggles device mute state
 
-- [ ] 3.7 Add volume control styling
+- [x] 3.7 Add volume control styling
   - Style slider to match design system
   - Add hover/focus states
   - Add disabled state styling
@@ -78,14 +78,14 @@
 
 ## Phase 4: Internationalization
 
-- [ ] 4.1 Add English translation keys
+- [x] 4.1 Add English translation keys
   - `deviceDetails.volume`: "Volume"
   - `deviceDetails.mute`: "Mute"
   - `deviceDetails.unmute`: "Unmute"
   - `deviceDetails.volumeDisabled`: "Volume control unavailable when device is off"
   - Verification: English translations display
 
-- [ ] 4.2 Add Polish translation keys
+- [x] 4.2 Add Polish translation keys
   - Corresponding Polish translations for all new keys
   - Verification: Polish translations display
 

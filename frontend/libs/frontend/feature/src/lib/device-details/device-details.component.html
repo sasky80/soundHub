@@ -33,6 +33,47 @@
             }
           </button>
         </div>
+
+        <div class="control-row volume-control">
+          <span class="control-label">{{ 'deviceDetails.volume' | translate }}</span>
+          <div class="volume-slider-container" [class.disabled]="!s.powerState">
+            @if (volumeLoading()) {
+              <span class="volume-loading">...</span>
+            } @else {
+              <input
+                type="range"
+                min="0"
+                max="100"
+                [value]="volumeValue()"
+                [disabled]="!s.powerState"
+                (input)="onVolumeInput($event)"
+                class="volume-slider"
+                [attr.aria-label]="'deviceDetails.volume' | translate"
+                [attr.title]="!s.powerState ? ('deviceDetails.volumeDisabled' | translate) : null"
+              />
+              <span class="volume-value">{{ volumeValue() }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">{{ 'deviceDetails.mute' | translate }}</span>
+          <button
+            class="mute-btn"
+            [class.muted]="volumeInfo()?.isMuted"
+            [disabled]="!s.powerState || muteLoading()"
+            (click)="toggleMute()"
+            [attr.title]="!s.powerState ? ('deviceDetails.volumeDisabled' | translate) : null"
+          >
+            @if (muteLoading()) {
+              ...
+            } @else if (volumeInfo()?.isMuted) {
+              {{ 'deviceDetails.unmute' | translate }}
+            } @else {
+              {{ 'deviceDetails.mute' | translate }}
+            }
+          </button>
+        </div>
       </section>
     }
   }
