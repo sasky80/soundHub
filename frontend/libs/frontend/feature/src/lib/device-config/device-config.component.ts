@@ -48,12 +48,12 @@ export class DeviceConfigComponent implements OnInit {
   protected readonly savingDevice = signal(false);
   protected readonly deletingDeviceId = signal<string | null>(null);
   protected readonly showDeleteConfirm = signal<string | null>(null);
+  protected readonly selectedCapabilities = signal<boolean[]>([false, false, false, false, false]);
 
   protected readonly deviceForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(1)]],
     ipAddress: ['', [Validators.required]],
     vendor: ['', [Validators.required]],
-    capabilities: this.fb.array<boolean>([]),
   });
 
   protected readonly availableCapabilities = ['power', 'volume', 'presets', 'bluetoothPairing', 'ping'];
@@ -163,26 +163,24 @@ export class DeviceConfigComponent implements OnInit {
 
   protected openAddDevice(): void {
     this.editingDevice.set(null);
-    const emptyCapabilities = this.availableCapabilities.map(() => false);
+    this.selectedCapabilities.set(this.availableCapabilities.map(() => false));
     this.deviceForm.reset({
       name: '',
       ipAddress: '',
       vendor: this.vendors()[0]?.id || '',
-      capabilities: emptyCapabilities,
     });
     this.showDeviceForm.set(true);
   }
 
   protected openEditDevice(device: Device): void {
     this.editingDevice.set(device);
-    const capabilitiesState = this.availableCapabilities.map((cap) =>
-      device.capabilities.includes(cap)
+    this.selectedCapabilities.set(
+      this.availableCapabilities.map((cap) => device.capabilities.includes(cap))
     );
     this.deviceForm.patchValue({
       name: device.name,
       ipAddress: device.ipAddress,
       vendor: device.vendor,
-      capabilities: capabilitiesState,
     });
     this.showDeviceForm.set(true);
   }
@@ -199,7 +197,7 @@ export class DeviceConfigComponent implements OnInit {
     const formValue = this.deviceForm.value;
 
     const selectedCapabilities = this.availableCapabilities.filter(
-      (_, i) => (formValue.capabilities as boolean[])?.[i]
+      (_, i) => this.selectedCapabilities()[i]
     );
 
     if (this.editingDevice()) {
@@ -278,14 +276,15 @@ export class DeviceConfigComponent implements OnInit {
   }
 
   protected isCapabilitySelected(index: number): boolean {
-    const caps = this.deviceForm.get('capabilities')?.value as boolean[] | undefined;
-    return caps?.[index] ?? false;
+    return this.selectedCapabilities()[index] ?? false;
   }
 
   protected toggleCapability(index: number): void {
-    const caps = [...((this.deviceForm.get('capabilities')?.value as boolean[]) || [])];
-    caps[index] = !caps[index];
-    this.deviceForm.patchValue({ capabilities: caps });
+    this.selectedCapabilities.update((caps) => {
+      const newCaps = [...caps];
+      newCaps[index] = !newCaps[index];
+      return newCaps;
+    });
   }
 
   protected getDeviceCapabilities(): boolean[] {
