@@ -4,7 +4,9 @@ SoundHub is a local-network control application for smart audio devices, startin
 
 ## 🎯 Features
 
-- **Device Management**: Add, remove, and discover smart audio devices on your local network
+- **Device Configuration**: Add, edit, remove, and discover devices from the web UI
+- **Device Discovery**: Automatic network scanning to find compatible devices
+- **Ping Verification**: Audible connectivity test for devices
 - **Device Control**: Power, volume, presets, and Bluetooth pairing
 - **Web Interface**: Modern landing page with device list, settings, and device control
 - **Internationalization**: Runtime language switching (English and Polish)
@@ -13,6 +15,13 @@ SoundHub is a local-network control application for smart audio devices, startin
 - **File-Based Configuration**: Simple devices.json for device metadata
 - **REST API**: Well-documented OpenAPI/Swagger endpoints
 - **Containerized**: Docker-ready for easy deployment
+
+## 📚 Documentation
+
+- [Architecture Overview](docs/architecture.md) - System design and diagrams
+- [API Reference](docs/api-reference.md) - REST API documentation
+- [Device Configuration Guide](docs/device-configuration-guide.md) - User guide for managing devices
+- [devices.json Schema](docs/devices-schema.md) - Configuration file format
 
 ## 🌐 Web UI Routes
 
@@ -185,18 +194,23 @@ secrets:
 **`data/devices.json`** - Device metadata (vendor-grouped):
 ```json
 {
-  "bose-soundtouch": {
+  "NetworkMask": "192.168.1.0/24",
+  "SoundTouch": {
     "Devices": [
       {
         "Id": "...",
+        "Vendor": "bose-soundtouch",
         "Name": "Living Room Speaker",
         "IpAddress": "192.168.1.131",
-        "Port": 8090
+        "Capabilities": ["power", "volume", "presets", "ping"],
+        "DateTimeAdded": "2025-12-31T12:00:00.000Z"
       }
     ]
   }
 }
 ```
+
+For detailed schema documentation, see [docs/devices-schema.md](docs/devices-schema.md).
 
 **`data/secrets.json`** - Encrypted secrets (AES-256-CBC):
 ```json
@@ -273,14 +287,23 @@ Once the API is running, access interactive documentation:
 - Swagger UI: http://localhost:5000/swagger
 - OpenAPI JSON: http://localhost:5000/swagger/v1/swagger.json
 
+For detailed API documentation, see [docs/api-reference.md](docs/api-reference.md).
+
 ### Key Endpoints
 
-#### Device Management
+#### Device Configuration
 - `GET /api/devices` - List all devices
 - `POST /api/devices` - Add a device
 - `GET /api/devices/{id}` - Get device by ID
+- `PUT /api/devices/{id}` - Update a device
 - `DELETE /api/devices/{id}` - Remove a device
-- `GET /api/devices/discover` - Discover devices on LAN
+- `POST /api/devices/discover` - Discover devices on LAN
+- `GET /api/devices/{id}/ping` - Ping device for connectivity
+
+#### Configuration
+- `GET /api/config/network-mask` - Get discovery network mask
+- `PUT /api/config/network-mask` - Set discovery network mask
+- `GET /api/vendors` - List supported vendors
 
 #### Device Status & Info
 - `GET /api/devices/{id}/status` - Get device status (power, volume, source)

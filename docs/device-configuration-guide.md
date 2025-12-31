@@ -1,0 +1,161 @@
+# Device Configuration User Guide
+
+This guide explains how to manage your audio devices in SoundHub, including adding, editing, discovering, and removing devices.
+
+## Accessing Device Configuration
+
+1. Open SoundHub in your browser (default: `http://localhost:4200`)
+2. Click on **Settings** from the landing page
+3. Navigate to **Device Configuration** or click on **Manage Devices**
+
+## Managing Devices
+
+### Viewing Devices
+
+The device configuration page displays all your configured devices in a list. Each device shows:
+
+- **Name** - The user-defined name for the device
+- **Vendor** - The device manufacturer (e.g., Bose SoundTouch)
+- **Ping button** - For devices that support audible ping
+
+**Newly Added Devices:** Devices added within the last 5 minutes are highlighted to help you identify recently discovered devices.
+
+### Adding a Device Manually
+
+1. Click the **+** or **Add Device** button
+2. Fill in the required fields:
+   - **Name** - A friendly name for the device (e.g., "Living Room Speaker")
+   - **IP Address** - The device's IP address or hostname (e.g., `192.168.1.100`)
+   - **Vendor** - Select the device manufacturer from the dropdown
+3. Optionally select capabilities (usually auto-detected)
+4. Click **Save**
+
+The system will attempt to connect to the device and detect its capabilities automatically.
+
+**Tip:** Use a static IP or DHCP reservation for your devices to ensure the IP address doesn't change.
+
+### Editing a Device
+
+1. Click on the device in the list or the **Edit** button
+2. Modify the desired fields:
+   - **Name** - Update the display name
+   - **IP Address** - Change if the device has moved
+   - **Capabilities** - Manually adjust available features
+3. Click **Save**
+
+### Removing a Device
+
+1. Click the **Delete** button on the device
+2. Confirm the deletion in the dialog
+3. The device will be removed from your configuration
+
+**Note:** Deleting a device only removes it from SoundHub's configuration. The physical device is not affected.
+
+## Device Discovery
+
+### Configuring Network Range
+
+Before discovering devices, configure the network range to scan:
+
+1. Find the **Network Mask** input field
+2. Enter your network in CIDR notation:
+   - Example: `192.168.1.0/24` scans 192.168.1.1 through 192.168.1.254
+   - Example: `10.0.0.0/24` scans 10.0.0.1 through 10.0.0.254
+3. Click **Save** to store the network mask
+
+**Tip:** Use a `/24` subnet for typical home networks. Larger ranges take longer to scan.
+
+### Running Discovery
+
+1. Ensure your devices are powered on and connected to the network
+2. Click **Discover Devices**
+3. Wait for the scan to complete (may take a few minutes)
+4. Newly discovered devices are automatically saved and highlighted
+
+**What Discovery Does:**
+- Scans the configured IP range for devices
+- Probes each IP for supported vendor signatures
+- Skips devices that are already configured (matched by IP)
+- Automatically saves new devices with detected capabilities
+
+## Ping / Connectivity Test
+
+The ping feature helps verify that a device is reachable and responding.
+
+### Using Ping
+
+1. Find a device with a **Ping** button (only available for devices with ping capability)
+2. Click the **Ping** button
+3. The device will:
+   - Emit a double beep sound
+   - Show connection status (success/error)
+   - Display latency in milliseconds
+
+**Ping States:**
+- 🔄 **Pinging** - Request in progress
+- ✅ **Success** - Device responded (shows latency)
+- ❌ **Error** - Device unreachable
+
+**Note:** Not all devices support audible ping. The button only appears for devices with the "ping" capability.
+
+## Device Capabilities
+
+Capabilities define what features are available for each device:
+
+| Capability | Description |
+|------------|-------------|
+| **power** | Power on/off control |
+| **volume** | Volume adjustment |
+| **presets** | Play saved presets (1-6) |
+| **bluetoothPairing** | Enter Bluetooth pairing mode |
+| **ping** | Audible connectivity test |
+
+### How Capabilities Are Detected
+
+For Bose SoundTouch devices:
+- **Base capabilities** (`power`, `volume`) are always present
+- **Additional capabilities** are detected by querying the device's `/supportedUrls` endpoint
+
+### Manually Editing Capabilities
+
+1. Edit the device
+2. Check/uncheck capability checkboxes
+3. Save the device
+
+**Caution:** Enabling a capability that the device doesn't support may cause errors when using that feature.
+
+## Troubleshooting
+
+### Device Not Found During Discovery
+
+1. Verify the device is powered on
+2. Check that the device is connected to the same network
+3. Ensure the network mask covers the device's IP range
+4. Try a larger subnet (e.g., `/16` instead of `/24`)
+
+### Ping Fails
+
+1. Verify the device IP address is correct
+2. Check that the device is online
+3. Ensure no firewall is blocking port 8090 (for SoundTouch)
+4. The device may not support the ping capability
+
+### Cannot Add Device
+
+1. Verify the IP address format is correct
+2. Ensure the device is reachable from the server
+3. Check that the vendor is supported
+
+### Device Shows Wrong Capabilities
+
+1. Edit the device
+2. Manually adjust capabilities
+3. Save the device
+
+## Best Practices
+
+1. **Use Static IPs** - Configure DHCP reservations for your audio devices
+2. **Meaningful Names** - Use descriptive names like "Living Room Speaker" instead of "Device 1"
+3. **Regular Discovery** - Run discovery periodically to find new devices
+4. **Test Connectivity** - Use ping to verify devices are reachable before troubleshooting other issues
+5. **Backup Configuration** - Keep a backup of your `devices.json` file

@@ -375,6 +375,126 @@ The frontend supports runtime language switching between English and Polish:
 - **TranslatePipe**: Pipe for translating keys in templates
 - **Persistence**: Selected language is stored in `localStorage` under `soundhub-language`
 
+## Device Configuration Management
+
+SoundHub provides comprehensive device configuration capabilities through both the web UI and REST API.
+
+### Device Configuration Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebApp as Angular Web App
+    participant API as SoundHub API
+    participant Service as DeviceService
+    participant Repo as FileDeviceRepository
+    participant Adapter as SoundTouchAdapter
+    participant Device as Physical Device
+
+    Note over User,Device: Add Device Flow
+    User->>WebApp: Enter device details (name, IP)
+    WebApp->>API: POST /api/devices
+    API->>Service: AddDeviceAsync(name, ip, vendor)
+    Service->>Adapter: GetCapabilitiesAsync(ip)
+    Adapter->>Device: GET /supportedUrls
+    Device-->>Adapter: Supported URLs
+    Adapter-->>Service: Capabilities
+    Service->>Repo: AddDeviceAsync(device)
+    Repo-->>Service: Saved device
+    Service-->>API: Device with capabilities
+    API-->>WebApp: 201 Created
+    WebApp-->>User: Device added
+```
+
+### Device Discovery Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebApp as Angular Web App
+    participant API as SoundHub API
+    participant Service as DeviceService
+    participant Repo as FileDeviceRepository
+    participant Adapter as SoundTouchAdapter
+    participant Network as Local Network
+
+    User->>WebApp: Click "Discover Devices"
+    WebApp->>API: POST /api/devices/discover
+    API->>Service: DiscoverAndSaveDevicesAsync()
+    Service->>Repo: GetNetworkMaskAsync()
+    Repo-->>Service: "192.168.1.0/24"
+    Service->>Repo: GetAllDevicesAsync()
+    Repo-->>Service: Existing devices
+    Service->>Adapter: DiscoverDevicesAsync(networkMask)
+    loop For each IP in range
+        Adapter->>Network: Probe port 8090
+        alt Device responds
+            Network-->>Adapter: XML response
+            Adapter->>Adapter: Parse device info
+        end
+    end
+    Adapter-->>Service: Discovered devices
+    loop For each new device
+        Service->>Repo: AddDeviceAsync(device)
+    end
+    Service-->>API: DiscoveryResult
+    API-->>WebApp: { discovered: 5, new: 2 }
+    WebApp-->>User: Show results
+```
+
+### Device Ping Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebApp as Angular Web App
+    participant API as SoundHub API
+    participant Service as DeviceService
+    participant Adapter as SoundTouchAdapter
+    participant Device as Physical Device
+
+    User->>WebApp: Click "Ping" button
+    WebApp->>API: GET /api/devices/{id}/ping
+    API->>Service: PingDeviceAsync(id)
+    Service->>Adapter: PingAsync(deviceId)
+    Adapter->>Device: GET /playNotification
+    Note over Device: Device beeps
+    Device-->>Adapter: 200 OK
+    Adapter-->>Service: PingResult(true, 45ms)
+    Service-->>API: PingResult
+    API-->>WebApp: { reachable: true, latencyMs: 45 }
+    WebApp-->>User: Show success + latency
+```
+
+### Configuration Persistence
+
+The device configuration is persisted in `devices.json` with the following structure:
+
+```json
+{
+  "NetworkMask": "192.168.1.0/24",
+  "SoundTouch": {
+    "Devices": [
+      {
+        "Id": "uuid",
+        "Vendor": "bose-soundtouch",
+        "Name": "Living Room Speaker",
+        "IpAddress": "192.168.1.100",
+        "Capabilities": ["power", "volume", "presets", "ping"],
+        "DateTimeAdded": "2025-12-31T12:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+**Key Points:**
+- `NetworkMask` is stored at the root level for vendor-agnostic discovery
+- Devices are grouped by vendor display name
+- Capabilities are detected from the device and stored
+- `DateTimeAdded` is used to highlight newly added devices in the UI
+- Dynamic state (volume, power, online) is not persisted; it's read on-demand
+
 ## Key Design Principles
 
 1. **Separation of Concerns**: Clear boundaries between layers (Domain, Application, Infrastructure, Presentation)

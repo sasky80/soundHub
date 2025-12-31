@@ -69,17 +69,18 @@
 - [x] 8.4 Create network mask input component with validation
 
 ## 9. Testing
-- [ ] 9.1 Unit tests for network mask parsing/validation
-- [ ] 9.2 Unit tests for device repository CRUD operations
-- [ ] 9.3 Unit tests for ping endpoint
-- [ ] 9.4 Unit tests for discovery endpoint
-- [ ] 9.5 Integration tests for device configuration API
-- [ ] 9.6 Frontend unit tests for device config components
-- [ ] 9.7 E2E test for device add/edit/remove flow
+- [x] 9.1 Unit tests for network mask parsing/validation
+- [x] 9.2 Unit tests for device repository CRUD operations
+- [x] 9.3 Unit tests for ping endpoint
+- [x] 9.4 Unit tests for discovery endpoint
+- [x] 9.5 Integration tests for device configuration API
+- [x] 9.6 Frontend unit tests for device config components
+- [x] 9.7 E2E test for device add/edit/remove flow
 
 ## 10. Documentation
-- [ ] 10.1 Update API documentation with new endpoints
-- [ ] 10.2 Update devices.json schema documentation
-- [ ] 10.3 Add user guide for device configuration
-- [ ] 10.4 Update README.md with device configuration feature
-- [ ] 10.5 Update docs/architecture.md with device management components
+- [x] 10.1 Update API documentation with new endpoints
+- [x] 10.2 Update devices.json schema documentation
+- [x] 10.3 Add user guide for device configuration
+- [x] 10.4 Update README.md with device configuration feature
+- [x] 10.5 Update docs/architecture.md with device management components
+
