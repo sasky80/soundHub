@@ -14,24 +14,26 @@
       <p class="device-vendor">{{ d.vendor }}</p>
     </div>
 
-    <section class="control-section">
-      <div class="control-row">
-        <span class="control-label">{{ 'deviceDetails.power' | translate }}</span>
-        <button
-          class="power-btn"
-          [class.on]="d.powerState"
-          [disabled]="powerLoading()"
-          (click)="togglePower()"
-        >
-          @if (powerLoading()) {
-            ...
-          } @else if (d.powerState) {
-            {{ 'deviceDetails.powerOn' | translate }}
-          } @else {
-            {{ 'deviceDetails.powerOff' | translate }}
-          }
-        </button>
-      </div>
-    </section>
+    @if (status(); as s) {
+      <section class="control-section">
+        <div class="control-row">
+          <span class="control-label">{{ 'deviceDetails.power' | translate }}</span>
+          <button
+            class="power-btn"
+            [class.on]="s.powerState"
+            [disabled]="powerLoading()"
+            (click)="togglePower()"
+          >
+            @if (powerLoading()) {
+              ...
+            } @else if (s.powerState) {
+              {{ 'deviceDetails.powerOn' | translate }}
+            } @else {
+              {{ 'deviceDetails.powerOff' | translate }}
+            }
+          </button>
+        </div>
+      </section>
+    }
   }
 </div>

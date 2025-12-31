@@ -36,37 +36,37 @@
 - [x] 5.3 Ensure discovery skips already-configured IPs
 
 ## 6. Frontend - Data Access Layer
-- [ ] 6.1 Create `DeviceConfigService` in data-access library
-- [ ] 6.2 Add `pingDevice(id)` method
-- [ ] 6.3 Add `discoverDevices()` method
-- [ ] 6.4 Add `getNetworkMask()` and `updateNetworkMask(mask)` methods
-- [ ] 6.5 Add `getVendors()` method
-- [ ] 6.6 Add `createDevice(device)` method
-- [ ] 6.7 Add `updateDevice(id, device)` method
-- [ ] 6.8 Add `deleteDevice(id)` method
+- [x] 6.1 Create `DeviceConfigService` in data-access library
+- [x] 6.2 Add `pingDevice(id)` method
+- [x] 6.3 Add `discoverDevices()` method
+- [x] 6.4 Add `getNetworkMask()` and `updateNetworkMask(mask)` methods
+- [x] 6.5 Add `getVendors()` method
+- [x] 6.6 Add `createDevice(device)` method
+- [x] 6.7 Add `updateDevice(id, device)` method
+- [x] 6.8 Add `deleteDevice(id)` method
 
 ## 7. Frontend - Device Configuration Feature
-- [ ] 7.1 Create `device-config` feature library
-- [ ] 7.2 Create device configuration page component
-- [ ] 7.3 Create device list component with ping button
-- [ ] 7.4 Implement ping button visibility based on "ping" capability
-- [ ] 7.5 Create add device button and navigation
-- [ ] 7.6 Create device form component (add/edit)
-- [ ] 7.7 Implement vendor dropdown populated from API
-- [ ] 7.8 Implement capabilities checkbox list
-- [ ] 7.9 Implement save functionality for add/edit
-- [ ] 7.10 Implement delete device with confirmation dialog
-- [ ] 7.11 Create network mask input field
-- [ ] 7.12 Create discover devices button with loading state
-- [ ] 7.13 Highlight devices where `DateTimeAdded` is within last 5 minutes
-- [ ] 7.14 Add route for device configuration page
-- [ ] 7.15 Add navigation from settings page to device configuration
+- [x] 7.1 Create `device-config` feature library
+- [x] 7.2 Create device configuration page component
+- [x] 7.3 Create device list component with ping button
+- [x] 7.4 Implement ping button visibility based on "ping" capability
+- [x] 7.5 Create add device button and navigation
+- [x] 7.6 Create device form component (add/edit)
+- [x] 7.7 Implement vendor dropdown populated from API
+- [x] 7.8 Implement capabilities checkbox list
+- [x] 7.9 Implement save functionality for add/edit
+- [x] 7.10 Implement delete device with confirmation dialog
+- [x] 7.11 Create network mask input field
+- [x] 7.12 Create discover devices button with loading state
+- [x] 7.13 Highlight devices where `DateTimeAdded` is within last 5 minutes
+- [x] 7.14 Add route for device configuration page
+- [x] 7.15 Add navigation from settings page to device configuration
 
 ## 8. Frontend - UI Components
-- [ ] 8.1 Create ping button component with status indicator
-- [ ] 8.2 Create device list item component
-- [ ] 8.3 Create capability selector component
-- [ ] 8.4 Create network mask input component with validation
+- [x] 8.1 Create ping button component with status indicator
+- [x] 8.2 Create device list item component
+- [x] 8.3 Create capability selector component
+- [x] 8.4 Create network mask input component with validation
 
 ## 9. Testing
 - [ ] 9.1 Unit tests for network mask parsing/validation

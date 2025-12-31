@@ -7,12 +7,8 @@ export interface Device {
   name: string;
   ipAddress: string;
   vendor: string;
-  port: number;
-  isOnline: boolean;
-  powerState: boolean;
-  volume: number;
   capabilities: string[];
-  lastSeen: string;
+  dateTimeAdded: string;
 }
 
 export interface DeviceStatus {
@@ -26,10 +22,45 @@ export interface PowerRequest {
   on: boolean;
 }
 
+export interface PingResult {
+  reachable: boolean;
+  latencyMs: number;
+}
+
+export interface DiscoveryResult {
+  discovered: number;
+  new: number;
+  devices: Device[];
+}
+
+export interface VendorInfo {
+  id: string;
+  name: string;
+}
+
+export interface NetworkMaskResponse {
+  networkMask: string;
+}
+
+export interface CreateDeviceRequest {
+  name: string;
+  ipAddress: string;
+  vendor: string;
+  capabilities?: string[];
+}
+
+export interface UpdateDeviceRequest {
+  name?: string;
+  ipAddress?: string;
+  vendor?: string;
+  capabilities?: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class DeviceService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/devices';
+  private readonly configUrl = '/api/config';
 
   getDevices(): Observable<Device[]> {
     return this.http.get<Device[]>(this.apiUrl);
@@ -45,5 +76,37 @@ export class DeviceService {
 
   setPower(id: string, on: boolean): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${id}/power`, { on });
+  }
+
+  pingDevice(id: string): Observable<PingResult> {
+    return this.http.get<PingResult>(`${this.apiUrl}/${id}/ping`);
+  }
+
+  discoverDevices(): Observable<DiscoveryResult> {
+    return this.http.post<DiscoveryResult>(`${this.apiUrl}/discover`, {});
+  }
+
+  getNetworkMask(): Observable<NetworkMaskResponse> {
+    return this.http.get<NetworkMaskResponse>(`${this.configUrl}/network-mask`);
+  }
+
+  updateNetworkMask(networkMask: string): Observable<void> {
+    return this.http.put<void>(`${this.configUrl}/network-mask`, { networkMask });
+  }
+
+  getVendors(): Observable<VendorInfo[]> {
+    return this.http.get<VendorInfo[]>('/api/vendors');
+  }
+
+  createDevice(device: CreateDeviceRequest): Observable<Device> {
+    return this.http.post<Device>(this.apiUrl, device);
+  }
+
+  updateDevice(id: string, device: UpdateDeviceRequest): Observable<Device> {
+    return this.http.put<Device>(`${this.apiUrl}/${id}`, device);
+  }
+
+  deleteDevice(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

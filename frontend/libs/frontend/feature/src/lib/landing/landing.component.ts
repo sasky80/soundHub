@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DeviceService, Device } from '@soundhub/frontend/data-access';
@@ -6,10 +6,10 @@ import { LanguageService, TranslatePipe } from '@soundhub/frontend/shared';
 
 @Component({
   selector: 'lib-landing',
-  standalone: true,
   imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LandingComponent implements OnInit {
   private readonly deviceService = inject(DeviceService);

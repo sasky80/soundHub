@@ -33,9 +33,7 @@
         <li class="device-item">
           <a [routerLink]="['/devices', device.id]" class="device-link">
             <span class="device-name">{{ device.name }}</span>
-            <span class="device-status" [class.online]="device.isOnline">
-              {{ device.isOnline ? '●' : '○' }}
-            </span>
+            <span class="device-vendor">{{ device.vendor }}</span>
           </a>
         </li>
       }

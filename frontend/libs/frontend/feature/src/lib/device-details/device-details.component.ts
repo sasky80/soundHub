@@ -1,21 +1,22 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DeviceService, Device } from '@soundhub/frontend/data-access';
+import { DeviceService, Device, DeviceStatus } from '@soundhub/frontend/data-access';
 import { TranslatePipe } from '@soundhub/frontend/shared';
 
 @Component({
   selector: 'lib-device-details',
-  standalone: true,
   imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './device-details.component.html',
   styleUrl: './device-details.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeviceDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly deviceService = inject(DeviceService);
 
   protected readonly device = signal<Device | null>(null);
+  protected readonly status = signal<DeviceStatus | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly powerLoading = signal(false);
@@ -35,6 +36,7 @@ export class DeviceDetailsComponent implements OnInit {
       next: (device) => {
         this.device.set(device);
         this.loading.set(false);
+        this.loadStatus(id);
       },
       error: (err) => {
         this.error.set(err.message || 'Failed to load device');
@@ -43,16 +45,24 @@ export class DeviceDetailsComponent implements OnInit {
     });
   }
 
+  private loadStatus(id: string): void {
+    this.deviceService.getDeviceStatus(id).subscribe({
+      next: (status) => this.status.set(status),
+      error: () => {}, // Non-critical, status may not be available
+    });
+  }
+
   protected togglePower(): void {
     const d = this.device();
-    if (!d || this.powerLoading()) return;
+    const s = this.status();
+    if (!d || !s || this.powerLoading()) return;
 
     this.powerLoading.set(true);
-    const newState = !d.powerState;
+    const newState = !s.powerState;
 
     this.deviceService.setPower(d.id, newState).subscribe({
       next: () => {
-        this.device.set({ ...d, powerState: newState });
+        this.status.set({ ...s, powerState: newState });
         this.powerLoading.set(false);
       },
       error: (err) => {

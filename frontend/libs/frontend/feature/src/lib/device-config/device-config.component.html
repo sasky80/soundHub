@@ -4,22 +4,239 @@
     <h1>{{ 'deviceConfig.title' | translate }}</h1>
   </header>
 
-  @if (loading()) {
-    <div class="loading">{{ 'common.loading' | translate }}</div>
-  } @else if (error()) {
-    <div class="error">{{ error() }}</div>
-  } @else if (devices().length === 0) {
-    <div class="empty-state">{{ 'deviceConfig.noDevices' | translate }}</div>
-  } @else {
-    <ul class="device-list">
-      @for (device of devices(); track device.id) {
-        <li class="device-item">
-          <a [routerLink]="['/devices', device.id]" class="device-link">
-            <span class="device-name">{{ device.name }}</span>
-            <span class="device-vendor">{{ device.vendor }}</span>
-          </a>
-        </li>
+  <!-- Network Configuration Section -->
+  <section class="config-section">
+    <h2>{{ 'deviceConfig.networkConfig' | translate }}</h2>
+    <div class="network-mask-row">
+      <label for="networkMask">{{ 'deviceConfig.networkMask' | translate }}</label>
+      <div class="input-group">
+        <input
+          id="networkMask"
+          type="text"
+          [ngModel]="networkMask()"
+          (ngModelChange)="networkMask.set($event)"
+          placeholder="192.168.1.0/24"
+          class="network-input"
+        />
+        <button
+          class="btn btn-secondary"
+          (click)="saveNetworkMask()"
+          [disabled]="savingNetworkMask()"
+        >
+          @if (savingNetworkMask()) {
+            {{ 'common.saving' | translate }}
+          } @else {
+            {{ 'deviceConfig.saveNetworkMask' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+    <div class="discovery-row">
+      <button
+        class="btn btn-primary discover-btn"
+        (click)="discoverDevices()"
+        [disabled]="discovering()"
+      >
+        @if (discovering()) {
+          <span class="spinner"></span>
+          {{ 'deviceConfig.discovering' | translate }}
+        } @else {
+          {{ 'deviceConfig.discoverDevices' | translate }}
+        }
+      </button>
+      @if (discoveryResult(); as result) {
+        <span class="discovery-result">
+          {{ 'deviceConfig.discovered' | translate }}: {{ result.discovered }},
+          {{ 'deviceConfig.newDevices' | translate }}: {{ result.new }}
+        </span>
       }
-    </ul>
+    </div>
+  </section>
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  <!-- Devices Section -->
+  <section class="config-section">
+    <div class="section-header">
+      <h2>{{ 'deviceConfig.devicesTitle' | translate }}</h2>
+      <button class="btn btn-primary" (click)="openAddDevice()">
+        + {{ 'deviceConfig.addDevice' | translate }}
+      </button>
+    </div>
+
+    @if (loading()) {
+      <div class="loading">{{ 'common.loading' | translate }}</div>
+    } @else if (devices().length === 0) {
+      <div class="empty-state">{{ 'deviceConfig.noDevices' | translate }}</div>
+    } @else {
+      <ul class="device-list">
+        @for (device of devices(); track device.id) {
+          <li class="device-item" [class.newly-added]="isNewlyAdded(device)">
+            <div class="device-info">
+              <span class="device-name">{{ device.name }}</span>
+              <span class="device-details">
+                {{ device.vendor }} • {{ device.ipAddress }}
+              </span>
+              @if (isNewlyAdded(device)) {
+                <span class="new-badge">{{ 'deviceConfig.new' | translate }}</span>
+              }
+            </div>
+            <div class="device-actions">
+              @if (hasPingCapability(device)) {
+                <button
+                  class="btn btn-icon ping-btn"
+                  [class.pinging]="device.pingState === 'pinging'"
+                  [class.success]="device.pingState === 'success'"
+                  [class.error]="device.pingState === 'error'"
+                  [disabled]="device.pingState === 'pinging'"
+                  (click)="pingDevice(device)"
+                  [attr.aria-label]="'deviceConfig.ping' | translate"
+                  [attr.title]="'deviceConfig.ping' | translate"
+                >
+                  @switch (device.pingState) {
+                    @case ('pinging') {
+                      <span class="spinner-small"></span>
+                    }
+                    @case ('success') {
+                      ✓ {{ device.pingLatency }}ms
+                    }
+                    @case ('error') {
+                      ✗
+                    }
+                    @default {
+                      🔔
+                    }
+                  }
+                </button>
+              }
+              <button
+                class="btn btn-icon"
+                (click)="openEditDevice(device)"
+                [attr.aria-label]="'deviceConfig.edit' | translate"
+              >
+                ✏️
+              </button>
+              <button
+                class="btn btn-icon btn-danger"
+                (click)="confirmDeleteDevice(device.id)"
+                [attr.aria-label]="'deviceConfig.delete' | translate"
+              >
+                🗑️
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- Device Form Modal -->
+  @if (showDeviceForm()) {
+    <div class="modal-overlay" (click)="closeDeviceForm()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2>
+            @if (isNewDevice()) {
+              {{ 'deviceConfig.addDevice' | translate }}
+            } @else {
+              {{ 'deviceConfig.editDevice' | translate }}
+            }
+          </h2>
+          <button class="btn btn-icon close-btn" (click)="closeDeviceForm()">✕</button>
+        </header>
+        <form class="modal-body" [formGroup]="deviceForm" (ngSubmit)="saveDevice()">
+          <div class="form-group">
+            <label for="deviceName">{{ 'deviceConfig.deviceName' | translate }}</label>
+            <input
+              id="deviceName"
+              type="text"
+              formControlName="name"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="deviceIp">{{ 'deviceConfig.ipAddress' | translate }}</label>
+            <input
+              id="deviceIp"
+              type="text"
+              formControlName="ipAddress"
+              placeholder="192.168.1.100 or hostname.local"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="deviceVendor">{{ 'deviceConfig.vendor' | translate }}</label>
+            <select id="deviceVendor" formControlName="vendor" class="form-input">
+              @for (vendor of vendors(); track vendor.id) {
+                <option [value]="vendor.id">{{ vendor.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ 'deviceConfig.capabilities' | translate }}</label>
+            <div class="capabilities-list">
+              @for (cap of availableCapabilities; track cap; let i = $index) {
+                <label class="capability-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="isCapabilitySelected(i)"
+                    (change)="toggleCapability(i)"
+                  />
+                  {{ cap }}
+                </label>
+              }
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeDeviceForm()">
+              {{ 'common.cancel' | translate }}
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="deviceForm.invalid || savingDevice()"
+            >
+              @if (savingDevice()) {
+                {{ 'common.saving' | translate }}
+              } @else {
+                {{ 'common.save' | translate }}
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteConfirm(); as deviceId) {
+    <div class="modal-overlay" (click)="cancelDelete()">
+      <div class="modal modal-small" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2>{{ 'deviceConfig.confirmDelete' | translate }}</h2>
+        </header>
+        <div class="modal-body">
+          <p>{{ 'deviceConfig.confirmDeleteMessage' | translate }}</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="cancelDelete()">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button
+            class="btn btn-danger"
+            (click)="deleteDevice(deviceId)"
+            [disabled]="deletingDeviceId() === deviceId"
+          >
+            @if (deletingDeviceId() === deviceId) {
+              {{ 'common.deleting' | translate }}
+            } @else {
+              {{ 'common.delete' | translate }}
+            }
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>
