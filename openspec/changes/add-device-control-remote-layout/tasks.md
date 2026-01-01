@@ -3,23 +3,23 @@
 ## 1. Backend - API Endpoints
 
 ### 1.1 Key Press Endpoint
-- [ ] 1.1.1 Add `POST /api/devices/{id}/key` endpoint to `DevicesController`
-- [ ] 1.1.2 Implement `PressKeyAsync` method accepting key name and device ID
-- [ ] 1.1.3 Map to `ISoundTouchAdapter.PressKey(deviceId, keyName)` method
-- [ ] 1.1.4 Support key values: `AUX_INPUT`, `PREV_TRACK`, `NEXT_TRACK`, `PLAY_PAUSE`, `VOLUME_UP`, `VOLUME_DOWN`
-- [ ] 1.1.5 Implement XML formatting for SoundTouch `/key` endpoint: `<key state="press" sender="Gabbo">KEY_NAME</key>` followed by release
+- [x] 1.1.1 Add `POST /api/devices/{id}/key` endpoint to `DevicesController`
+- [x] 1.1.2 Implement `PressKeyAsync` method accepting key name and device ID
+- [x] 1.1.3 Map to `ISoundTouchAdapter.PressKey(deviceId, keyName)` method
+- [x] 1.1.4 Support key values: `AUX_INPUT`, `PREV_TRACK`, `NEXT_TRACK`, `PLAY_PAUSE`, `VOLUME_UP`, `VOLUME_DOWN`
+- [x] 1.1.5 Implement XML formatting for SoundTouch `/key` endpoint: `<key state="press" sender="Gabbo">KEY_NAME</key>` followed by release
 
 ### 1.2 Bluetooth Pairing Endpoint
-- [ ] 1.2.1 Add `POST /api/devices/{id}/bluetooth/enter-pairing` endpoint to `DevicesController`
-- [ ] 1.2.2 Implement `EnterBluetoothPairingAsync` method
-- [ ] 1.2.3 Map to `ISoundTouchAdapter.EnterBluetoothPairing(deviceId)` method
-- [ ] 1.2.4 Call SoundTouch `/enterBluetoothPairing` endpoint (GET request)
-- [ ] 1.2.5 Return success/failure status
+- [x] 1.2.1 Add `POST /api/devices/{id}/bluetooth/enter-pairing` endpoint to `DevicesController`
+- [x] 1.2.2 Implement `EnterBluetoothPairingAsync` method
+- [x] 1.2.3 Map to `ISoundTouchAdapter.EnterBluetoothPairing(deviceId)` method
+- [x] 1.2.4 Call SoundTouch `/enterBluetoothPairing` endpoint (GET request)
+- [x] 1.2.5 Return success/failure status
 
 ### 1.3 Capabilities Enhancement
-- [ ] 1.3.1 Update `CapabilitiesDto` to include `bluetoothPairing` boolean property
-- [ ] 1.3.2 Parse `<capability name="bluetoothPairing" ...>` from SoundTouch `/capabilities` response
-- [ ] 1.3.3 Return capability info in device status or info endpoint
+- [x] 1.3.1 Update `CapabilitiesDto` to include `bluetoothPairing` boolean property
+- [x] 1.3.2 Parse `<capability name="bluetoothPairing" ...>` from SoundTouch `/capabilities` response
+- [x] 1.3.3 Return capability info in device status or info endpoint
 
 ## 2. Frontend - Control Panel Redesign
 
@@ -86,10 +86,10 @@
 ## 4. Testing
 
 ### 4.1 Backend Tests
-- [ ] 4.1.1 Unit test `PressKeyAsync` endpoint with valid key names
-- [ ] 4.1.2 Unit test error handling for invalid keys
-- [ ] 4.1.3 Unit test `EnterBluetoothPairingAsync` endpoint
-- [ ] 4.1.4 Mock SoundTouchAdapter responses
+- [x] 4.1.1 Unit test `PressKeyAsync` endpoint with valid key names
+- [x] 4.1.2 Unit test error handling for invalid keys
+- [x] 4.1.3 Unit test `EnterBluetoothPairingAsync` endpoint
+- [x] 4.1.4 Mock SoundTouchAdapter responses
 
 ### 4.2 Frontend Tests
 - [ ] 4.2.1 Component test: remote buttons rendered correctly
