@@ -28,7 +28,7 @@
 - [x] 5.1 Write unit tests for preset service (frontend)
 - [x] 5.2 Write unit tests for preset endpoints (backend)
 - [x] 5.3 Write e2e tests for preset management flow
-- [ ] 5.4 Test with real SoundTouch device
+- [x] 5.4 Test with real SoundTouch device
 
 ## 6. Documentation
 - [x] 6.1 Update API reference docs with new preset endpoints (POST, DELETE)
