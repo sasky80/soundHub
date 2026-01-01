@@ -79,6 +79,7 @@
         <lib-preset-list
           [deviceId]="d.id"
           [isPowerOn]="s.powerState"
+          (powerStateChanged)="onPresetPowerStateChanged($event)"
         />
       </section>
     }

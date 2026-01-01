@@ -27,6 +27,7 @@ describe('LandingComponent', () => {
   });
 
   it('should show loading state initially', () => {
+    fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Loading');
   });
 });

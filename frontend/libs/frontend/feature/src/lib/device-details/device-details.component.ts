@@ -142,4 +142,13 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  protected onPresetPowerStateChanged(newState: boolean): void {
+    const currentStatus = this.status();
+    if (!currentStatus || currentStatus.powerState === newState) {
+      return;
+    }
+
+    this.status.set({ ...currentStatus, powerState: newState });
+  }
 }

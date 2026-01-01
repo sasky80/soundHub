@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, ActivatedRoute } from '@angular/router';
@@ -32,6 +32,8 @@ describe('DeviceDetailsComponent', () => {
     actualVolume: 50,
     isMuted: false,
   };
+
+  const mockPresets: unknown[] = [];
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -73,6 +75,8 @@ describe('DeviceDetailsComponent', () => {
       httpMock.expectOne('/api/devices/test-device-id').flush(mockDevice);
       httpMock.expectOne('/api/devices/test-device-id/status').flush(mockStatus);
       httpMock.expectOne('/api/devices/test-device-id/volume').flush(mockVolumeInfo);
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id/presets').flush(mockPresets);
     });
 
     it('should load volume info after status loads', () => {
@@ -111,7 +115,23 @@ describe('DeviceDetailsComponent', () => {
       expect(muteBtn?.classList.contains('muted')).toBe(true);
     });
 
-    it('should call toggleMute when mute button clicked', fakeAsync(() => {
+    it('should update power state when preset powers on device', () => {
+      component['status'].set({ ...mockStatus, powerState: false });
+
+      component['onPresetPowerStateChanged'](true);
+
+      expect(component['status']()?.powerState).toBe(true);
+    });
+
+    it('should ignore redundant power state updates', () => {
+      component['status'].set({ ...mockStatus, powerState: true });
+
+      component['onPresetPowerStateChanged'](true);
+
+      expect(component['status']()?.powerState).toBe(true);
+    });
+
+    it('should call toggleMute when mute button clicked', () => {
       fixture.detectChanges();
       const muteBtn = fixture.nativeElement.querySelector('.mute-btn');
       muteBtn?.click();
@@ -122,10 +142,10 @@ describe('DeviceDetailsComponent', () => {
 
       // Expect volume refetch
       httpMock.expectOne('/api/devices/test-device-id/volume').flush({ ...mockVolumeInfo, isMuted: true });
-      tick();
-    }));
+    });
 
-    it('should debounce volume changes', fakeAsync(() => {
+    it('should debounce volume changes', () => {
+      jest.useFakeTimers();
       fixture.detectChanges();
 
       // Simulate multiple rapid slider changes
@@ -134,14 +154,15 @@ describe('DeviceDetailsComponent', () => {
       component['onVolumeInput']({ target: { value: '70' } } as unknown as Event);
 
       // Before debounce, no request
-      tick(200);
+      jest.advanceTimersByTime(200);
       httpMock.expectNone('/api/devices/test-device-id/volume');
 
       // After debounce, only one request with final value
-      tick(150);
+      jest.advanceTimersByTime(150);
       const req = httpMock.expectOne('/api/devices/test-device-id/volume');
       expect(req.request.body).toEqual({ level: 70 });
       req.flush(null);
-    }));
+      jest.useRealTimers();
+    });
   });
 });

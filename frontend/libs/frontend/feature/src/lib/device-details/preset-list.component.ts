@@ -29,6 +29,7 @@ export class PresetListComponent implements OnInit {
   readonly deviceId = input.required<string>();
   readonly isPowerOn = input<boolean>(true);
   readonly presetPlayed = output<number>();
+  readonly powerStateChanged = output<boolean>();
 
   protected readonly presets = signal<Preset[]>([]);
   protected readonly loading = signal(false);
@@ -73,9 +74,14 @@ export class PresetListComponent implements OnInit {
     // If device is off, power it on first, then play preset
     const playAction$ = this.isPowerOn()
       ? this.presetService.playPreset(deviceId, preset.id)
-      : this.deviceService.setPower(deviceId, true).pipe(
-          switchMap(() => this.presetService.playPreset(deviceId, preset.id))
-        );
+      : this.deviceService
+          .setPower(deviceId, true)
+          .pipe(
+            switchMap(() => {
+              this.powerStateChanged.emit(true);
+              return this.presetService.playPreset(deviceId, preset.id);
+            })
+          );
 
     playAction$.subscribe({
       next: () => {
