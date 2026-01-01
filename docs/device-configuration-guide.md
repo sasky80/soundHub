@@ -129,6 +129,55 @@ To enable volume controls, turn the device on using the **Power** button first.
 
 **Note:** Volume control is only available for devices with the "volume" capability.
 
+## Preset Management
+
+Manage and trigger SoundTouch presets directly from the device details page.
+
+### Viewing Presets
+
+1. Open the landing page and select any configured device.
+2. Scroll below the volume controls to the **Presets** grid.
+3. Each tile shows:
+   - A 64×64 play button with the preset artwork (or default icon)
+   - The preset name as a text button (tap/click to edit)
+   - A loading spinner when a preset command is in progress
+4. The final tile always contains the **+ Add Preset** shortcut.
+
+### Playing Presets
+
+1. Ensure the device is online (SoundHub automatically powers it on if required).
+2. Click the circular play button for any preset slot.
+3. The UI shows a spinner and disables other preset buttons until the API responds.
+4. On success the device begins playback; failures surface as toast/console errors.
+
+### Adding or Editing a Preset
+
+1. From the preset grid click the **+** tile to create a new preset.
+2. Alternatively, click an existing preset name to open the edit form (slot field becomes read-only).
+3. The form requires:
+   - **Preset Slot (1‑6)** – corresponds to SoundTouch physical buttons
+   - **Name** – label shown in the UI
+   - **Location URL** – stream, playlist, or station URL
+4. Optional fields:
+   - **Image URL** – artwork/background for the play button
+   - **Type** and **Source** – SoundTouch-specific metadata
+5. Click **Save** to submit. The UI navigates back to the device page after a successful API response.
+6. Use **Cancel** to discard changes at any time.
+
+### SoundTouch-Specific Fields
+
+- **Type** defaults to `stationurl`.
+- **Source** defaults to `LOCAL_INTERNET_RADIO`.
+- Leave either blank to accept the defaults—SoundHub applies them automatically on the backend.
+- Use custom values only when the SoundTouch WebServices API expects a different combination (e.g., TuneIn, Spotify).
+
+### Deleting a Preset
+
+1. Open an existing preset.
+2. Click **Delete** to show the confirmation modal.
+3. Confirm to remove the preset from the device; cancel keeps the preset intact.
+4. The preset list refreshes automatically after deletion.
+
 ## Device Capabilities
 
 Capabilities define what features are available for each device:

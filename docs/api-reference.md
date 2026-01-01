@@ -403,7 +403,7 @@ POST /api/devices/{id}/mute
 
 ### List Presets
 
-Returns the configured presets (1-6) for a device.
+Returns the configured presets (slots 1-6) for a device, including metadata used by the UI.
 
 ```http
 GET /api/devices/{id}/presets
@@ -413,30 +413,108 @@ GET /api/devices/{id}/presets
 ```json
 [
   {
-    "id": "1",
-    "position": 1,
+    "id": 1,
+    "deviceId": "abc123",
     "name": "BBC Radio 1",
-    "type": "TUNEIN"
+    "location": "https://stream.live.bbc.co.uk/",
+    "iconUrl": "https://cdn.example.com/bbc.png",
+    "type": "stationurl",
+    "source": "LOCAL_INTERNET_RADIO",
+    "isPresetable": true
   },
   {
-    "id": "2",
-    "position": 2,
-    "name": "My Spotify Playlist",
-    "type": "SPOTIFY"
+    "id": 2,
+    "deviceId": "abc123",
+    "name": "Morning Playlist",
+    "location": "spotify:playlist:123",
+    "iconUrl": null,
+    "type": "playlist",
+    "source": "SPOTIFY",
+    "isPresetable": true
   }
 ]
 ```
 
+**Error Responses**
+- `404 Not Found` - Device does not exist
+- `501 Not Implemented` - Vendor does not expose preset APIs
+
+### Store Preset (Create/Update)
+
+Creates or updates a preset slot on the device. If the slot already holds a preset, it is overwritten.
+
+```http
+POST /api/devices/{id}/presets
+Content-Type: application/json
+
+{
+  "id": 3,
+  "name": "Evening Jazz",
+  "location": "https://radio.example.com/jazz",
+  "iconUrl": "https://cdn.example.com/jazz.png",
+  "type": "stationurl",
+  "source": "LOCAL_INTERNET_RADIO"
+}
+```
+
+**Behavior**
+- `id` must be between 1 and 6 for SoundTouch devices
+- `name` and `location` are required
+- `type` and `source` are optional; defaults are `stationurl` and `LOCAL_INTERNET_RADIO` when omitted (SoundTouch requirement)
+
+**Response**
+- `201 Created` - Preset stored successfully (body contains the stored preset)
+- `200 OK` - Returned by some adapters when updating an existing slot
+
+```json
+{
+  "id": 3,
+  "deviceId": "abc123",
+  "name": "Evening Jazz",
+  "location": "https://radio.example.com/jazz",
+  "iconUrl": "https://cdn.example.com/jazz.png",
+  "type": "stationurl",
+  "source": "LOCAL_INTERNET_RADIO",
+  "isPresetable": true
+}
+```
+
+**Error Responses**
+- `400 Bad Request` - Invalid slot id, missing fields, or slot outside 1-6
+- `404 Not Found` - Device not found
+- `501 Not Implemented` - Vendor adapter missing
+
+### Remove Preset
+
+Deletes a preset from a slot.
+
+```http
+DELETE /api/devices/{id}/presets/{presetId}
+```
+
+**Response**
+- `204 No Content` - Preset removed
+- `404 Not Found` - Device missing or slot empty
+
+**Error Responses**
+- `400 Bad Request` - `presetId` outside 1-6
+- `501 Not Implemented` - Vendor does not support preset removal
+
 ### Play Preset
 
-Plays a specific preset.
+Activates a preset. The backend powers on the device first when necessary.
 
 ```http
 POST /api/devices/{id}/presets/{presetNumber}/play
 ```
 
 **Response**
-- `204 No Content` - Successfully playing
+- `204 No Content` - Request accepted
+
+**Error Responses**
+- `400 Bad Request` - Invalid preset number
+- `404 Not Found` - Device or preset absent
+- `501 Not Implemented` - Vendor adapter missing
 
 ---
 

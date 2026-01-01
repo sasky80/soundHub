@@ -1,4 +1,4 @@
-<section class="preset-list">
+<section class="preset-list" data-testid="preset-list">
   <h3 class="preset-list__title">{{ 'presets.title' | translate }}</h3>
 
   @if (loading()) {
@@ -8,10 +8,11 @@
   } @else {
     <div class="preset-list__grid">
       @for (preset of presets(); track trackByPresetId($index, preset)) {
-        <div class="preset-item">
+        <div class="preset-item" data-testid="preset-item">
           <button
             type="button"
             class="preset-item__play-btn"
+            data-testid="preset-play-button"
             [class.preset-item__play-btn--playing]="playingPresetId() === preset.id"
             [class.preset-item__play-btn--power-off]="!isPowerOn()"
             [disabled]="playingPresetId() !== null"
@@ -29,6 +30,7 @@
           <button
             type="button"
             class="preset-item__name"
+            data-testid="preset-name-button"
             (click)="navigateToPreset(preset)"
             [attr.aria-label]="('presets.edit' | translate) + ' ' + preset.name"
           >
@@ -38,10 +40,11 @@
       }
 
       <!-- Add new preset button -->
-      <div class="preset-item preset-item--add">
+      <div class="preset-item preset-item--add" data-testid="preset-add-item">
         <button
           type="button"
           class="preset-item__add-btn"
+          data-testid="preset-add-button"
           (click)="navigateToNewPreset()"
           [attr.aria-label]="'presets.addNew' | translate"
         >

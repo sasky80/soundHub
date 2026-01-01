@@ -1,4 +1,4 @@
-<div class="preset-form-page">
+<div class="preset-form-page" data-testid="preset-form-page">
   <header class="page-header">
     <a [routerLink]="['/devices', deviceId()]" class="back-link">
       ← {{ 'presetForm.back' | translate }}
@@ -19,7 +19,12 @@
       <div class="error-message">{{ error() }}</div>
     }
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="preset-form">
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="preset-form"
+      data-testid="preset-form"
+    >
       <!-- Preset Slot (ID) -->
       <div class="form-group">
         <label for="presetId" class="form-label">
@@ -30,6 +35,7 @@
           id="presetId"
           formControlName="id"
           class="form-select"
+          data-testid="preset-slot-select"
           [attr.aria-describedby]="form.get('id')?.invalid ? 'id-error' : null"
         >
           @for (slot of presetSlots; track slot) {
@@ -52,6 +58,7 @@
           type="text"
           formControlName="name"
           class="form-input"
+          data-testid="preset-name-input"
           [attr.aria-describedby]="form.get('name')?.invalid ? 'name-error' : null"
         />
         @if (form.get('name')?.invalid && form.get('name')?.touched) {
@@ -71,6 +78,7 @@
           formControlName="location"
           class="form-input"
           placeholder="https://example.com/stream"
+          data-testid="preset-location-input"
           [attr.aria-describedby]="form.get('location')?.invalid ? 'location-error' : null"
         />
         @if (form.get('location')?.invalid && form.get('location')?.touched) {
@@ -90,6 +98,7 @@
           formControlName="iconUrl"
           class="form-input"
           placeholder="https://example.com/icon.png"
+          data-testid="preset-icon-input"
         />
         <span class="form-hint">{{ 'presetForm.iconUrlHint' | translate }}</span>
       </div>
@@ -107,6 +116,7 @@
             formControlName="type"
             class="form-input"
             placeholder="stationurl"
+            data-testid="preset-type-input"
           />
           <span class="form-hint">{{ 'presetForm.typeHint' | translate }}</span>
         </div>
@@ -120,6 +130,7 @@
             formControlName="source"
             class="form-input"
             placeholder="LOCAL_INTERNET_RADIO"
+            data-testid="preset-source-input"
           />
           <span class="form-hint">{{ 'presetForm.sourceHint' | translate }}</span>
         </div>
@@ -131,6 +142,7 @@
           type="submit"
           class="btn btn-primary"
           [disabled]="form.invalid || saving()"
+          data-testid="preset-save-button"
         >
           @if (saving()) {
             {{ 'common.saving' | translate }}
@@ -144,6 +156,7 @@
           class="btn btn-secondary"
           (click)="navigateBack()"
           [disabled]="saving() || deleting()"
+          data-testid="preset-cancel-button"
         >
           {{ 'common.cancel' | translate }}
         </button>
@@ -154,6 +167,7 @@
             class="btn btn-danger"
             (click)="confirmDelete()"
             [disabled]="saving() || deleting()"
+            data-testid="preset-delete-button"
           >
             @if (deleting()) {
               {{ 'common.deleting' | translate }}
@@ -168,7 +182,11 @@
     <!-- Delete Confirmation Dialog -->
     @if (showDeleteConfirm()) {
       <div class="confirm-dialog-overlay" (click)="cancelDelete()">
-        <div class="confirm-dialog" (click)="$event.stopPropagation()">
+        <div
+          class="confirm-dialog"
+          data-testid="preset-delete-confirm"
+          (click)="$event.stopPropagation()"
+        >
           <h2 class="confirm-dialog__title">{{ 'presetForm.deleteConfirmTitle' | translate }}</h2>
           <p class="confirm-dialog__message">{{ 'presetForm.deleteConfirmMessage' | translate }}</p>
           <div class="confirm-dialog__actions">

@@ -25,13 +25,13 @@
 - [x] 4.3 Wire navigation back from preset details to device details
 
 ## 5. Integration and Testing
-- [ ] 5.1 Write unit tests for preset service (frontend)
-- [ ] 5.2 Write unit tests for preset endpoints (backend)
-- [ ] 5.3 Write e2e tests for preset management flow
+- [x] 5.1 Write unit tests for preset service (frontend)
+- [x] 5.2 Write unit tests for preset endpoints (backend)
+- [x] 5.3 Write e2e tests for preset management flow
 - [ ] 5.4 Test with real SoundTouch device
 
 ## 6. Documentation
-- [ ] 6.1 Update API reference docs with new preset endpoints (POST, DELETE)
-- [ ] 6.2 Update device configuration guide with preset management instructions
-- [ ] 6.3 Add preset-related examples to API documentation
-- [ ] 6.4 Document SoundTouch-specific preset fields (type, source) and default values
+- [x] 6.1 Update API reference docs with new preset endpoints (POST, DELETE)
+- [x] 6.2 Update device configuration guide with preset management instructions
+- [x] 6.3 Add preset-related examples to API documentation
+- [x] 6.4 Document SoundTouch-specific preset fields (type, source) and default values
