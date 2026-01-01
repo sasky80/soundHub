@@ -12,4 +12,5 @@ public class DeviceStatus
     public string? CurrentPreset { get; init; }
     public bool IsOnline { get; init; }
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+    public DeviceCapabilities? Capabilities { get; init; }
 }

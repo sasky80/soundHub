@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Mvc;
 using SoundHub.Application.Services;
 using SoundHub.Domain.Entities;
@@ -13,6 +14,16 @@ public class DevicesController : ControllerBase
 {
     private readonly DeviceService _deviceService;
     private readonly ILogger<DevicesController> _logger;
+
+    private static readonly HashSet<string> SupportedKeys = new(new[]
+    {
+        "AUX_INPUT",
+        "PREV_TRACK",
+        "NEXT_TRACK",
+        "PLAY_PAUSE",
+        "VOLUME_UP",
+        "VOLUME_DOWN"
+    });
 
     public DevicesController(DeviceService deviceService, ILogger<DevicesController> logger)
     {
@@ -382,18 +393,31 @@ public class DevicesController : ControllerBase
     }
 
     /// <summary>
-    /// Enters Bluetooth pairing mode for a device.
+    /// Sends a key press to the device (press + release).
     /// </summary>
-    [HttpPost("{id}/bluetooth/pairing")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [HttpPost("{id}/key")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status501NotImplemented)]
-    public async Task<IActionResult> EnterBluetoothPairing(string id, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
+    public async Task<IActionResult> PressKey(string id, [FromBody] PressKeyRequest request, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(request.Key))
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Key is required" });
+        }
+
+        var normalizedKey = request.Key.Trim().ToUpperInvariant();
+        if (!SupportedKeys.Contains(normalizedKey))
+        {
+            return BadRequest(new { code = "INVALID_KEY", message = "Unsupported key name" });
+        }
+
         try
         {
-            await _deviceService.EnterPairingModeAsync(id, ct);
-            return NoContent();
+            await _deviceService.PressKeyAsync(id, normalizedKey, ct);
+            return Ok();
         }
         catch (KeyNotFoundException)
         {
@@ -402,6 +426,52 @@ public class DevicesController : ControllerBase
         catch (NotSupportedException ex)
         {
             return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (TimeoutException ex)
+        {
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new { code = "DEVICE_TIMEOUT", message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { code = "DEVICE_UNREACHABLE", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending key {Key} for {DeviceId}", normalizedKey, id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { code = "INTERNAL_ERROR", message = "Failed to send key" });
+        }
+    }
+
+    /// <summary>
+    /// Enters Bluetooth pairing mode for a device.
+    /// </summary>
+    [HttpPost("{id}/bluetooth/enter-pairing")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
+    [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
+    public async Task<IActionResult> EnterBluetoothPairing(string id, CancellationToken ct)
+    {
+        try
+        {
+            await _deviceService.EnterPairingModeAsync(id, ct);
+            return Ok();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { code = "DEVICE_NOT_FOUND", message = $"Device with ID {id} not found" });
+        }
+        catch (InvalidOperationException ex) when (string.Equals(ex.Message, "Device does not support Bluetooth pairing", StringComparison.Ordinal))
+        {
+            return BadRequest(new { code = "INVALID_OPERATION", message = ex.Message });
+        }
+        catch (NotSupportedException ex)
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (TimeoutException ex)
+        {
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new { code = "DEVICE_TIMEOUT", message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
@@ -602,3 +672,4 @@ public record AddDeviceRequest(string Name, string IpAddress, string Vendor);
 public record UpdateDeviceRequest(string Name, string IpAddress, IEnumerable<string>? Capabilities);
 public record SetPowerRequest(bool On);
 public record SetVolumeRequest(int Level);
+public record PressKeyRequest(string Key);

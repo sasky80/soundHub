@@ -34,4 +34,9 @@ public class DeviceInfo
     /// The device software/firmware version.
     /// </summary>
     public string? SoftwareVersion { get; init; }
+
+    /// <summary>
+    /// Capabilities advertised by the device.
+    /// </summary>
+    public DeviceCapabilities? Capabilities { get; init; }
 }

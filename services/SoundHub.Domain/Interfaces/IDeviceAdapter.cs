@@ -90,6 +90,14 @@ public interface IDeviceAdapter
     Task MuteAsync(string deviceId, CancellationToken ct = default);
 
     /// <summary>
+    /// Sends a key press to the device (press + release).
+    /// </summary>
+    /// <param name="deviceId">The device identifier.</param>
+    /// <param name="keyName">Name of the key (e.g., PLAY_PAUSE, VOLUME_UP).</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task PressKeyAsync(string deviceId, string keyName, CancellationToken ct = default);
+
+    /// <summary>
     /// Puts a device into Bluetooth pairing mode.
     /// </summary>
     Task EnterPairingModeAsync(string deviceId, CancellationToken ct = default);

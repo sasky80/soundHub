@@ -310,6 +310,23 @@ public class DeviceService
         await adapter.SetVolumeAsync(id, level, ct);
     }
 
+    public async Task PressKeyAsync(string id, string keyName, CancellationToken ct = default)
+    {
+        var device = await _repository.GetDeviceAsync(id, ct);
+        if (device == null)
+        {
+            throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        var adapter = _adapterRegistry.GetAdapter(device.Vendor);
+        if (adapter == null)
+        {
+            throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        await adapter.PressKeyAsync(id, keyName, ct);
+    }
+
     /// <summary>
     /// Toggles the mute state of a device.
     /// </summary>
@@ -338,6 +355,11 @@ public class DeviceService
         if (device == null)
         {
             throw new KeyNotFoundException($"Device with ID {id} not found");
+        }
+
+        if (!device.Capabilities.Contains("bluetoothPairing"))
+        {
+            throw new InvalidOperationException("Device does not support Bluetooth pairing");
         }
 
         var adapter = _adapterRegistry.GetAdapter(device.Vendor);

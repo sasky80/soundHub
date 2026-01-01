@@ -631,6 +631,34 @@ public class SoundTouchAdapterTests
         Assert.Equal(2, capabilities.Count);
     }
 
+    [Fact]
+    public async Task GetCapabilitiesAsync_CapabilitiesEndpointIncludesBluetooth_AddsFlag()
+    {
+        // Arrange - supported URLs minimal plus capabilities endpoint
+        var responses = new Queue<string>();
+        responses.Enqueue("""
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <supportedURLs deviceID="C8DF84AE0B6E">
+                <supportedURL>/info</supportedURL>
+                <supportedURL>/volume</supportedURL>
+            </supportedURLs>
+            """);
+        responses.Enqueue("""
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <capabilities deviceID="C8DF84AE0B6E">
+                <capability name="bluetoothPairing"/>
+            </capabilities>
+            """);
+
+        _mockHandler.SetResponseQueue(responses);
+
+        // Act
+        var capabilities = await _adapter.GetCapabilitiesAsync(TestDeviceIp);
+
+        // Assert
+        Assert.Contains("bluetoothPairing", capabilities);
+    }
+
     #endregion
 
     #region VendorId Tests
@@ -639,6 +667,25 @@ public class SoundTouchAdapterTests
     public void VendorId_ReturnsBoseSoundtouch()
     {
         Assert.Equal("bose-soundtouch", _adapter.VendorId);
+    }
+
+    #endregion
+
+    #region PressKeyAsync Tests
+
+    [Fact]
+    public async Task PressKeyAsync_SendsPressAndRelease()
+    {
+        // Arrange
+        _mockHandler.SetResponse("", HttpStatusCode.OK);
+
+        // Act
+        await _adapter.PressKeyAsync(TestDeviceId, "PLAY_PAUSE");
+
+        // Assert
+        Assert.Equal(2, _mockHandler.RequestCount);
+        Assert.Contains("release", _mockHandler.LastRequestContent);
+        Assert.Contains("PLAY_PAUSE", _mockHandler.LastRequestContent);
     }
 
     #endregion

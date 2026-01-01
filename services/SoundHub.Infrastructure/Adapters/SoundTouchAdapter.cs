@@ -126,6 +126,27 @@ public class SoundTouchAdapter : IDeviceAdapter
             _logger.LogWarning(ex, "Failed to query supported URLs for device at {IpAddress}, using base capabilities", ipAddress);
         }
 
+        try
+        {
+            var url = GetDeviceUrl(ipAddress, DefaultPort, "/capabilities");
+            var response = await GetAsync(url, ct);
+            var doc = XDocument.Parse(response);
+
+            var capabilityNames = doc.Root?
+                .Elements("capability")
+                .Select(e => e.Attribute("name")?.Value)
+                .Where(n => !string.IsNullOrWhiteSpace(n));
+
+            foreach (var name in capabilityNames ?? Array.Empty<string>())
+            {
+                capabilities.Add(name!);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Failed to query /capabilities for device at {IpAddress}, continuing with supported URLs", ipAddress);
+        }
+
         return capabilities;
     }
 
@@ -163,7 +184,8 @@ public class SoundTouchAdapter : IDeviceAdapter
                 Type = type,
                 MacAddress = macAddress,
                 IpAddress = ipAddress,
-                SoftwareVersion = softwareVersion
+                SoftwareVersion = softwareVersion,
+                Capabilities = DeviceCapabilities.FromCapabilities(device.Capabilities)
             };
         }
         catch (HttpRequestException ex)
@@ -268,7 +290,8 @@ public class SoundTouchAdapter : IDeviceAdapter
                 CurrentSource = nowPlaying.Source,
                 CurrentPreset = null, // Would need to correlate with presets
                 IsOnline = true,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
+                Capabilities = DeviceCapabilities.FromCapabilities(device.Capabilities)
             };
         }
         catch (Exception ex)
@@ -282,7 +305,8 @@ public class SoundTouchAdapter : IDeviceAdapter
                 CurrentSource = null,
                 CurrentPreset = null,
                 IsOnline = false,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
+                Capabilities = DeviceCapabilities.FromCapabilities(device.Capabilities)
             };
         }
     }
@@ -363,13 +387,47 @@ public class SoundTouchAdapter : IDeviceAdapter
 
         _logger.LogInformation("Entering Bluetooth pairing mode for device {DeviceId}", deviceId);
 
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
+
         try
         {
-            await GetAsync(url, ct);
+            await GetAsync(url, timeoutCts.Token);
+        }
+        catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            _logger.LogWarning(ex, "Bluetooth pairing timed out for {DeviceId}", deviceId);
+            throw new TimeoutException($"Bluetooth pairing timed out for device {deviceId}", ex);
         }
         catch (HttpRequestException ex)
         {
             _logger.LogWarning(ex, "Failed to enter pairing mode for {DeviceId}", deviceId);
+            throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task PressKeyAsync(string deviceId, string keyName, CancellationToken ct = default)
+    {
+        var device = await GetDeviceOrThrowAsync(deviceId, ct);
+
+        _logger.LogInformation("Sending key {KeyName} to device {DeviceId}", keyName, deviceId);
+
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(5));
+
+        try
+        {
+            await SendKeyPressAsync(device.IpAddress, DefaultPort, keyName, timeoutCts.Token);
+        }
+        catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            _logger.LogWarning(ex, "Key press timed out for {DeviceId}", deviceId);
+            throw new TimeoutException($"Key press timed out for device {deviceId}", ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to send key {KeyName} for {DeviceId}", keyName, deviceId);
             throw new InvalidOperationException($"Device {deviceId} is not reachable", ex);
         }
     }
