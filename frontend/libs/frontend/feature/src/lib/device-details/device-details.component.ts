@@ -4,10 +4,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DeviceService, Device, DeviceStatus, VolumeInfo } from '@soundhub/frontend/data-access';
 import { TranslatePipe } from '@soundhub/frontend/shared';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { PresetListComponent } from './preset-list.component';
 
 @Component({
   selector: 'lib-device-details',
-  imports: [CommonModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, RouterLink, TranslatePipe, PresetListComponent],
   templateUrl: './device-details.component.html',
   styleUrl: './device-details.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

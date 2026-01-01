@@ -1,0 +1,186 @@
+<div class="preset-form-page">
+  <header class="page-header">
+    <a [routerLink]="['/devices', deviceId()]" class="back-link">
+      ← {{ 'presetForm.back' | translate }}
+    </a>
+    <h1>
+      @if (isEditMode()) {
+        {{ 'presetForm.editTitle' | translate }}
+      } @else {
+        {{ 'presetForm.createTitle' | translate }}
+      }
+    </h1>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ 'common.loading' | translate }}</div>
+  } @else {
+    @if (error()) {
+      <div class="error-message">{{ error() }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="preset-form">
+      <!-- Preset Slot (ID) -->
+      <div class="form-group">
+        <label for="presetId" class="form-label">
+          {{ 'presetForm.slot' | translate }}
+          <span class="required">*</span>
+        </label>
+        <select
+          id="presetId"
+          formControlName="id"
+          class="form-select"
+          [attr.aria-describedby]="form.get('id')?.invalid ? 'id-error' : null"
+        >
+          @for (slot of presetSlots; track slot) {
+            <option [value]="slot">{{ 'presetForm.slotNumber' | translate }} {{ slot }}</option>
+          }
+        </select>
+        @if (form.get('id')?.invalid && form.get('id')?.touched) {
+          <span id="id-error" class="form-error">{{ 'presetForm.slotRequired' | translate }}</span>
+        }
+      </div>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name" class="form-label">
+          {{ 'presetForm.name' | translate }}
+          <span class="required">*</span>
+        </label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          class="form-input"
+          [attr.aria-describedby]="form.get('name')?.invalid ? 'name-error' : null"
+        />
+        @if (form.get('name')?.invalid && form.get('name')?.touched) {
+          <span id="name-error" class="form-error">{{ 'presetForm.nameRequired' | translate }}</span>
+        }
+      </div>
+
+      <!-- Location URL -->
+      <div class="form-group">
+        <label for="location" class="form-label">
+          {{ 'presetForm.location' | translate }}
+          <span class="required">*</span>
+        </label>
+        <input
+          id="location"
+          type="url"
+          formControlName="location"
+          class="form-input"
+          placeholder="https://example.com/stream"
+          [attr.aria-describedby]="form.get('location')?.invalid ? 'location-error' : null"
+        />
+        @if (form.get('location')?.invalid && form.get('location')?.touched) {
+          <span id="location-error" class="form-error">{{ 'presetForm.locationRequired' | translate }}</span>
+        }
+        <span class="form-hint">{{ 'presetForm.locationHint' | translate }}</span>
+      </div>
+
+      <!-- Icon URL (optional) -->
+      <div class="form-group">
+        <label for="iconUrl" class="form-label">
+          {{ 'presetForm.iconUrl' | translate }}
+        </label>
+        <input
+          id="iconUrl"
+          type="url"
+          formControlName="iconUrl"
+          class="form-input"
+          placeholder="https://example.com/icon.png"
+        />
+        <span class="form-hint">{{ 'presetForm.iconUrlHint' | translate }}</span>
+      </div>
+
+      <!-- SoundTouch-specific fields -->
+      <fieldset class="form-fieldset">
+        <legend class="form-legend">{{ 'presetForm.advancedOptions' | translate }}</legend>
+
+        <!-- Type -->
+        <div class="form-group">
+          <label for="type" class="form-label">{{ 'presetForm.type' | translate }}</label>
+          <input
+            id="type"
+            type="text"
+            formControlName="type"
+            class="form-input"
+            placeholder="stationurl"
+          />
+          <span class="form-hint">{{ 'presetForm.typeHint' | translate }}</span>
+        </div>
+
+        <!-- Source -->
+        <div class="form-group">
+          <label for="source" class="form-label">{{ 'presetForm.source' | translate }}</label>
+          <input
+            id="source"
+            type="text"
+            formControlName="source"
+            class="form-input"
+            placeholder="LOCAL_INTERNET_RADIO"
+          />
+          <span class="form-hint">{{ 'presetForm.sourceHint' | translate }}</span>
+        </div>
+      </fieldset>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="form.invalid || saving()"
+        >
+          @if (saving()) {
+            {{ 'common.saving' | translate }}
+          } @else {
+            {{ 'common.save' | translate }}
+          }
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="navigateBack()"
+          [disabled]="saving() || deleting()"
+        >
+          {{ 'common.cancel' | translate }}
+        </button>
+
+        @if (isEditMode()) {
+          <button
+            type="button"
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+            [disabled]="saving() || deleting()"
+          >
+            @if (deleting()) {
+              {{ 'common.deleting' | translate }}
+            } @else {
+              {{ 'common.delete' | translate }}
+            }
+          </button>
+        }
+      </div>
+    </form>
+
+    <!-- Delete Confirmation Dialog -->
+    @if (showDeleteConfirm()) {
+      <div class="confirm-dialog-overlay" (click)="cancelDelete()">
+        <div class="confirm-dialog" (click)="$event.stopPropagation()">
+          <h2 class="confirm-dialog__title">{{ 'presetForm.deleteConfirmTitle' | translate }}</h2>
+          <p class="confirm-dialog__message">{{ 'presetForm.deleteConfirmMessage' | translate }}</p>
+          <div class="confirm-dialog__actions">
+            <button type="button" class="btn btn-secondary" (click)="cancelDelete()">
+              {{ 'common.cancel' | translate }}
+            </button>
+            <button type="button" class="btn btn-danger" (click)="onDelete()">
+              {{ 'common.delete' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

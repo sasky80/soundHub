@@ -1,0 +1,54 @@
+<section class="preset-list">
+  <h3 class="preset-list__title">{{ 'presets.title' | translate }}</h3>
+
+  @if (loading()) {
+    <div class="preset-list__loading">{{ 'common.loading' | translate }}</div>
+  } @else if (error()) {
+    <div class="preset-list__error">{{ error() }}</div>
+  } @else {
+    <div class="preset-list__grid">
+      @for (preset of presets(); track trackByPresetId($index, preset)) {
+        <div class="preset-item">
+          <button
+            type="button"
+            class="preset-item__play-btn"
+            [class.preset-item__play-btn--playing]="playingPresetId() === preset.id"
+            [class.preset-item__play-btn--power-off]="!isPowerOn()"
+            [disabled]="playingPresetId() !== null"
+            [style.background-image]="'url(' + getPresetIcon(preset) + ')'"
+            (click)="playPreset(preset)"
+            [attr.aria-label]="('presets.play' | translate) + ' ' + preset.name"
+            [attr.title]="!isPowerOn() ? ('presets.willPowerOn' | translate) : preset.name"
+          >
+            @if (playingPresetId() === preset.id) {
+              <span class="preset-item__spinner" aria-hidden="true"></span>
+            } @else {
+              <span class="preset-item__play-icon" aria-hidden="true">▶</span>
+            }
+          </button>
+          <button
+            type="button"
+            class="preset-item__name"
+            (click)="navigateToPreset(preset)"
+            [attr.aria-label]="('presets.edit' | translate) + ' ' + preset.name"
+          >
+            {{ preset.name }}
+          </button>
+        </div>
+      }
+
+      <!-- Add new preset button -->
+      <div class="preset-item preset-item--add">
+        <button
+          type="button"
+          class="preset-item__add-btn"
+          (click)="navigateToNewPreset()"
+          [attr.aria-label]="'presets.addNew' | translate"
+        >
+          <span class="preset-item__add-icon" aria-hidden="true">+</span>
+        </button>
+        <span class="preset-item__label">{{ 'presets.addNew' | translate }}</span>
+      </div>
+    </div>
+  }
+</section>

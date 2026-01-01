@@ -74,6 +74,12 @@
             }
           </button>
         </div>
+
+        <!-- Preset List -->
+        <lib-preset-list
+          [deviceId]="d.id"
+          [isPowerOn]="s.powerState"
+        />
       </section>
     }
   }

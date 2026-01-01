@@ -3,3 +3,5 @@ export * from './lib/landing/landing.component';
 export * from './lib/settings/settings.component';
 export * from './lib/device-config/device-config.component';
 export * from './lib/device-details/device-details.component';
+export * from './lib/device-details/preset-list.component';
+export * from './lib/preset-form/preset-form.component';
