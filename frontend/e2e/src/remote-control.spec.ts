@@ -89,6 +89,9 @@ test.describe('Remote Control', () => {
     const volDownBtn = page.locator('button[aria-label="Volume down"]');
     const volumeValue = page.locator('.volume-value, [data-testid="volume-value"]');
     
+    // Wait for button to be enabled (volume needs to be loaded)
+    await expect(volDownBtn).toBeEnabled({ timeout: 10000 });
+    
     const initialVolume = await volumeValue.textContent();
     
     await volDownBtn.click();

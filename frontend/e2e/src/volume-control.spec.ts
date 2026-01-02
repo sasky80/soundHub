@@ -91,14 +91,16 @@ test.describe('Volume Control', () => {
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(2000); // Wait longer for volume to load
+      await page.waitForTimeout(4000); // Wait longer for power on and initial polling
     } else {
-      await page.waitForTimeout(1000); // Still wait for volume to load
+      await page.waitForTimeout(2000); // Still wait for volume to stabilize
     }
 
-    // Click mute button
+    // Wait for mute button to be enabled (indicates volume is loaded)
+    // Volume loading happens during polling, which can take time
     const muteButton = page.locator('button.mute-btn, [data-testid="mute-button"]');
-    await expect(muteButton).toBeEnabled();
+    await expect(muteButton).toBeEnabled({ timeout: 10000 });
+    
     const wasMuted = await muteButton.evaluate((el) => el.classList.contains('muted'));
     await muteButton.click();
 
@@ -124,12 +126,13 @@ test.describe('Volume Control', () => {
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(2000); // Wait longer for volume to load
+      await page.waitForTimeout(4000); // Wait longer for power on and initial polling
     } else {
-      await page.waitForTimeout(1000); // Still wait for volume to load
+      await page.waitForTimeout(2000); // Still wait for volume to stabilize
     }
 
-    // Get volume slider and adjust it
+    // Get volume slider and wait for it to be enabled (indicates volume is loaded)
+    // Volume loading happens during polling, which can take time
     const volumeSlider = page.locator('input[type="range"].volume-slider, [data-testid="volume-slider"]');
     await expect(volumeSlider).toBeEnabled({ timeout: 10000 });
 

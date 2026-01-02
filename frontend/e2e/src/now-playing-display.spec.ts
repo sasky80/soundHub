@@ -52,16 +52,16 @@ test.describe('Now Playing LCD Display', () => {
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000); // Wait for power on
     }
 
     // Now turn off the device
     await powerButton.click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000); // Wait for power off to process
 
-    // LCD display should not be visible
+    // LCD display should not be visible (polling will eventually hide it)
     const lcdDisplay = page.locator('.lcd-display');
-    await expect(lcdDisplay).not.toBeVisible();
+    await expect(lcdDisplay).not.toBeVisible({ timeout: 3000 });
   });
 
   test('should display scrolling animation on LCD text', async ({ page }) => {
@@ -132,24 +132,28 @@ test.describe('Now Playing LCD Display', () => {
     
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(1000);
     }
 
+    // Wait for device to be actually ready by checking if AUX button becomes enabled
+    // This indicates power is on, status is loaded, and controls are active
     const auxBtn = page.locator('button[aria-label="Switch to AUX"]');
     await expect(auxBtn).toBeVisible();
-    await expect(auxBtn).toBeEnabled();
+    await expect(auxBtn).toBeEnabled({ timeout: 8000 });
 
     // Click AUX button to activate it
     await auxBtn.click();
-    await page.waitForTimeout(1500);
+    
+    // Wait for button to finish loading state (aria-busy should become false)
+    await expect(auxBtn).not.toHaveAttribute('aria-busy', 'true', { timeout: 10000 });
+    await page.waitForTimeout(1000); // Buffer for API response to complete
 
-    // Check if button has active class
+    // The component relies on status polling (10s interval) to reflect source changes
+    // Wait for the active state to be reflected in the DOM (could take up to 15 seconds)
+    await expect(auxBtn).toHaveAttribute('aria-pressed', 'true', { timeout: 15000 });
+    
+    // Verify active class is also present
     const hasActiveClass = await auxBtn.evaluate((el) => el.classList.contains('active'));
-    const ariaPressed = await auxBtn.getAttribute('aria-pressed');
-
-    // After clicking, button should have some indication of being active
-    // Either active class or aria-pressed should be true
-    expect(hasActiveClass || ariaPressed === 'true').toBeTruthy();
+    expect(hasActiveClass).toBeTruthy();
   });
 
   test('should apply theme styles via data attributes', async ({ page }) => {
