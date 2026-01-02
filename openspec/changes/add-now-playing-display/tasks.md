@@ -76,19 +76,19 @@
 ## 6. Testing
 
 ### 6.1 Unit Tests
-- [ ] 6.1.1 Test Now Playing display formatting with various data combinations
-- [ ] 6.1.2 Test polling start/stop based on power state
-- [ ] 6.1.3 Test Bluetooth button active state based on source
-- [ ] 6.1.4 Test AUX button active state based on source
-- [ ] 6.1.5 Test scroll speed setting persistence and application
-- [ ] 6.1.6 Test color theme setting persistence and application
+- [x] 6.1.1 Test Now Playing display formatting with various data combinations
+- [x] 6.1.2 Test polling start/stop based on power state
+- [x] 6.1.3 Test Bluetooth button active state based on source
+- [x] 6.1.4 Test AUX button active state based on source
+- [x] 6.1.5 Test scroll speed setting persistence and application
+- [x] 6.1.6 Test color theme setting persistence and application
 
 ### 6.2 E2E Tests
-- [ ] 6.2.1 Add test for Now Playing display visibility when device is on
-- [ ] 6.2.2 Add test for Now Playing hidden when device is off
-- [ ] 6.2.3 Add test for Bluetooth button active state
-- [ ] 6.2.4 Add test for AUX button active state
-- [ ] 6.2.5 Add test for LCD settings on settings page
+- [x] 6.2.1 Add test for Now Playing display visibility when device is on
+- [x] 6.2.2 Add test for Now Playing hidden when device is off
+- [x] 6.2.3 Add test for Bluetooth button active state
+- [x] 6.2.4 Add test for AUX button active state
+- [x] 6.2.5 Add test for LCD settings on settings page
 
 ## 7. Documentation
 
