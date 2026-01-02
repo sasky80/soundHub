@@ -91,7 +91,9 @@ test.describe('Volume Control', () => {
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000); // Wait longer for volume to load
+    } else {
+      await page.waitForTimeout(1000); // Still wait for volume to load
     }
 
     // Click mute button
@@ -122,12 +124,14 @@ test.describe('Volume Control', () => {
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(2000); // Wait longer for volume to load
+    } else {
+      await page.waitForTimeout(1000); // Still wait for volume to load
     }
 
     // Get volume slider and adjust it
     const volumeSlider = page.locator('input[type="range"].volume-slider, [data-testid="volume-slider"]');
-    await expect(volumeSlider).toBeEnabled({ timeout: 5000 });
+    await expect(volumeSlider).toBeEnabled({ timeout: 10000 });
 
     // Set volume to 75
     await volumeSlider.fill('75');

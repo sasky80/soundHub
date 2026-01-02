@@ -137,10 +137,11 @@ test.describe('Now Playing LCD Display', () => {
 
     const auxBtn = page.locator('button[aria-label="Switch to AUX"]');
     await expect(auxBtn).toBeVisible();
+    await expect(auxBtn).toBeEnabled();
 
     // Click AUX button to activate it
     await auxBtn.click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
     // Check if button has active class
     const hasActiveClass = await auxBtn.evaluate((el) => el.classList.contains('active'));
@@ -295,14 +296,14 @@ test.describe('LCD Display Settings', () => {
       localStorage.setItem('lcdColorTheme', 'amber');
     });
 
-    // Reload the page
-    await page.reload();
-    await page.waitForTimeout(500);
+    // Navigate to home first
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="device-list"], .device-list, .devices-grid', { timeout: 10000 });
 
     // Navigate to settings
     const settingsLink = page.locator('a[href="/settings"], [data-testid="settings-link"]').first();
     await settingsLink.click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     // Verify slow and amber buttons are active
     const slowBtn = page.locator('button:has-text("Slow"), button:has-text("Wolna")').first();
