@@ -3,14 +3,14 @@
 ## 1. Backend - Extend Device Status API
 
 ### 1.1 Update Status Response Model
-- [ ] 1.1.1 Add `nowPlaying` object to status response model with fields: `stationName`, `artist`, `track`, `source`
-- [ ] 1.1.2 Update `DevicesController.GetStatus` to include now playing data
-- [ ] 1.1.3 Ensure `currentSource` is included in status response (AUX, BLUETOOTH, LOCAL_INTERNET_RADIO, etc.)
+- [x] 1.1.1 Add `nowPlaying` object to status response model with fields: `stationName`, `artist`, `track`, `source`
+- [x] 1.1.2 Update `DevicesController.GetStatus` to include now playing data
+- [x] 1.1.3 Ensure `currentSource` is included in status response (AUX, BLUETOOTH, LOCAL_INTERNET_RADIO, etc.)
 
 ### 1.2 SoundTouch Adapter Updates
-- [ ] 1.2.1 Modify `GetStatusAsync` to fetch now playing information from device
-- [ ] 1.2.2 Parse station name, artist, and track from `/nowPlaying` endpoint response
-- [ ] 1.2.3 Include source type in status response
+- [x] 1.2.1 Modify `GetStatusAsync` to fetch now playing information from device
+- [x] 1.2.2 Parse station name, artist, and track from `/nowPlaying` endpoint response
+- [x] 1.2.3 Include source type in status response
 
 ## 2. Frontend - Data Access Layer
 

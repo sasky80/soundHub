@@ -523,6 +523,8 @@ public class SoundTouchAdapterTests
         Assert.True(result.PowerState);
         Assert.Equal(45, result.Volume);
         Assert.Equal("SPOTIFY", result.CurrentSource);
+        Assert.NotNull(result.NowPlaying);
+        Assert.Equal("SPOTIFY", result.NowPlaying!.Source);
     }
 
     [Fact]
@@ -551,6 +553,7 @@ public class SoundTouchAdapterTests
         Assert.True(result.IsOnline);
         Assert.False(result.PowerState); // STANDBY means power off
         Assert.Equal("STANDBY", result.CurrentSource);
+        Assert.Null(result.NowPlaying);
     }
 
     [Fact]

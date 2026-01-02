@@ -289,6 +289,7 @@ public class SoundTouchAdapter : IDeviceAdapter
                 Volume = volume.ActualVolume,
                 CurrentSource = nowPlaying.Source,
                 CurrentPreset = null, // Would need to correlate with presets
+                NowPlaying = isStandby ? null : nowPlaying,
                 IsOnline = true,
                 Timestamp = DateTime.UtcNow,
                 Capabilities = DeviceCapabilities.FromCapabilities(device.Capabilities)
@@ -304,6 +305,7 @@ public class SoundTouchAdapter : IDeviceAdapter
                 Volume = 0,
                 CurrentSource = null,
                 CurrentPreset = null,
+                NowPlaying = null,
                 IsOnline = false,
                 Timestamp = DateTime.UtcNow,
                 Capabilities = DeviceCapabilities.FromCapabilities(device.Capabilities)
