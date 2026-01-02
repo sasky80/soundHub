@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DeviceService, Device, DeviceStatus, VolumeInfo } from '@soundhub/frontend/data-access';
@@ -28,6 +28,17 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
   protected readonly volumeLoading = signal(false);
   protected readonly volumeValue = signal(0);
   protected readonly muteLoading = signal(false);
+  protected readonly keyLoading = signal<string | null>(null);
+  protected readonly pairingLoading = signal(false);
+  protected readonly isPlaying = signal(false);
+  protected readonly pairingMessage = signal<string | null>(null);
+  protected readonly remoteMessage = signal<string | null>(null);
+  protected readonly activeSource = signal<string | null>(null);
+
+  protected readonly isPowerOn = computed(() => this.status()?.powerState ?? false);
+  protected readonly bluetoothSupported = computed(() =>
+    this.device()?.capabilities?.includes('bluetoothPairing') ?? false
+  );
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -85,16 +96,22 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadVolume(id: string): void {
-    this.volumeLoading.set(true);
+  private loadVolume(id: string, showLoading = true): void {
+    if (showLoading) {
+      this.volumeLoading.set(true);
+    }
     this.deviceService.getVolume(id).subscribe({
       next: (volumeInfo) => {
         this.volumeInfo.set(volumeInfo);
         this.volumeValue.set(volumeInfo.actualVolume);
-        this.volumeLoading.set(false);
+        if (showLoading) {
+          this.volumeLoading.set(false);
+        }
       },
       error: () => {
-        this.volumeLoading.set(false);
+        if (showLoading) {
+          this.volumeLoading.set(false);
+        }
       },
     });
   }
@@ -139,6 +156,57 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Failed to toggle mute:', err);
         this.muteLoading.set(false);
+      },
+    });
+  }
+
+  protected pressKey(keyName: string): void {
+    const d = this.device();
+    if (!d || this.keyLoading()) return;
+
+    this.keyLoading.set(keyName);
+    this.remoteMessage.set(null);
+    this.deviceService.pressKey(d.id, keyName).subscribe({
+      next: () => {
+        if (keyName === 'PLAY_PAUSE') {
+          this.isPlaying.update((current) => !current);
+        }
+        if (keyName === 'AUX_INPUT') {
+          this.activeSource.set('AUX_INPUT');
+        }
+        if (keyName === 'VOLUME_UP' || keyName === 'VOLUME_DOWN') {
+          this.loadVolume(d.id, false);
+        }
+        this.keyLoading.set(null);
+      },
+      error: (err) => {
+        console.error('Failed to send key:', err);
+        this.remoteMessage.set('Action failed. Please try again.');
+        this.keyLoading.set(null);
+      },
+    });
+  }
+
+  protected isKeyInFlight(key: string): boolean {
+    return this.keyLoading() === key;
+  }
+
+  protected startBluetoothPairing(): void {
+    const d = this.device();
+    if (!d || this.pairingLoading()) return;
+
+    this.pairingMessage.set(null);
+    this.pairingLoading.set(true);
+
+    this.deviceService.enterBluetoothPairing(d.id).subscribe({
+      next: () => {
+        this.pairingMessage.set('Bluetooth pairing started');
+        this.pairingLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to start Bluetooth pairing:', err);
+        this.pairingMessage.set('Bluetooth pairing failed');
+        this.pairingLoading.set(false);
       },
     });
   }

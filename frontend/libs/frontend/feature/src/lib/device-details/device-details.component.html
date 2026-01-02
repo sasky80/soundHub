@@ -1,7 +1,7 @@
 <div class="device-details-page">
   <header class="page-header">
     <a routerLink="/" class="back-link">← {{ 'deviceDetails.back' | translate }}</a>
-    <h1>{{ 'deviceDetails.title' | translate }}</h1>
+    <h1>{{ 'controlPanel.title' | translate }}</h1>
   </header>
 
   @if (loading()) {
@@ -10,32 +10,41 @@
     <div class="error">{{ error() }}</div>
   } @else if (device(); as d) {
     <div class="device-info">
-      <h2 class="device-name">{{ d.name }}</h2>
-      <p class="device-vendor">{{ d.vendor }}</p>
+      <div>
+        <p class="eyebrow">{{ 'deviceDetails.back' | translate }}</p>
+        <h2 class="device-name">{{ d.name }}</h2>
+        <p class="device-vendor">{{ d.vendor }}</p>
+      </div>
     </div>
 
     @if (status(); as s) {
       <section class="control-section">
-        <div class="control-row">
-          <span class="control-label">{{ 'deviceDetails.power' | translate }}</span>
+        <div class="power-row">
           <button
             class="power-btn"
             [class.on]="s.powerState"
             [disabled]="powerLoading()"
             (click)="togglePower()"
+            aria-label="Toggle power"
+            [attr.title]="'controlPanel.togglePower' | translate"
           >
-            @if (powerLoading()) {
-              ...
-            } @else if (s.powerState) {
-              {{ 'deviceDetails.powerOn' | translate }}
-            } @else {
-              {{ 'deviceDetails.powerOff' | translate }}
-            }
+            <span class="icon" aria-hidden="true">
+              <img src="assets/icons/remote/remote-power.svg" alt="" aria-hidden="true" />
+            </span>
+            <span class="label">{{ s.powerState ? ('deviceDetails.powerOn' | translate) : ('deviceDetails.powerOff' | translate) }}</span>
           </button>
+          @if (powerLoading()) {
+            <span class="subtext">{{ 'common.loading' | translate }}</span>
+          }
         </div>
 
-        <div class="control-row volume-control">
-          <span class="control-label">{{ 'deviceDetails.volume' | translate }}</span>
+        <div class="volume-panel">
+          <div class="volume-label">
+            <span class="icon" aria-hidden="true">
+              <img src="assets/icons/remote/remote-volume.svg" alt="" aria-hidden="true" />
+            </span>
+            <span class="text">{{ 'deviceDetails.volume' | translate }}</span>
+          </div>
           <div class="volume-slider-container" [class.disabled]="!s.powerState">
             @if (volumeLoading()) {
               <span class="volume-loading">...</span>
@@ -52,30 +61,147 @@
                 [attr.title]="!s.powerState ? ('deviceDetails.volumeDisabled' | translate) : null"
               />
               <span class="volume-value">{{ volumeValue() }}</span>
+              <button
+                class="mute-btn"
+                [class.muted]="volumeInfo()?.isMuted"
+                [disabled]="!s.powerState || muteLoading()"
+                (click)="toggleMute()"
+                [attr.title]="!s.powerState ? ('deviceDetails.volumeDisabled' | translate) : (volumeInfo()?.isMuted ? ('deviceDetails.unmute' | translate) : ('deviceDetails.mute' | translate))"
+                aria-label="Toggle mute"
+              >
+                @if (muteLoading()) {
+                  <span class="inline-spinner" aria-hidden="true"></span>
+                  <span class="sr-only">{{ 'common.loading' | translate }}</span>
+                } @else if (volumeInfo()?.isMuted) {
+                  <img src="assets/icons/remote/remote-mute.svg" alt="" aria-hidden="true" />
+                } @else {
+                  <img src="assets/icons/remote/remote-volume.svg" alt="" aria-hidden="true" />
+                }
+              </button>
             }
           </div>
         </div>
 
-        <div class="control-row">
-          <span class="control-label">{{ 'deviceDetails.mute' | translate }}</span>
-          <button
-            class="mute-btn"
-            [class.muted]="volumeInfo()?.isMuted"
-            [disabled]="!s.powerState || muteLoading()"
-            (click)="toggleMute()"
-            [attr.title]="!s.powerState ? ('deviceDetails.volumeDisabled' | translate) : null"
-          >
-            @if (muteLoading()) {
-              ...
-            } @else if (volumeInfo()?.isMuted) {
-              {{ 'deviceDetails.unmute' | translate }}
-            } @else {
-              {{ 'deviceDetails.mute' | translate }}
-            }
-          </button>
+        <div class="remote-control">
+          @if (remoteMessage()) {
+            <p class="remote-message" aria-live="polite">{{ remoteMessage() }}</p>
+          }
+          <div class="remote-grid" aria-label="Remote controls">
+            <div class="playback-group" role="group" aria-label="Playback controls">
+              <button
+                class="remote-btn secondary"
+                [class.is-loading]="isKeyInFlight('PREV_TRACK')"
+                [attr.aria-busy]="isKeyInFlight('PREV_TRACK') ? 'true' : null"
+                [disabled]="!isPowerOn() || isKeyInFlight('PREV_TRACK')"
+                (click)="pressKey('PREV_TRACK')"
+                aria-label="Previous track"
+                [attr.title]="'controlPanel.previousTrack' | translate"
+              >
+                <span class="remote-btn-icon" aria-hidden="true">
+                  <img src="assets/icons/remote/remote-prev.svg" alt="" aria-hidden="true" />
+                </span>
+              </button>
+              <button
+                class="remote-btn primary"
+                [class.is-loading]="isKeyInFlight('PLAY_PAUSE')"
+                [attr.aria-busy]="isKeyInFlight('PLAY_PAUSE') ? 'true' : null"
+                [disabled]="!isPowerOn() || isKeyInFlight('PLAY_PAUSE')"
+                (click)="pressKey('PLAY_PAUSE')"
+                aria-label="Play or pause"
+                [attr.title]="'controlPanel.playPause' | translate"
+              >
+                <span class="remote-btn-icon" aria-hidden="true">
+                  @if (isPlaying()) {
+                    <img src="assets/icons/remote/remote-pause.svg" alt="" aria-hidden="true" />
+                  } @else {
+                    <img src="assets/icons/remote/remote-play.svg" alt="" aria-hidden="true" />
+                  }
+                </span>
+              </button>
+              <button
+                class="remote-btn secondary"
+                [class.is-loading]="isKeyInFlight('NEXT_TRACK')"
+                [attr.aria-busy]="isKeyInFlight('NEXT_TRACK') ? 'true' : null"
+                [disabled]="!isPowerOn() || isKeyInFlight('NEXT_TRACK')"
+                (click)="pressKey('NEXT_TRACK')"
+                aria-label="Next track"
+                [attr.title]="'controlPanel.nextTrack' | translate"
+              >
+                <span class="remote-btn-icon" aria-hidden="true">
+                  <img src="assets/icons/remote/remote-next.svg" alt="" aria-hidden="true" />
+                </span>
+              </button>
+            </div>
+
+            <div class="volume-buttons" role="group" aria-label="Volume controls">
+              <button
+                class="remote-btn tertiary"
+                [class.is-loading]="isKeyInFlight('VOLUME_DOWN')"
+                [attr.aria-busy]="isKeyInFlight('VOLUME_DOWN') ? 'true' : null"
+                [disabled]="!isPowerOn() || isKeyInFlight('VOLUME_DOWN')"
+                (click)="pressKey('VOLUME_DOWN')"
+                aria-label="Volume down"
+                [attr.title]="'controlPanel.volumeDown' | translate"
+              >
+                <span class="remote-btn-icon" aria-hidden="true">
+                  <img src="assets/icons/remote/remote-volume-down.svg" alt="" aria-hidden="true" />
+                </span>
+              </button>
+              <button
+                class="remote-btn tertiary"
+                [class.is-loading]="isKeyInFlight('VOLUME_UP')"
+                [attr.aria-busy]="isKeyInFlight('VOLUME_UP') ? 'true' : null"
+                [disabled]="!isPowerOn() || isKeyInFlight('VOLUME_UP')"
+                (click)="pressKey('VOLUME_UP')"
+                aria-label="Volume up"
+                [attr.title]="'controlPanel.volumeUp' | translate"
+              >
+                <span class="remote-btn-icon" aria-hidden="true">
+                  <img src="assets/icons/remote/remote-volume-up.svg" alt="" aria-hidden="true" />
+                </span>
+              </button>
+            </div>
+
+            <div class="source-buttons" role="group" aria-label="Source controls">
+              <button
+                class="remote-btn tertiary"
+                [class.is-loading]="isKeyInFlight('AUX_INPUT')"
+                [class.active]="activeSource() === 'AUX_INPUT'"
+                [attr.aria-pressed]="activeSource() === 'AUX_INPUT'"
+                [attr.aria-busy]="isKeyInFlight('AUX_INPUT') ? 'true' : null"
+                [disabled]="!isPowerOn() || isKeyInFlight('AUX_INPUT')"
+                (click)="pressKey('AUX_INPUT')"
+                aria-label="Switch to AUX"
+                [attr.title]="'controlPanel.switchAux' | translate"
+              >
+                <span class="remote-btn-icon" aria-hidden="true">
+                  <img src="assets/icons/remote/remote-aux.svg" alt="" aria-hidden="true" />
+                </span>
+              </button>
+
+              @if (bluetoothSupported()) {
+                <button
+                  class="remote-btn tertiary bluetooth"
+                  [class.is-loading]="pairingLoading()"
+                  [attr.aria-busy]="pairingLoading() ? 'true' : null"
+                  [disabled]="!isPowerOn() || pairingLoading()"
+                  [attr.title]="pairingLoading() ? ('deviceDetails.bluetoothPairingInProgress' | translate) : ('deviceDetails.bluetoothStartPairing' | translate)"
+                  (click)="startBluetoothPairing()"
+                  aria-label="Start Bluetooth pairing"
+                >
+                  <span class="remote-btn-icon" aria-hidden="true">
+                    <img src="assets/icons/remote/remote-bluetooth.svg" alt="" aria-hidden="true" />
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (pairingMessage()) {
+            <p class="pairing-message" aria-live="polite">{{ pairingMessage() }}</p>
+          }
         </div>
 
-        <!-- Preset List -->
         <lib-preset-list
           [deviceId]="d.id"
           [isPowerOn]="s.powerState"
