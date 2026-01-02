@@ -160,7 +160,7 @@ _Figure 2 – Stacked mobile layout optimized for 44px touch targets._
 ### Source & Bluetooth actions
 
 - **AUX**: Sets the active source to `AUX_INPUT`. The button highlights when SoundHub detects AUX as the `currentSource`.
-- **Bluetooth pairing**: Appears only when the device `capabilities` array contains `bluetoothPairing`. Clicking the button triggers the new `/bluetooth/enter-pairing` endpoint and shows a toast-style confirmation in the remote banner.
+- **Bluetooth pairing**: Appears only when the device `capabilities` array contains `bluetoothPairing`. Clicking the button triggers the `/bluetooth/enter-pairing` endpoint. The button highlights when SoundHub detects Bluetooth as the `currentSource`.
 - **Tooltips**: Hovering over either icon surfaces localized helper text (e.g., "Start Bluetooth pairing") for additional guidance.
 
 ### Accessibility tips
@@ -170,6 +170,23 @@ _Figure 2 – Stacked mobile layout optimized for 44px touch targets._
 - When screen readers are enabled, the remote banner announces success or failure text after each action, ensuring keyboard-only users know when an API call completes.
 
 ## Preset Management
+
+## Now Playing Display
+
+When a device is powered on, SoundHub shows a retro LCD-style **Now Playing** display under the device vendor name on the device details page.
+
+- The text is shown as: `{StationName}: {Artist}, {Track}` (missing fields are omitted).
+- For long content, the text auto-scrolls from right to left.
+- When the device is powered off, the display is hidden.
+
+## LCD Display Settings
+
+You can customize the Now Playing LCD display from the **Settings** page:
+
+- **Scroll speed**: Slow / Medium / Fast
+- **Color theme**: Green / Amber / Blue
+
+These settings are stored in your browser (local storage) and applied across device pages.
 
 Manage and trigger SoundTouch presets directly from the device details page.
 

@@ -92,6 +92,6 @@
 
 ## 7. Documentation
 
-- [ ] 7.1 Update API reference with extended status response
-- [ ] 7.2 Add Now Playing feature to device configuration guide
-- [ ] 7.3 Document LCD customization options (scroll speed, color themes)
+- [x] 7.1 Update API reference with extended status response
+- [x] 7.2 Add Now Playing feature to device configuration guide
+- [x] 7.3 Document LCD customization options (scroll speed, color themes)

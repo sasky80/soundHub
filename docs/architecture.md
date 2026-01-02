@@ -266,6 +266,31 @@ sequenceDiagram
     WebApp-->>User: Power state updated
 ```
 
+## Data Flow: Now Playing Polling
+
+The DeviceDetailsComponent polls the device status every 10 seconds to keep the Now Playing LCD display updated.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebApp as Angular Web App
+    participant API as SoundHub API
+    participant Adapter as SoundTouchAdapter
+    participant Device as Physical Device
+
+    loop Every 10 seconds (when device is on)
+        WebApp->>API: GET /devices/{id}/status
+        API->>Adapter: GetStatusAsync(deviceId)
+        Adapter->>Device: GET /nowPlaying
+        Device-->>Adapter: XML (source, track, artist, stationName)
+        Adapter-->>API: DeviceStatus (incl. nowPlaying)
+        API-->>WebApp: JSON { isOnline, powerState, volume, currentSource, nowPlaying }
+        WebApp-->>User: Update LCD display text
+    end
+
+    Note over WebApp: Polling stops when device powers off or component is destroyed
+```
+
 ## SoundTouch API Communication
 
 The SoundTouchAdapter communicates with Bose SoundTouch devices via HTTP on port 8090:
@@ -289,14 +314,14 @@ sequenceDiagram
     Device-->>Adapter: XML (preset 1-6 with ContentItem)
 
     Note over Adapter,Device: POST Requests (control)
-    Adapter->>Device: POST /volume<br/>&lt;volume&gt;50&lt;/volume&gt;
+    Adapter->>Device: POST /volume (volume=50)
     Device-->>Adapter: 200 OK
 
     Note over Adapter,Device: Key Press Pattern (power, presets)
-    Adapter->>Device: POST /key<br/>&lt;key state="press"&gt;PRESET_1&lt;/key&gt;
+    Adapter->>Device: POST /key (state=press, PRESET_1)
     Device-->>Adapter: 200 OK
     Note over Adapter: Wait 100ms
-    Adapter->>Device: POST /key<br/>&lt;key state="release"&gt;PRESET_1&lt;/key&gt;
+    Adapter->>Device: POST /key (state=release, PRESET_1)
     Device-->>Adapter: 200 OK
 ```
 
@@ -363,9 +388,9 @@ flowchart TB
 | Route | Component | Description |
 |-------|-----------|-------------|
 | `/` | LandingComponent | Displays list of configured devices with navigation to settings and device details |
-| `/settings` | SettingsComponent | Language selection (English/Polish) and navigation to device configuration |
+| `/settings` | SettingsComponent | Language selection, LCD display settings, and navigation to device configuration |
 | `/settings/devices` | DeviceConfigComponent | Lists configured devices with navigation to device details |
-| `/devices/:id` | DeviceDetailsComponent | Device control page with power toggle, volume slider, and mute button |
+| `/devices/:id` | DeviceDetailsComponent | Device control page with Now Playing LCD (polls status every 10 s), power, volume, presets, and remote control |
 
 ## Internationalization (i18n)
 

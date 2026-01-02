@@ -281,9 +281,20 @@ GET /api/devices/{id}/status
   "isOnline": true,
   "powerState": true,
   "volume": 45,
-  "currentSource": "SPOTIFY"
+  "currentSource": "SPOTIFY",
+  "nowPlaying": {
+    "source": "SPOTIFY",
+    "stationName": "My Playlist",
+    "artist": "Queen",
+    "track": "Bohemian Rhapsody"
+  }
 }
 ```
+
+**Notes**
+- `currentSource` represents the device's active source (for example: `AUX`, `BLUETOOTH`, `LOCAL_INTERNET_RADIO`, `SPOTIFY`).
+- `nowPlaying` may be `null` (or contain missing fields) when the device is idle or the vendor does not provide metadata.
+- For richer playback details (e.g., `album`, `playStatus`, `artUrl`), use the dedicated **Get Now Playing** endpoint.
 
 ### Set Power
 
