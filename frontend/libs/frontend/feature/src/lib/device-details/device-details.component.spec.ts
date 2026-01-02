@@ -347,7 +347,6 @@ describe('DeviceDetailsComponent', () => {
       req.flush(null);
       fixture.detectChanges();
 
-      expect(component['activeSource']()).toBe('AUX_INPUT');
       expect(auxBtn?.classList.contains('active')).toBe(true);
     });
 
@@ -361,6 +360,205 @@ describe('DeviceDetailsComponent', () => {
 
       const message = fixture.nativeElement.querySelector('.remote-message');
       expect(message?.textContent).toContain('Action failed');
+    });
+  });
+
+  describe('Now Playing LCD display', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id').flush(mockDevice);
+      httpMock.expectOne('/api/devices/test-device-id/status').flush(mockStatus);
+      httpMock.expectOne('/api/devices/test-device-id/volume').flush(mockVolumeInfo);
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id/presets').flush(mockPresets);
+    });
+
+    it('should format Now Playing text with all fields present', () => {
+      const nowPlaying = {
+        stationName: 'KINK FM',
+        artist: 'Jungle Brothers',
+        track: 'Straight Out the Jungle',
+        album: 'Straight Out the Jungle',
+        source: 'LOCAL_INTERNET_RADIO',
+        playStatus: 'PLAY_STATE',
+        artUrl: undefined,
+      };
+
+      const formatted = component['formatNowPlaying'](nowPlaying);
+      expect(formatted).toBe('KINK FM: Jungle Brothers, Straight Out the Jungle');
+    });
+
+    it('should format Now Playing text with missing artist', () => {
+      const nowPlaying = {
+        stationName: 'KINK FM',
+        artist: undefined,
+        track: 'Straight Out the Jungle',
+        album: undefined,
+        source: 'LOCAL_INTERNET_RADIO',
+        playStatus: 'PLAY_STATE',
+        artUrl: undefined,
+      };
+
+      const formatted = component['formatNowPlaying'](nowPlaying);
+      expect(formatted).toBe('KINK FM: Straight Out the Jungle');
+    });
+
+    it('should format Now Playing text with missing track', () => {
+      const nowPlaying = {
+        stationName: 'KINK FM',
+        artist: 'Jungle Brothers',
+        track: undefined,
+        album: undefined,
+        source: 'LOCAL_INTERNET_RADIO',
+        playStatus: 'PLAY_STATE',
+        artUrl: undefined,
+      };
+
+      const formatted = component['formatNowPlaying'](nowPlaying);
+      expect(formatted).toBe('KINK FM: Jungle Brothers');
+    });
+
+    it('should format Now Playing text with only station name', () => {
+      const nowPlaying = {
+        stationName: 'KINK FM',
+        artist: undefined,
+        track: undefined,
+        album: undefined,
+        source: 'LOCAL_INTERNET_RADIO',
+        playStatus: 'PLAY_STATE',
+        artUrl: undefined,
+      };
+
+      const formatted = component['formatNowPlaying'](nowPlaying);
+      expect(formatted).toBe('KINK FM');
+    });
+
+    it('should display LCD when device is on and nowPlaying exists', () => {
+      const statusWithNowPlaying = {
+        ...mockStatus,
+        powerState: true,
+        nowPlaying: {
+          stationName: 'KINK FM',
+          artist: 'Jungle Brothers',
+          track: 'Straight Out the Jungle',
+          album: undefined,
+          source: 'LOCAL_INTERNET_RADIO',
+          playStatus: 'PLAY_STATE',
+          artUrl: undefined,
+        },
+      };
+
+      component['status'].set(statusWithNowPlaying);
+      fixture.detectChanges();
+
+      const lcdDisplay = fixture.nativeElement.querySelector('.lcd-display');
+      expect(lcdDisplay).toBeTruthy();
+      expect(lcdDisplay?.textContent).toContain('KINK FM: Jungle Brothers, Straight Out the Jungle');
+    });
+
+    it('should hide LCD when device is off', () => {
+      const statusWithNowPlaying = {
+        ...mockStatus,
+        powerState: false,
+        nowPlaying: {
+          stationName: 'KINK FM',
+          artist: 'Jungle Brothers',
+          track: 'Straight Out the Jungle',
+          album: undefined,
+          source: 'LOCAL_INTERNET_RADIO',
+          playStatus: 'PLAY_STATE',
+          artUrl: undefined,
+        },
+      };
+
+      component['status'].set(statusWithNowPlaying);
+      fixture.detectChanges();
+
+      const lcdDisplay = fixture.nativeElement.querySelector('.lcd-display');
+      expect(lcdDisplay).toBeFalsy();
+    });
+
+    it('should show no playback message when device is on but no nowPlaying', () => {
+      component['status'].set({ ...mockStatus, powerState: true, nowPlaying: undefined });
+      fixture.detectChanges();
+
+      const lcdDisplay = fixture.nativeElement.querySelector('.lcd-display');
+      const lcdText = lcdDisplay?.querySelector('.lcd-text.static');
+      expect(lcdDisplay).toBeTruthy();
+      expect(lcdText).toBeTruthy();
+    });
+  });
+
+  describe('Bluetooth button active state', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id').flush({
+        ...mockDevice,
+        capabilities: [...mockDevice.capabilities, 'bluetoothPairing'],
+      });
+      httpMock.expectOne('/api/devices/test-device-id/status').flush(mockStatus);
+      httpMock.expectOne('/api/devices/test-device-id/volume').flush(mockVolumeInfo);
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id/presets').flush(mockPresets);
+    });
+
+    it('should show Bluetooth button as active when source is BLUETOOTH', () => {
+      component['status'].set({ ...mockStatus, currentSource: 'BLUETOOTH' });
+      fixture.detectChanges();
+
+      expect(component['isBluetoothActive']()).toBe(true);
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      expect(btBtn?.classList.contains('active')).toBe(true);
+      expect(btBtn?.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('should not show Bluetooth button as active when source is not BLUETOOTH', () => {
+      component['status'].set({ ...mockStatus, currentSource: 'SPOTIFY' });
+      fixture.detectChanges();
+
+      expect(component['isBluetoothActive']()).toBe(false);
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      expect(btBtn?.classList.contains('active')).toBe(false);
+      expect(btBtn?.getAttribute('aria-pressed')).toBe('false');
+    });
+  });
+
+  describe('AUX button active state', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id').flush(mockDevice);
+      httpMock.expectOne('/api/devices/test-device-id/status').flush(mockStatus);
+      httpMock.expectOne('/api/devices/test-device-id/volume').flush(mockVolumeInfo);
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id/presets').flush(mockPresets);
+    });
+
+    it('should show AUX button as active when source is AUX', () => {
+      component['status'].set({ ...mockStatus, currentSource: 'AUX' });
+      fixture.detectChanges();
+
+      expect(component['isAuxActive']()).toBe(true);
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+      expect(auxBtn?.classList.contains('active')).toBe(true);
+      expect(auxBtn?.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('should show AUX button as active when source is AUX_INPUT', () => {
+      component['status'].set({ ...mockStatus, currentSource: 'AUX_INPUT' });
+      fixture.detectChanges();
+
+      expect(component['isAuxActive']()).toBe(true);
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+      expect(auxBtn?.classList.contains('active')).toBe(true);
+    });
+
+    it('should not show AUX button as active when source is different', () => {
+      component['status'].set({ ...mockStatus, currentSource: 'SPOTIFY' });
+      fixture.detectChanges();
+
+      expect(component['isAuxActive']()).toBe(false);
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+      expect(auxBtn?.classList.contains('active')).toBe(false);
     });
   });
 });
