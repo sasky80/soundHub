@@ -1,9 +1,9 @@
-import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy, computed, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { DeviceService, Device, DeviceStatus, VolumeInfo } from '@soundhub/frontend/data-access';
+import { DeviceService, Device, DeviceStatus, VolumeInfo, NowPlayingInfo } from '@soundhub/frontend/data-access';
 import { TranslatePipe } from '@soundhub/frontend/shared';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, interval, debounceTime, distinctUntilChanged, takeUntil, switchMap, startWith } from 'rxjs';
 import { PresetListComponent } from './preset-list.component';
 
 @Component({
@@ -18,6 +18,18 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
   private readonly deviceService = inject(DeviceService);
   private readonly destroy$ = new Subject<void>();
   private readonly volumeChange$ = new Subject<number>();
+  private readonly statusPolling$ = new Subject<void>();
+  private readonly POLL_INTERVAL = 10000; // 10 seconds
+
+  @HostBinding('attr.data-lcd-speed')
+  protected get lcdSpeed(): string {
+    return localStorage.getItem('lcdScrollSpeed') ?? 'medium';
+  }
+
+  @HostBinding('attr.data-lcd-theme')
+  protected get lcdTheme(): string {
+    return localStorage.getItem('lcdColorTheme') ?? 'green';
+  }
 
   protected readonly device = signal<Device | null>(null);
   protected readonly status = signal<DeviceStatus | null>(null);
@@ -33,12 +45,19 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
   protected readonly isPlaying = signal(false);
   protected readonly pairingMessage = signal<string | null>(null);
   protected readonly remoteMessage = signal<string | null>(null);
-  protected readonly activeSource = signal<string | null>(null);
+  protected readonly shouldScroll = signal(false);
 
   protected readonly isPowerOn = computed(() => this.status()?.powerState ?? false);
   protected readonly bluetoothSupported = computed(() =>
     this.device()?.capabilities?.includes('bluetoothPairing') ?? false
   );
+  protected readonly isBluetoothActive = computed(() => 
+    this.status()?.currentSource === 'BLUETOOTH'
+  );
+  protected readonly isAuxActive = computed(() => {
+    const source = this.status()?.currentSource;
+    return source === 'AUX' || source === 'AUX_INPUT';
+  });
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -49,8 +68,31 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPolling();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private startPolling(deviceId: string): void {
+    this.statusPolling$.next(); // Stop any existing polling
+    
+    interval(this.POLL_INTERVAL)
+      .pipe(
+        startWith(0), // Immediate first poll
+        switchMap(() => this.deviceService.getDeviceStatus(deviceId)),
+        takeUntil(this.statusPolling$),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (status) => {
+          this.status.set(status);
+        },
+        error: (err) => console.error('Polling error:', err),
+      });
+  }
+
+  private stopPolling(): void {
+    this.statusPolling$.next();
   }
 
   private setupVolumeDebounce(deviceId: string): void {
@@ -91,6 +133,11 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
       next: (status) => {
         this.status.set(status);
         this.loadVolume(id);
+        
+        // Start polling if device is powered on
+        if (status.powerState) {
+          this.startPolling(id);
+        }
       },
       error: () => {}, // Non-critical, status may not be available
     });
@@ -128,6 +175,13 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
       next: () => {
         this.status.set({ ...s, powerState: newState });
         this.powerLoading.set(false);
+        
+        // Start or stop polling based on new power state
+        if (newState) {
+          this.startPolling(d.id);
+        } else {
+          this.stopPolling();
+        }
       },
       error: (err) => {
         console.error('Failed to toggle power:', err);
@@ -171,9 +225,6 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
         if (keyName === 'PLAY_PAUSE') {
           this.isPlaying.update((current) => !current);
         }
-        if (keyName === 'AUX_INPUT') {
-          this.activeSource.set('AUX_INPUT');
-        }
         if (keyName === 'VOLUME_UP' || keyName === 'VOLUME_DOWN') {
           this.loadVolume(d.id, false);
         }
@@ -195,20 +246,42 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
     const d = this.device();
     if (!d || this.pairingLoading()) return;
 
-    this.pairingMessage.set(null);
     this.pairingLoading.set(true);
 
     this.deviceService.enterBluetoothPairing(d.id).subscribe({
       next: () => {
-        this.pairingMessage.set('Bluetooth pairing started');
         this.pairingLoading.set(false);
       },
       error: (err) => {
         console.error('Failed to start Bluetooth pairing:', err);
-        this.pairingMessage.set('Bluetooth pairing failed');
         this.pairingLoading.set(false);
       },
     });
+  }
+
+  protected formatNowPlaying(nowPlaying: NowPlayingInfo): string {
+    const parts: string[] = [];
+    
+    if (nowPlaying.stationName) {
+      parts.push(nowPlaying.stationName);
+    }
+    
+    const trackInfo: string[] = [];
+    if (nowPlaying.artist) {
+      trackInfo.push(nowPlaying.artist);
+    }
+    if (nowPlaying.track) {
+      trackInfo.push(nowPlaying.track);
+    }
+    
+    if (trackInfo.length > 0) {
+      if (parts.length > 0) {
+        parts.push(': ');
+      }
+      parts.push(trackInfo.join(', '));
+    }
+    
+    return parts.length > 0 ? parts.join('') : '---';
   }
 
   protected onPresetPowerStateChanged(newState: boolean): void {

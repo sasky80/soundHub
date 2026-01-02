@@ -11,11 +11,22 @@ export interface Device {
   dateTimeAdded: string;
 }
 
+export interface NowPlayingInfo {
+  stationName?: string;
+  artist?: string;
+  track?: string;
+  album?: string;
+  source?: string;
+  playStatus?: string;
+  artUrl?: string;
+}
+
 export interface DeviceStatus {
   isOnline: boolean;
   powerState: boolean;
   volume: number;
   currentSource?: string;
+  nowPlaying?: NowPlayingInfo;
 }
 
 export interface PowerRequest {

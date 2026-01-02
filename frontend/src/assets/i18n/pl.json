@@ -1,0 +1,17 @@
+{
+  "controlPanel": {
+    "nowPlaying": "Teraz odtwarzane",
+    "noPlayback": "Brak informacji o odtwarzaniu"
+  },
+  "settings": {
+    "lcdDisplay": "Wyświetlacz LCD",
+    "lcdScrollSpeed": "Prędkość przewijania",
+    "scrollSpeedSlow": "Wolna",
+    "scrollSpeedMedium": "Średnia",
+    "scrollSpeedFast": "Szybka",
+    "lcdColorTheme": "Motyw kolorystyczny",
+    "colorThemeGreen": "Zielony",
+    "colorThemeAmber": "Bursztynowy",
+    "colorThemeBlue": "Niebieski"
+  }
+}

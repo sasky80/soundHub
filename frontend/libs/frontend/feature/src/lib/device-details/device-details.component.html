@@ -18,6 +18,20 @@
     </div>
 
     @if (status(); as s) {
+      @if (s.powerState && s.nowPlaying) {
+        <div class="lcd-display" role="status" aria-live="polite" [attr.aria-label]="'controlPanel.nowPlaying' | translate">
+          <div class="lcd-text">
+            {{ formatNowPlaying(s.nowPlaying) }}
+          </div>
+        </div>
+      } @else if (s.powerState) {
+        <div class="lcd-display" role="status" aria-live="polite">
+          <div class="lcd-text static">
+            {{ 'controlPanel.noPlayback' | translate }}
+          </div>
+        </div>
+      }
+
       <section class="control-section">
         <div class="power-row">
           <button
@@ -166,8 +180,8 @@
               <button
                 class="remote-btn tertiary"
                 [class.is-loading]="isKeyInFlight('AUX_INPUT')"
-                [class.active]="activeSource() === 'AUX_INPUT'"
-                [attr.aria-pressed]="activeSource() === 'AUX_INPUT'"
+                [class.active]="isAuxActive()"
+                [attr.aria-pressed]="isAuxActive()"
                 [attr.aria-busy]="isKeyInFlight('AUX_INPUT') ? 'true' : null"
                 [disabled]="!isPowerOn() || isKeyInFlight('AUX_INPUT')"
                 (click)="pressKey('AUX_INPUT')"
@@ -183,6 +197,8 @@
                 <button
                   class="remote-btn tertiary bluetooth"
                   [class.is-loading]="pairingLoading()"
+                  [class.active]="isBluetoothActive()"
+                  [attr.aria-pressed]="isBluetoothActive()"
                   [attr.aria-busy]="pairingLoading() ? 'true' : null"
                   [disabled]="!isPowerOn() || pairingLoading()"
                   [attr.title]="pairingLoading() ? ('deviceDetails.bluetoothPairingInProgress' | translate) : ('deviceDetails.bluetoothStartPairing' | translate)"
@@ -196,10 +212,6 @@
               }
             </div>
           </div>
-
-          @if (pairingMessage()) {
-            <p class="pairing-message" aria-live="polite">{{ pairingMessage() }}</p>
-          }
         </div>
 
         <lib-preset-list

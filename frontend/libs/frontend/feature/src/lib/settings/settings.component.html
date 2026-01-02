@@ -25,6 +25,82 @@
   </section>
 
   <section class="settings-section">
+    <h2>{{ 'settings.lcdDisplay' | translate }}</h2>
+    
+    <div class="lcd-preview-container">
+      <div 
+        class="lcd-display-preview" 
+        [attr.data-lcd-theme]="colorTheme()"
+        [attr.data-lcd-speed]="scrollSpeed()"
+      >
+        <div class="lcd-text">
+          KINK FM: Jungle Brothers, Straight Out the Jungle
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <label>{{ 'settings.lcdScrollSpeed' | translate }}</label>
+      <div class="option-buttons">
+        <button
+          class="option-btn"
+          [class.active]="scrollSpeed() === 'slow'"
+          (click)="setScrollSpeed('slow')"
+        >
+          {{ 'settings.scrollSpeedSlow' | translate }}
+        </button>
+        <button
+          class="option-btn"
+          [class.active]="scrollSpeed() === 'medium'"
+          (click)="setScrollSpeed('medium')"
+        >
+          {{ 'settings.scrollSpeedMedium' | translate }}
+        </button>
+        <button
+          class="option-btn"
+          [class.active]="scrollSpeed() === 'fast'"
+          (click)="setScrollSpeed('fast')"
+        >
+          {{ 'settings.scrollSpeedFast' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <label>{{ 'settings.lcdColorTheme' | translate }}</label>
+      <div class="option-buttons color-themes">
+        <button
+          class="option-btn color-preview"
+          [class.active]="colorTheme() === 'green'"
+          (click)="setColorTheme('green')"
+          data-theme="green"
+        >
+          <span class="color-swatch green"></span>
+          {{ 'settings.colorThemeGreen' | translate }}
+        </button>
+        <button
+          class="option-btn color-preview"
+          [class.active]="colorTheme() === 'amber'"
+          (click)="setColorTheme('amber')"
+          data-theme="amber"
+        >
+          <span class="color-swatch amber"></span>
+          {{ 'settings.colorThemeAmber' | translate }}
+        </button>
+        <button
+          class="option-btn color-preview"
+          [class.active]="colorTheme() === 'blue'"
+          (click)="setColorTheme('blue')"
+          data-theme="blue"
+        >
+          <span class="color-swatch blue"></span>
+          {{ 'settings.colorThemeBlue' | translate }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-section">
     <a routerLink="/settings/devices" class="nav-link">
       {{ 'settings.deviceConfig' | translate }} →
     </a>

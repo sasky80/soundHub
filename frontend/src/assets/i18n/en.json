@@ -1,0 +1,17 @@
+{
+  "controlPanel": {
+    "nowPlaying": "Now Playing",
+    "noPlayback": "No playback information"
+  },
+  "settings": {
+    "lcdDisplay": "LCD Display",
+    "lcdScrollSpeed": "Scroll Speed",
+    "scrollSpeedSlow": "Slow",
+    "scrollSpeedMedium": "Medium",
+    "scrollSpeedFast": "Fast",
+    "lcdColorTheme": "Color Theme",
+    "colorThemeGreen": "Green",
+    "colorThemeAmber": "Amber",
+    "colorThemeBlue": "Blue"
+  }
+}
