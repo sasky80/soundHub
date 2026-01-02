@@ -129,6 +129,46 @@ To enable volume controls, turn the device on using the **Power** button first.
 
 **Note:** Volume control is only available for devices with the "volume" capability.
 
+## Remote Controller Layout
+
+SoundHub now renders a compact remote-style control surface directly beneath the volume slider. The layout mirrors a physical remote, so you can quickly trigger frequent actions without scrolling through text buttons.
+
+![Desktop remote controller layout](./images/remote-control-desktop.svg)
+_Figure 1 – Desktop/tablet layout with grouped playback, volume, and source buttons._
+
+![Mobile remote controller layout](./images/remote-control-mobile.svg)
+_Figure 2 – Stacked mobile layout optimized for 44px touch targets._
+
+### Opening the remote
+
+1. Navigate to any device details page from the landing screen.
+2. Ensure the device is powered on (power button glows when active). The remote grid automatically disables when the device is off.
+3. Wait for the status call to finish loading; the button grid fades in once capabilities are known.
+
+### Playback controls
+
+- **Previous / Play-Pause / Next**: Center row buttons send `PREV_TRACK`, `PLAY_PAUSE`, and `NEXT_TRACK` keys respectively. The play button toggles between ▶ and ⏸ to match the `nowPlaying.playStatus` signal.
+- **Loading feedback**: When a key press is in flight, the pressed button shows a spinner and the rest of the grid is momentarily disabled to avoid duplicate calls.
+- **Status banner**: Any errors or confirmations appear above the grid inside the "Remote action" banner (`aria-live="polite"`).
+
+### Volume shortcut buttons
+
+- **Volume Down / Up** buttons flank the playback row and emit the `VOLUME_DOWN` or `VOLUME_UP` keys.
+- These buttons respect the same debounce rules as the slider; if volume info has not loaded yet, the shortcuts stay disabled.
+- Use the slider for precise adjustments and the shortcut buttons for one-tap nudges.
+
+### Source & Bluetooth actions
+
+- **AUX**: Sets the active source to `AUX_INPUT`. The button highlights when SoundHub detects AUX as the `currentSource`.
+- **Bluetooth pairing**: Appears only when the device `capabilities` array contains `bluetoothPairing`. Clicking the button triggers the new `/bluetooth/enter-pairing` endpoint and shows a toast-style confirmation in the remote banner.
+- **Tooltips**: Hovering over either icon surfaces localized helper text (e.g., "Start Bluetooth pairing") for additional guidance.
+
+### Accessibility tips
+
+- Every icon button includes an `aria-label` describing the action ("Previous track", "Volume up", etc.).
+- Tab order flows left-to-right, top-to-bottom, matching the visual grouping. Press **Enter** or **Space** to activate a focused control.
+- When screen readers are enabled, the remote banner announces success or failure text after each action, ensuring keyboard-only users know when an API call completes.
+
 ## Preset Management
 
 Manage and trigger SoundTouch presets directly from the device details page.

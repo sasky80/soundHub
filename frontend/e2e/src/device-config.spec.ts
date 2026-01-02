@@ -22,7 +22,7 @@ test.describe('Device Configuration', () => {
 
   test('should display network mask input', async ({ page }) => {
     // Network mask input should be visible
-    const networkMaskInput = page.locator('input[placeholder*="network"], input[name*="networkMask"], [data-testid="network-mask-input"]');
+    const networkMaskInput = page.locator('#networkMask, .network-input, input[placeholder*="192.168"]');
     await expect(networkMaskInput).toBeVisible();
   });
 
@@ -38,8 +38,8 @@ test.describe('Device Configuration', () => {
     await addButton.click();
 
     // Form should be visible with required fields
-    await expect(page.locator('input[name="name"], [data-testid="device-name-input"]')).toBeVisible();
-    await expect(page.locator('input[name="ipAddress"], [data-testid="device-ip-input"]')).toBeVisible();
+    await expect(page.locator('#deviceName, input[formcontrolname="name"]')).toBeVisible();
+    await expect(page.locator('#deviceIp, input[formcontrolname="ipAddress"]')).toBeVisible();
   });
 
   test('should validate required fields in add device form', async ({ page }) => {
@@ -47,12 +47,12 @@ test.describe('Device Configuration', () => {
     const addButton = page.locator('button').filter({ hasText: /add|new|\+/i }).first();
     await addButton.click();
 
-    // Try to submit empty form
-    const saveButton = page.locator('button').filter({ hasText: /save|submit|add/i }).last();
-    await saveButton.click();
+    // Wait for form to be visible
+    await expect(page.locator('#deviceName, input[formcontrolname="name"]')).toBeVisible();
 
-    // Form should still be visible (not submitted due to validation)
-    await expect(page.locator('input[name="name"], [data-testid="device-name-input"]')).toBeVisible();
+    // Submit button should be disabled when form is empty
+    const saveButton = page.locator('button[type="submit"]');
+    await expect(saveButton).toBeDisabled();
   });
 
   test('should close add device form when clicking cancel', async ({ page }) => {
@@ -61,14 +61,14 @@ test.describe('Device Configuration', () => {
     await addButton.click();
 
     // Form should be visible
-    await expect(page.locator('input[name="name"], [data-testid="device-name-input"]')).toBeVisible();
+    await expect(page.locator('#deviceName, input[formcontrolname="name"]')).toBeVisible();
 
-    // Click cancel
-    const cancelButton = page.locator('button').filter({ hasText: /cancel|close/i });
-    await cancelButton.click();
+    // Click close button
+    const closeButton = page.locator('button.close-btn, button').filter({ hasText: /✕|cancel|close/i }).first();
+    await closeButton.click();
 
     // Form should be hidden
-    await expect(page.locator('input[name="name"], [data-testid="device-name-input"]')).not.toBeVisible();
+    await expect(page.locator('.modal')).not.toBeVisible();
   });
 
   test('should show vendor dropdown with options', async ({ page }) => {
@@ -77,7 +77,7 @@ test.describe('Device Configuration', () => {
     await addButton.click();
 
     // Vendor dropdown should be visible
-    const vendorSelect = page.locator('select[name="vendor"], [data-testid="vendor-select"]');
+    const vendorSelect = page.locator('#deviceVendor, select[formcontrolname="vendor"]');
     await expect(vendorSelect).toBeVisible();
   });
 
@@ -100,18 +100,21 @@ test.describe('Device Configuration - Add Device Flow', () => {
     const addButton = page.locator('button').filter({ hasText: /add|new|\+/i }).first();
     await addButton.click();
 
+    // Wait for form to be visible
+    await expect(page.locator('#deviceName, input[formcontrolname="name"]')).toBeVisible();
+
     // Fill in the form
-    await page.fill('input[name="name"], [data-testid="device-name-input"]', 'Test Speaker');
-    await page.fill('input[name="ipAddress"], [data-testid="device-ip-input"]', '192.168.1.100');
+    await page.fill('#deviceName, input[formcontrolname="name"]', 'Test Speaker');
+    await page.fill('#deviceIp, input[formcontrolname="ipAddress"]', '192.168.1.100');
 
     // Select vendor if dropdown is available
-    const vendorSelect = page.locator('select[name="vendor"], [data-testid="vendor-select"]');
+    const vendorSelect = page.locator('#deviceVendor, select[formcontrolname="vendor"]');
     if (await vendorSelect.isVisible()) {
       await vendorSelect.selectOption({ index: 0 });
     }
 
     // Submit the form
-    const saveButton = page.locator('button').filter({ hasText: /save|submit|add/i }).last();
+    const saveButton = page.locator('button[type="submit"]');
     await saveButton.click();
 
     // Wait for API response (form should close)

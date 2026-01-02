@@ -13,7 +13,7 @@ test.describe('Volume Control', () => {
     await deviceCard.click();
 
     // Wait for device details page to load
-    await expect(page.locator('h1, h2').first()).toContainText(/Device|Details/i);
+    await expect(page.locator('h1, h2').first()).toContainText(/Control Panel|Device|Details/i);
 
     // Volume slider should be visible
     const volumeSlider = page.locator('input[type="range"].volume-slider, [data-testid="volume-slider"]');
@@ -26,9 +26,12 @@ test.describe('Volume Control', () => {
     await deviceCard.click();
 
     // Wait for device details page to load
-    await expect(page.locator('h1, h2').first()).toContainText(/Device|Details/i);
+    await expect(page.locator('h1, h2').first()).toContainText(/Control Panel|Device|Details/i);
 
-    // Mute button should be visible
+    // Wait for volume controls to load
+    await page.waitForTimeout(500);
+
+    // Mute button should be visible (may be disabled if device is off)
     const muteButton = page.locator('button.mute-btn, [data-testid="mute-button"]');
     await expect(muteButton).toBeVisible();
   });
@@ -39,7 +42,7 @@ test.describe('Volume Control', () => {
     await deviceCard.click();
 
     // Wait for device details page to load
-    await expect(page.locator('h1, h2').first()).toContainText(/Device|Details/i);
+    await expect(page.locator('h1, h2').first()).toContainText(/Control Panel|Device|Details/i);
 
     // Volume value should be visible
     const volumeValue = page.locator('.volume-value, [data-testid="volume-value"]');
@@ -52,24 +55,26 @@ test.describe('Volume Control', () => {
     await deviceCard.click();
 
     // Wait for device details page to load
-    await expect(page.locator('h1, h2').first()).toContainText(/Device|Details/i);
+    await expect(page.locator('h1, h2').first()).toContainText(/Control Panel|Device|Details/i);
+    await page.waitForTimeout(500);
 
-    // Find and click power button to turn off device
+    // Find power button and check if it's on
     const powerButton = page.locator('button.power-btn, [data-testid="power-button"]');
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
 
+    // If device is on, turn it off first
     if (isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(500); // Wait for state update
-
-      // Volume slider should be disabled
-      const volumeSlider = page.locator('input[type="range"].volume-slider, [data-testid="volume-slider"]');
-      await expect(volumeSlider).toBeDisabled();
-
-      // Mute button should be disabled
-      const muteButton = page.locator('button.mute-btn, [data-testid="mute-button"]');
-      await expect(muteButton).toBeDisabled();
+      await page.waitForTimeout(1000); // Wait for state update
     }
+
+    // Volume slider should be disabled when device is off
+    const volumeSlider = page.locator('input[type="range"].volume-slider, [data-testid="volume-slider"]');
+    await expect(volumeSlider).toBeDisabled();
+
+    // Mute button should be disabled when device is off
+    const muteButton = page.locator('button.mute-btn, [data-testid="mute-button"]');
+    await expect(muteButton).toBeDisabled();
   });
 
   test('should toggle mute state when clicking mute button', async ({ page }) => {
@@ -78,23 +83,25 @@ test.describe('Volume Control', () => {
     await deviceCard.click();
 
     // Wait for device details page to load
-    await expect(page.locator('h1, h2').first()).toContainText(/Device|Details/i);
+    await expect(page.locator('h1, h2').first()).toContainText(/Control Panel|Device|Details/i);
+    await page.waitForTimeout(500);
 
     // Ensure device is on first
     const powerButton = page.locator('button.power-btn, [data-testid="power-button"]');
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
     }
 
     // Click mute button
     const muteButton = page.locator('button.mute-btn, [data-testid="mute-button"]');
+    await expect(muteButton).toBeEnabled();
     const wasMuted = await muteButton.evaluate((el) => el.classList.contains('muted'));
     await muteButton.click();
 
     // Wait for API response
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     // Mute state should have toggled
     const isMutedNow = await muteButton.evaluate((el) => el.classList.contains('muted'));
@@ -107,19 +114,20 @@ test.describe('Volume Control', () => {
     await deviceCard.click();
 
     // Wait for device details page to load
-    await expect(page.locator('h1, h2').first()).toContainText(/Device|Details/i);
+    await expect(page.locator('h1, h2').first()).toContainText(/Control Panel|Device|Details/i);
+    await page.waitForTimeout(500);
 
     // Ensure device is on first
     const powerButton = page.locator('button.power-btn, [data-testid="power-button"]');
     const isPoweredOn = await powerButton.evaluate((el) => el.classList.contains('on'));
     if (!isPoweredOn) {
       await powerButton.click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
     }
 
     // Get volume slider and adjust it
     const volumeSlider = page.locator('input[type="range"].volume-slider, [data-testid="volume-slider"]');
-    await expect(volumeSlider).toBeEnabled();
+    await expect(volumeSlider).toBeEnabled({ timeout: 5000 });
 
     // Set volume to 75
     await volumeSlider.fill('75');

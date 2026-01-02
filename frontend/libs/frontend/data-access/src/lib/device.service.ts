@@ -66,6 +66,10 @@ export interface SetVolumeRequest {
   level: number;
 }
 
+export interface PressKeyRequest {
+  key: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DeviceService {
   private readonly http = inject(HttpClient);
@@ -130,5 +134,13 @@ export class DeviceService {
 
   toggleMute(id: string): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${id}/mute`, {});
+  }
+
+  pressKey(id: string, key: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/key`, { key } as PressKeyRequest);
+  }
+
+  enterBluetoothPairing(id: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/bluetooth/enter-pairing`, {});
   }
 }

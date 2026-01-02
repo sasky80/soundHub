@@ -165,4 +165,202 @@ describe('DeviceDetailsComponent', () => {
       jest.useRealTimers();
     });
   });
+
+  describe('remote control buttons', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id').flush(mockDevice);
+      httpMock.expectOne('/api/devices/test-device-id/status').flush(mockStatus);
+      httpMock.expectOne('/api/devices/test-device-id/volume').flush(mockVolumeInfo);
+      fixture.detectChanges();
+      httpMock.expectOne('/api/devices/test-device-id/presets').flush(mockPresets);
+      fixture.detectChanges();
+    });
+
+    it('should render remote control buttons', () => {
+      const prevBtn = fixture.nativeElement.querySelector('button[aria-label="Previous track"]');
+      const playBtn = fixture.nativeElement.querySelector('button[aria-label="Play or pause"]');
+      const nextBtn = fixture.nativeElement.querySelector('button[aria-label="Next track"]');
+      const volUpBtn = fixture.nativeElement.querySelector('button[aria-label="Volume up"]');
+      const volDownBtn = fixture.nativeElement.querySelector('button[aria-label="Volume down"]');
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+
+      expect(prevBtn).toBeTruthy();
+      expect(playBtn).toBeTruthy();
+      expect(nextBtn).toBeTruthy();
+      expect(volUpBtn).toBeTruthy();
+      expect(volDownBtn).toBeTruthy();
+      expect(auxBtn).toBeTruthy();
+    });
+
+    it('should hide Bluetooth button if capability not present', () => {
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      expect(btBtn).toBeNull();
+    });
+
+    it('should show Bluetooth button if capability is present', () => {
+      component['device'].set({
+        ...mockDevice,
+        capabilities: [...mockDevice.capabilities, 'bluetoothPairing'],
+      });
+      fixture.detectChanges();
+
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      expect(btBtn).toBeTruthy();
+    });
+
+    it('should disable buttons when device is off', () => {
+      component['status'].set({ ...mockStatus, powerState: false });
+      fixture.detectChanges();
+
+      const prevBtn = fixture.nativeElement.querySelector('button[aria-label="Previous track"]');
+      const playBtn = fixture.nativeElement.querySelector('button[aria-label="Play or pause"]');
+      const nextBtn = fixture.nativeElement.querySelector('button[aria-label="Next track"]');
+      const volUpBtn = fixture.nativeElement.querySelector('button[aria-label="Volume up"]');
+      const volDownBtn = fixture.nativeElement.querySelector('button[aria-label="Volume down"]');
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+
+      expect(prevBtn?.disabled).toBe(true);
+      expect(playBtn?.disabled).toBe(true);
+      expect(nextBtn?.disabled).toBe(true);
+      expect(volUpBtn?.disabled).toBe(true);
+      expect(volDownBtn?.disabled).toBe(true);
+      expect(auxBtn?.disabled).toBe(true);
+    });
+
+    it('should enable buttons when device is on', () => {
+      const prevBtn = fixture.nativeElement.querySelector('button[aria-label="Previous track"]');
+      const playBtn = fixture.nativeElement.querySelector('button[aria-label="Play or pause"]');
+      const nextBtn = fixture.nativeElement.querySelector('button[aria-label="Next track"]');
+
+      expect(prevBtn?.disabled).toBe(false);
+      expect(playBtn?.disabled).toBe(false);
+      expect(nextBtn?.disabled).toBe(false);
+    });
+
+    it('should call pressKey with correct key name when buttons clicked', () => {
+      const prevBtn = fixture.nativeElement.querySelector('button[aria-label="Previous track"]');
+      const nextBtn = fixture.nativeElement.querySelector('button[aria-label="Next track"]');
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+
+      prevBtn?.click();
+      let req = httpMock.expectOne('/api/devices/test-device-id/key');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ key: 'PREV_TRACK' });
+      req.flush(null);
+
+      nextBtn?.click();
+      req = httpMock.expectOne('/api/devices/test-device-id/key');
+      expect(req.request.body).toEqual({ key: 'NEXT_TRACK' });
+      req.flush(null);
+
+      auxBtn?.click();
+      req = httpMock.expectOne('/api/devices/test-device-id/key');
+      expect(req.request.body).toEqual({ key: 'AUX_INPUT' });
+      req.flush(null);
+    });
+
+    it('should toggle play/pause icon based on play state', () => {
+      const getIconSrc = () =>
+        fixture.nativeElement
+          .querySelector('button[aria-label="Play or pause"] img')
+          ?.getAttribute('src');
+
+      component['isPlaying'].set(false);
+      fixture.detectChanges();
+      expect(getIconSrc()).toContain('remote-play.svg');
+
+      component['isPlaying'].set(true);
+      fixture.detectChanges();
+      expect(getIconSrc()).toContain('remote-pause.svg');
+    });
+
+    it('should update isPlaying signal when play/pause button clicked', () => {
+      component['isPlaying'].set(false);
+      const playBtn = fixture.nativeElement.querySelector('button[aria-label="Play or pause"]');
+
+      playBtn?.click();
+      const req = httpMock.expectOne('/api/devices/test-device-id/key');
+      req.flush(null);
+
+      expect(component['isPlaying']()).toBe(true);
+    });
+
+    it('should display loading state during key press', () => {
+      component['keyLoading'].set('PREV_TRACK');
+      fixture.detectChanges();
+
+      const prevBtn = fixture.nativeElement.querySelector('button[aria-label="Previous track"]');
+      expect(prevBtn?.disabled).toBe(true);
+    });
+
+    it('should display loading state during Bluetooth pairing', () => {
+      component['device'].set({
+        ...mockDevice,
+        capabilities: [...mockDevice.capabilities, 'bluetoothPairing'],
+      });
+      component['pairingLoading'].set(true);
+      fixture.detectChanges();
+
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      expect(btBtn?.disabled).toBe(true);
+    });
+
+    it('should call enterBluetoothPairing when Bluetooth button clicked', () => {
+      component['device'].set({
+        ...mockDevice,
+        capabilities: [...mockDevice.capabilities, 'bluetoothPairing'],
+      });
+      fixture.detectChanges();
+
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      btBtn?.click();
+
+      const req = httpMock.expectOne('/api/devices/test-device-id/bluetooth/enter-pairing');
+      expect(req.request.method).toBe('POST');
+      req.flush(null);
+    });
+
+    it('should display pairing message after Bluetooth pairing started', () => {
+      component['device'].set({
+        ...mockDevice,
+        capabilities: [...mockDevice.capabilities, 'bluetoothPairing'],
+      });
+      fixture.detectChanges();
+
+      const btBtn = fixture.nativeElement.querySelector('button[aria-label="Start Bluetooth pairing"]');
+      btBtn?.click();
+
+      const req = httpMock.expectOne('/api/devices/test-device-id/bluetooth/enter-pairing');
+      req.flush(null);
+      fixture.detectChanges();
+
+      const message = fixture.nativeElement.querySelector('.pairing-message');
+      expect(message?.textContent).toContain('Bluetooth pairing started');
+    });
+
+    it('should set active state on AUX button after successful key press', () => {
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+      auxBtn?.click();
+
+      const req = httpMock.expectOne('/api/devices/test-device-id/key');
+      req.flush(null);
+      fixture.detectChanges();
+
+      expect(component['activeSource']()).toBe('AUX_INPUT');
+      expect(auxBtn?.classList.contains('active')).toBe(true);
+    });
+
+    it('should display error message when key press fails', () => {
+      const auxBtn = fixture.nativeElement.querySelector('button[aria-label="Switch to AUX"]');
+      auxBtn?.click();
+
+      const req = httpMock.expectOne('/api/devices/test-device-id/key');
+      req.error(new ProgressEvent('error'));
+      fixture.detectChanges();
+
+      const message = fixture.nativeElement.querySelector('.remote-message');
+      expect(message?.textContent).toContain('Action failed');
+    });
+  });
 });

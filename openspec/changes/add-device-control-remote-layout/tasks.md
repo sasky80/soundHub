@@ -24,64 +24,64 @@
 ## 2. Frontend - Control Panel Redesign
 
 ### 2.1 Header Update
-- [ ] 2.1.1 Change "Device Details" to "Control panel" in `device-details.component.html`
-- [ ] 2.1.2 Update translation keys: `deviceDetails.title` → `controlPanel.title`
+- [x] 2.1.1 Change "Device Details" to "Control panel" in `device-details.component.html`
+- [x] 2.1.2 Update translation keys: `deviceDetails.title` → `controlPanel.title`
 
 ### 2.2 Volume Section Redesign
-- [ ] 2.2.1 Replace "Volume" text label with volume icon (e.g., 🔊 or SVG icon)
-- [ ] 2.2.2 Position icon on the left side of the slider
-- [ ] 2.2.3 Update CSS to accommodate icon layout
-- [ ] 2.2.4 Keep slider and mute button functionality unchanged
+- [x] 2.2.1 Replace "Volume" text label with volume icon (e.g., 🔊 or SVG icon)
+- [x] 2.2.2 Position icon on the left side of the slider
+- [x] 2.2.3 Update CSS to accommodate icon layout
+- [x] 2.2.4 Keep slider and mute button functionality unchanged
 
 ### 2.3 Remote Controller Button Grid
-- [ ] 2.3.1 Create CSS grid layout for remote controller buttons
-- [ ] 2.3.2 Design icon-based button components (no text labels on buttons)
-- [ ] 2.3.3 Add aria-labels for accessibility
-- [ ] 2.3.4 Implement responsive layout (adjust grid for mobile/tablet/desktop)
+- [x] 2.3.1 Create CSS grid layout for remote controller buttons
+- [x] 2.3.2 Design icon-based button components (no text labels on buttons)
+- [x] 2.3.3 Add aria-labels for accessibility
+- [x] 2.3.4 Implement responsive layout (adjust grid for mobile/tablet/desktop)
 
 ### 2.4 Playback Control Buttons
-- [ ] 2.4.1 Add Previous Track button with icon (⏮ or SVG)
-- [ ] 2.4.2 Add Next Track button with icon (⏭ or SVG)
-- [ ] 2.4.3 Add Play/Pause toggle button with dynamic icon (▶ when paused, ⏸ when playing)
-- [ ] 2.4.4 Wire up buttons to call `deviceService.pressKey(deviceId, keyName)` method
-- [ ] 2.4.5 Play/Pause button always sends 'PLAY_PAUSE' key
-- [ ] 2.4.6 Show loading state during key press operation
+- [x] 2.4.1 Add Previous Track button with icon (⏮ or SVG)
+- [x] 2.4.2 Add Next Track button with icon (⏭ or SVG)
+- [x] 2.4.3 Add Play/Pause toggle button with dynamic icon (▶ when paused, ⏸ when playing)
+- [x] 2.4.4 Wire up buttons to call `deviceService.pressKey(deviceId, keyName)` method
+- [x] 2.4.5 Play/Pause button always sends 'PLAY_PAUSE' key
+- [x] 2.4.6 Show loading state during key press operation
 
 ### 2.5 Volume Control Buttons
-- [ ] 2.5.1 Add Volume Up button with icon (🔊+ or SVG)
-- [ ] 2.5.2 Add Volume Down button with icon (🔉- or SVG)
-- [ ] 2.5.3 Wire up to `deviceService.pressKey(deviceId, 'VOLUME_UP')` and `VOLUME_DOWN`
-- [ ] 2.5.4 Optional: Add haptic feedback or visual confirmation
+- [x] 2.5.1 Add Volume Up button with icon (🔊+ or SVG)
+- [x] 2.5.2 Add Volume Down button with icon (🔉- or SVG)
+- [x] 2.5.3 Wire up to `deviceService.pressKey(deviceId, 'VOLUME_UP')` and `VOLUME_DOWN`
+- [x] 2.5.4 Optional: Add haptic feedback or visual confirmation
 
 ### 2.6 Source Control Buttons
-- [ ] 2.6.1 Add AUX button with icon (AUX text or cable icon)
-- [ ] 2.6.2 Wire up to `deviceService.pressKey(deviceId, 'AUX_INPUT')`
-- [ ] 2.6.3 Add visual feedback when AUX source is active
+- [x] 2.6.1 Add AUX button with icon (AUX text or cable icon)
+- [x] 2.6.2 Wire up to `deviceService.pressKey(deviceId, 'AUX_INPUT')`
+- [x] 2.6.3 Add visual feedback when AUX source is active
 
 ### 2.7 Bluetooth Pairing Button
-- [ ] 2.7.1 Check device capabilities for `bluetoothPairing` support
-- [ ] 2.7.2 Conditionally render Bluetooth button if capability exists
-- [ ] 2.7.3 Add Bluetooth icon button
-- [ ] 2.7.4 Wire up to `deviceService.enterBluetoothPairing(deviceId)` method
-- [ ] 2.7.5 Show pairing status/confirmation message
-- [ ] 2.7.6 Add tooltip explaining Bluetooth pairing action
+- [x] 2.7.1 Check device capabilities for `bluetoothPairing` support
+- [x] 2.7.2 Conditionally render Bluetooth button if capability exists
+- [x] 2.7.3 Add Bluetooth icon button
+- [x] 2.7.4 Wire up to `deviceService.enterBluetoothPairing(deviceId)` method
+- [x] 2.7.5 Show pairing status/confirmation message
+- [x] 2.7.6 Add tooltip explaining Bluetooth pairing action
 
 ### 2.8 Power and Preset Sections
-- [ ] 2.8.1 Convert power toggle to icon-based button (if not already)
-- [ ] 2.8.2 Keep preset list section unchanged
-- [ ] 2.8.3 Ensure remote layout integrates visually with preset section
+- [x] 2.8.1 Convert power toggle to icon-based button (if not already)
+- [x] 2.8.2 Keep preset list section unchanged
+- [x] 2.8.3 Ensure remote layout integrates visually with preset section
 
 ## 3. Frontend - DeviceService Updates
 
 ### 3.1 Key Press Method
-- [ ] 3.1.1 Add `pressKey(deviceId: string, keyName: string): Observable<void>` method
-- [ ] 3.1.2 Call `POST /api/devices/{id}/key` with `{ key: keyName }` body
-- [ ] 3.1.3 Handle errors gracefully (show toast notifications)
+- [x] 3.1.1 Add `pressKey(deviceId: string, keyName: string): Observable<void>` method
+- [x] 3.1.2 Call `POST /api/devices/{id}/key` with `{ key: keyName }` body
+- [x] 3.1.3 Handle errors gracefully (show toast notifications)
 
 ### 3.2 Bluetooth Pairing Method
-- [ ] 3.2.1 Add `enterBluetoothPairing(deviceId: string): Observable<void>` method
-- [ ] 3.2.2 Call `POST /api/devices/{id}/bluetooth/enter-pairing`
-- [ ] 3.2.3 Return observable with success/failure
+- [x] 3.2.1 Add `enterBluetoothPairing(deviceId: string): Observable<void>` method
+- [x] 3.2.2 Call `POST /api/devices/{id}/bluetooth/enter-pairing`
+- [x] 3.2.3 Return observable with success/failure
 
 ## 4. Testing
 
@@ -92,29 +92,29 @@
 - [x] 4.1.4 Mock SoundTouchAdapter responses
 
 ### 4.2 Frontend Tests
-- [ ] 4.2.1 Component test: remote buttons rendered correctly
-- [ ] 4.2.2 Component test: Bluetooth button hidden if capability not present
-- [ ] 4.2.3 Component test: buttons disabled when device is off
-- [ ] 4.2.4 Component test: key press triggers correct service method
-- [ ] 4.2.5 Component test: Play/Pause button toggles icon based on play state
-- [ ] 4.2.6 Component test: loading states displayed correctly
+- [x] 4.2.1 Component test: remote buttons rendered correctly
+- [x] 4.2.2 Component test: Bluetooth button hidden if capability not present
+- [x] 4.2.3 Component test: buttons disabled when device is off
+- [x] 4.2.4 Component test: key press triggers correct service method
+- [x] 4.2.5 Component test: Play/Pause button toggles icon based on play state
+- [x] 4.2.6 Component test: loading states displayed correctly
 
 ### 4.3 E2E Tests
-- [ ] 4.3.1 E2E test: click playback buttons and verify API call
-- [ ] 4.3.2 E2E test: click Bluetooth button (if visible)
-- [ ] 4.3.3 E2E test: click AUX button and verify source switch
-- [ ] 4.3.4 E2E test: volume buttons increment/decrement volume
+- [x] 4.3.1 E2E test: click playback buttons and verify API call
+- [x] 4.3.2 E2E test: click Bluetooth button (if visible)
+- [x] 4.3.3 E2E test: click AUX button and verify source switch
+- [x] 4.3.4 E2E test: volume buttons increment/decrement volume
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `device-configuration-guide.md` with remote controller usage instructions
-- [ ] 5.2 Document key press API endpoint in `api-reference.md`
-- [ ] 5.3 Document Bluetooth pairing endpoint in `api-reference.md`
-- [ ] 5.4 Add screenshots of new remote controller layout
+- [x] 5.1 Update `device-configuration-guide.md` with remote controller usage instructions
+- [x] 5.2 Document key press API endpoint in `api-reference.md`
+- [x] 5.3 Document Bluetooth pairing endpoint in `api-reference.md`
+- [x] 5.4 Add screenshots of new remote controller layout
 
 ## 6. Design Assets
 
-- [ ] 6.1 Create or source icon assets for all buttons
-- [ ] 6.2 Ensure icons are accessible (SVG format, proper contrast)
-- [ ] 6.3 Design loading/active states for buttons
-- [ ] 6.4 Create responsive grid breakpoints for different screen sizes
+- [x] 6.1 Create or source icon assets for all buttons
+- [x] 6.2 Ensure icons are accessible (SVG format, proper contrast)
+- [x] 6.3 Design loading/active states for buttons
+- [x] 6.4 Create responsive grid breakpoints for different screen sizes

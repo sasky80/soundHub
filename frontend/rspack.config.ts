@@ -17,6 +17,11 @@ export default createConfig(
           glob: '**/*',
           input: './public',
         },
+        {
+          glob: '**/*',
+          input: './src/assets',
+          output: 'assets',
+        },
       ],
       styles: ['./src/styles.scss'],
       devServer: {},

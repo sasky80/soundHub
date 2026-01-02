@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="640" viewBox="0 0 360 640" role="img" aria-labelledby="title desc">
+  <title id="title">SoundHub remote controller layout – mobile</title>
+  <desc id="desc">Stacked mobile layout showing power, volume, playback, volume buttons, and source buttons.</desc>
+  <rect width="360" height="640" rx="32" fill="#020617"/>
+  <text x="180" y="50" text-anchor="middle" fill="#e2e8f0" font-size="24" font-family="Inter,Arial,Helvetica,sans-serif">Control panel</text>
+  <rect x="50" y="80" width="260" height="70" rx="18" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <text x="80" y="125" fill="#f8fafc" font-size="28">🔊</text>
+  <rect x="110" y="110" width="160" height="18" rx="9" fill="#1d4ed8"/>
+  <circle cx="240" cy="119" r="10" fill="#38bdf8"/>
+  <rect x="50" y="170" width="260" height="90" rx="18" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <text x="105" y="225" text-anchor="middle" fill="#f8fafc" font-size="28">⏮</text>
+  <text x="180" y="225" text-anchor="middle" fill="#f8fafc" font-size="28">▶⏸</text>
+  <text x="255" y="225" text-anchor="middle" fill="#f8fafc" font-size="28">⏭</text>
+  <rect x="50" y="280" width="260" height="70" rx="18" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <text x="130" y="325" text-anchor="middle" fill="#f8fafc" font-size="24">🔉-</text>
+  <text x="230" y="325" text-anchor="middle" fill="#f8fafc" font-size="24">🔊+</text>
+  <rect x="50" y="370" width="260" height="70" rx="18" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <text x="130" y="415" text-anchor="middle" fill="#38bdf8" font-size="22">AUX</text>
+  <text x="230" y="415" text-anchor="middle" fill="#38bdf8" font-size="26">🔵</text>
+</svg>

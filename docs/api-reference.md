@@ -397,6 +397,66 @@ POST /api/devices/{id}/mute
 - For SoundTouch devices, sends a MUTE key press via the `/key` endpoint
 - Mute state can be retrieved via `GET /api/devices/{id}/volume` (check `isMuted` field)
 
+### Send Remote Key Press
+
+Sends a press-and-release gesture to the device. This is the API backing the remote controller grid in the UI.
+
+```http
+POST /api/devices/{id}/key
+Content-Type: application/json
+
+{
+  "key": "PLAY_PAUSE"
+}
+```
+
+**Supported key values**
+
+| Key | Description |
+|-----|-------------|
+| `PREV_TRACK` | Skip to the previous track |
+| `PLAY_PAUSE` | Toggle playback (always sends a toggle press) |
+| `NEXT_TRACK` | Skip to the next track |
+| `VOLUME_DOWN` | Decrease volume by one native SoundTouch step |
+| `VOLUME_UP` | Increase volume by one native SoundTouch step |
+| `AUX_INPUT` | Switch active source to AUX |
+
+**Response**
+- `200 OK` – Key was delivered to the adapter
+
+**Error Responses**
+- `400 Bad Request` – Missing `key` field or unsupported key value
+- `404 Not Found` – Device ID not registered
+- `501 Not Implemented` – Vendor adapter does not expose `/key`
+- `503 Service Unavailable` – Device unreachable
+- `504 Gateway Timeout` – Device did not acknowledge in time
+
+**Notes**
+- Requests are idempotent from the server perspective; each call still results in a physical button tap, so throttle appropriately.
+- The backend automatically issues the required `press` + `release` XML payloads expected by SoundTouch hardware.
+
+### Enter Bluetooth Pairing
+
+Places a device into Bluetooth pairing mode (when supported).
+
+```http
+POST /api/devices/{id}/bluetooth/enter-pairing
+```
+
+**Response**
+- `200 OK` – Pairing mode activated
+
+**Error Responses**
+- `400 Bad Request` – Device exists but is not flagged with the `bluetoothPairing` capability
+- `404 Not Found` – Unknown device ID
+- `501 Not Implemented` – Adapter does not implement Bluetooth pairing
+- `503 Service Unavailable` – Device unreachable (offline or not responding)
+- `504 Gateway Timeout` – Device failed to acknowledge pairing mode before timeout
+
+**Notes**
+- This endpoint does not return structured payloads; the UI shows confirmation text using the HTTP status alone.
+- SoundTouch devices exit pairing mode automatically after ~60 seconds if no client connects.
+
 ---
 
 ## Presets
