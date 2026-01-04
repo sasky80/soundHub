@@ -94,6 +94,21 @@ Here is a link to the most recent Angular style guide https://angular.dev/style-
 
 - It MUST pass all AXE checks.
 - It MUST follow all WCAG AA minimums, including focus management, color contrast, and ARIA attributes.
+- Interactive elements with `(click)` handlers MUST have:
+  - Keyboard event handlers (`keydown`, `keyup`, or `keypress`)
+  - Proper `tabindex` attribute for focusability
+  - Appropriate ARIA attributes (`role`, `aria-label`, etc.)
+- Modal overlays MUST have:
+  - `role="button"` or `role="dialog"` as appropriate
+  - `aria-label` for screen readers
+  - `keydown.escape` handler for closing
+  - `aria-modal="true"` for dialog content
+  - `tabindex="0"` for keyboard navigation
+- Labels MUST be properly associated with form controls:
+  - Use `<label for="id">` with matching input `id`
+  - For button groups, use `<div class="label">` with `role="group"` and `aria-label`
+  - Do NOT use `<label>` without a corresponding form control
+- Add tooltips via `[attr.title]` for icon-only buttons
 
 ### Components
 
@@ -106,6 +121,26 @@ Here is a link to the most recent Angular style guide https://angular.dev/style-
 - Prefer Reactive forms instead of Template-driven ones
 - Do NOT use `ngClass`, use `class` bindings instead, for context: https://angular.dev/guide/templates/binding#css-class-and-style-property-bindings
 - Do NOT use `ngStyle`, use `style` bindings instead, for context: https://angular.dev/guide/templates/binding#css-class-and-style-property-bindings
+- Do NOT implement empty lifecycle methods (like empty `ngOnInit`) - remove the interface and method entirely if not needed
+- Avoid empty error handlers in subscriptions - use `console.error()` for debugging or proper error handling
+
+### Testing Best Practices
+
+- When testing components with `RouterLink` directives, mock the Router with ALL required methods:
+  ```typescript
+  mockRouter = {
+    navigate: jest.fn(),
+    createUrlTree: jest.fn().mockReturnValue({}),
+    serializeUrl: jest.fn().mockReturnValue(''),
+    events: new Subject(), // Required for RouterLink
+  } as unknown as jest.Mocked<Router>;
+  ```
+- Remove unused imports from test files to keep them clean
+- Use proper TypeScript types instead of `any` in production code (acceptable in test mocks)
+- ALWAYS run tests after completing implementation to verify the code works correctly
+- Execute `npx nx test <library>` to run unit tests for the modified library
+- If tests fail, fix the issues immediately before considering the implementation complete
+- Create or update tests alongside implementation, not as an afterthought
 
 ### State Management
 
@@ -129,3 +164,13 @@ Here is a link to the most recent Angular style guide https://angular.dev/style-
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+### Code Quality
+
+- Run `npx nx lint <library>` before committing to catch issues early
+- Run `npx nx test <library>` after completing implementation to ensure tests pass
+- Address ESLint errors immediately - do not accumulate technical debt
+- Keep components free of unused imports (use IDE features to remove them automatically)
+- Use meaningful error messages in error handlers instead of empty functions
+- Follow the principle: if a method is empty and serves no purpose, remove it entirely
+- Consider the implementation complete only after: code works, tests pass, and linting succeeds
