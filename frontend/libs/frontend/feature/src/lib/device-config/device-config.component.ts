@@ -91,12 +91,12 @@ export class DeviceConfigComponent implements OnInit {
 
     this.deviceService.getVendors().subscribe({
       next: (vendors) => this.vendors.set(vendors),
-      error: () => {}, // Non-critical
+      error: (err) => console.error('Failed to load vendors:', err),
     });
 
     this.deviceService.getNetworkMask().subscribe({
       next: (res) => this.networkMask.set(res.networkMask),
-      error: () => {}, // Non-critical
+      error: (err) => console.error('Failed to load network mask:', err),
     });
   }
 

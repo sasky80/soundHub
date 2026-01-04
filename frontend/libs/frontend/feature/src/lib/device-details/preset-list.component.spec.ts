@@ -3,7 +3,6 @@ import { PresetListComponent } from './preset-list.component';
 import { PresetService, DeviceService } from '@soundhub/frontend/data-access';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { signal } from '@angular/core';
 
 describe('PresetListComponent', () => {
   let component: PresetListComponent;

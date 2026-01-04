@@ -40,8 +40,8 @@
     </div>
 
     <div class="setting-group">
-      <label>{{ 'settings.lcdScrollSpeed' | translate }}</label>
-      <div class="option-buttons">
+      <div class="setting-label">{{ 'settings.lcdScrollSpeed' | translate }}</div>
+      <div class="option-buttons" role="group" [attr.aria-label]="'settings.lcdScrollSpeed' | translate">
         <button
           class="option-btn"
           [class.active]="scrollSpeed() === 'slow'"
@@ -67,8 +67,8 @@
     </div>
 
     <div class="setting-group">
-      <label>{{ 'settings.lcdColorTheme' | translate }}</label>
-      <div class="option-buttons color-themes">
+      <div class="setting-label">{{ 'settings.lcdColorTheme' | translate }}</div>
+      <div class="option-buttons color-themes" role="group" [attr.aria-label]="'settings.lcdColorTheme' | translate">
         <button
           class="option-btn color-preview"
           [class.active]="colorTheme() === 'green'"

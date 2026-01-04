@@ -134,8 +134,8 @@
 
   <!-- Device Form Modal -->
   @if (showDeviceForm()) {
-    <div class="modal-overlay" (click)="closeDeviceForm()">
-      <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-overlay" (click)="closeDeviceForm()" (keydown.escape)="closeDeviceForm()" tabindex="0" role="button" [attr.aria-label]="'common.close' | translate">
+      <div class="modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" role="dialog" aria-modal="true">
         <header class="modal-header">
           <h2>
             @if (isNewDevice()) {
@@ -175,8 +175,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label>{{ 'deviceConfig.capabilities' | translate }}</label>
-            <div class="capabilities-list">
+            <div class="form-label">{{ 'deviceConfig.capabilities' | translate }}</div>
+            <div class="capabilities-list" role="group" [attr.aria-label]="'deviceConfig.capabilities' | translate">
               @for (cap of availableCapabilities; track cap; let i = $index) {
                 <label class="capability-checkbox">
                   <input
@@ -212,8 +212,8 @@
 
   <!-- Delete Confirmation Modal -->
   @if (showDeleteConfirm(); as deviceId) {
-    <div class="modal-overlay" (click)="cancelDelete()">
-      <div class="modal modal-small" (click)="$event.stopPropagation()">
+    <div class="modal-overlay" (click)="cancelDelete()" (keydown.escape)="cancelDelete()" tabindex="0" role="button" [attr.aria-label]="'common.close' | translate">
+      <div class="modal modal-small" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" role="dialog" aria-modal="true">
         <header class="modal-header">
           <h2>{{ 'deviceConfig.confirmDelete' | translate }}</h2>
         </header>

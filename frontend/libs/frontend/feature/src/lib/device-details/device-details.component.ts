@@ -139,7 +139,7 @@ export class DeviceDetailsComponent implements OnInit, OnDestroy {
           this.startPolling(id);
         }
       },
-      error: () => {}, // Non-critical, status may not be available
+      error: (err) => console.error('Failed to load device status:', err),
     });
   }
 

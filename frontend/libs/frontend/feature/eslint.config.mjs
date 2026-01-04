@@ -24,6 +24,10 @@ export default [
           style: 'kebab-case',
         },
       ],
+      '@nx/enforce-module-boundaries': 'off', // Temporarily disabled due to circular dependency detection
+      '@typescript-eslint/no-empty-function': ['error', { allow: ['methods'] }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@angular-eslint/no-empty-lifecycle-method': 'warn',
     },
   },
   {

@@ -181,11 +181,14 @@
 
     <!-- Delete Confirmation Dialog -->
     @if (showDeleteConfirm()) {
-      <div class="confirm-dialog-overlay" (click)="cancelDelete()">
+      <div class="confirm-dialog-overlay" (click)="cancelDelete()" (keydown.escape)="cancelDelete()" tabindex="0" role="button" [attr.aria-label]="'common.close' | translate">
         <div
           class="confirm-dialog"
           data-testid="preset-delete-confirm"
           (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()"
+          role="dialog"
+          aria-modal="true"
         >
           <h2 class="confirm-dialog__title">{{ 'presetForm.deleteConfirmTitle' | translate }}</h2>
           <p class="confirm-dialog__message">{{ 'presetForm.deleteConfirmMessage' | translate }}</p>

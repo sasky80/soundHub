@@ -5,14 +5,13 @@ import {
   output,
   signal,
   inject,
-  OnInit,
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { PresetService, Preset, DeviceService } from '@soundhub/frontend/data-access';
 import { TranslatePipe } from '@soundhub/frontend/shared';
-import { switchMap, of } from 'rxjs';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'lib-preset-list',
@@ -21,7 +20,7 @@ import { switchMap, of } from 'rxjs';
   styleUrl: './preset-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PresetListComponent implements OnInit {
+export class PresetListComponent {
   private readonly presetService = inject(PresetService);
   private readonly deviceService = inject(DeviceService);
   private readonly router = inject(Router);
@@ -44,10 +43,6 @@ export class PresetListComponent implements OnInit {
         this.loadPresets(id);
       }
     });
-  }
-
-  ngOnInit(): void {
-    // Initial load handled by effect
   }
 
   private loadPresets(deviceId: string): void {

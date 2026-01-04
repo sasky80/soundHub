@@ -2,9 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
 import { DeviceDetailsComponent } from './device-details.component';
-import { DeviceService } from '@soundhub/frontend/data-access';
 
 describe('DeviceDetailsComponent', () => {
   let component: DeviceDetailsComponent;
