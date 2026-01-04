@@ -45,11 +45,12 @@
             data-testid="preset-name-button"
             (click)="onPresetNameClick(preset)"
             [attr.aria-label]="editMode() ? (('presets.edit' | translate) + ' ' + preset.name) : preset.name"
+            [attr.title]="preset.name"
           >
             @if (editMode()) {
               <span class="preset-item__edit-icon" aria-hidden="true">✎</span>
             }
-            {{ preset.name }}
+            <span class="preset-item__name-text">{{ preset.name }}</span>
           </button>
         </div>
       }
