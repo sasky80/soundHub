@@ -211,11 +211,6 @@
       outline: 2px solid var(--focus-color, #3498db);
       outline-offset: 2px;
     }
-
-    .preset-list--edit-mode & {
-      text-decoration: underline;
-      text-decoration-style: dotted;
-    }
   }
 
   &__name-text {
@@ -223,6 +218,11 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
+
+    .preset-list--edit-mode & {
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
   }
 
   &__edit-icon {
