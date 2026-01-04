@@ -3,7 +3,7 @@ import { PresetFormComponent } from './preset-form.component';
 import { PresetService } from '@soundhub/frontend/data-access';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 
 describe('PresetFormComponent', () => {
   let component: PresetFormComponent;
@@ -43,6 +43,9 @@ describe('PresetFormComponent', () => {
 
     mockRouter = {
       navigate: jest.fn(),
+      createUrlTree: jest.fn().mockReturnValue({}),
+      serializeUrl: jest.fn().mockReturnValue(''),
+      events: new Subject(),
     } as unknown as jest.Mocked<Router>;
 
     mockActivatedRoute = {

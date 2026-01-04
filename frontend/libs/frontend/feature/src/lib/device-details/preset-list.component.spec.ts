@@ -46,6 +46,7 @@ describe('PresetListComponent', () => {
 
     mockRouter = {
       navigate: jest.fn(),
+      createUrlTree: jest.fn(),
     } as unknown as jest.Mocked<Router>;
 
     await TestBed.configureTestingModule({
