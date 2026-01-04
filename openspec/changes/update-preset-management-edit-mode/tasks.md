@@ -36,7 +36,7 @@
 
 ## 5. Testing
 
-- [ ] 5.1 Update E2E tests for edit mode flow
-- [ ] 5.2 Add unit tests for edit mode toggle
-- [ ] 5.3 Test slot dropdown shows correct preset names
-- [ ] 5.4 Test delete confirmation and navigation
+- [x] 5.1 Update E2E tests for edit mode flow
+- [x] 5.2 Add unit tests for edit mode toggle
+- [x] 5.3 Test slot dropdown shows correct preset names
+- [x] 5.4 Test delete confirmation and navigation

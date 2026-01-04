@@ -23,6 +23,13 @@ async function navigateToPresetForm(page: Page): Promise<boolean> {
     return false;
   }
 
+  // Enter edit mode first
+  const settingsButton = page.locator('[data-testid="preset-settings-button"]');
+  if (await settingsButton.isVisible()) {
+    await settingsButton.click();
+    await page.waitForTimeout(300);
+  }
+
   const addButton = page.locator('[data-testid="preset-add-button"], .preset-item__add-btn').first();
   if (!(await addButton.isVisible().catch(() => false))) {
     return false;
@@ -42,7 +49,71 @@ test.describe('Preset Management', () => {
 
     const presetSection = page.locator('[data-testid="preset-list"], .preset-list');
     await expect(presetSection).toBeVisible();
-    await expect(page.locator('[data-testid="preset-add-button"], .preset-item__add-btn')).toBeVisible();
+    
+    // Settings button should be visible
+    await expect(page.locator('[data-testid="preset-settings-button"]')).toBeVisible();
+    
+    // Add button should NOT be visible in normal mode
+    const addButton = page.locator('[data-testid="preset-add-button"], .preset-item__add-btn');
+    await expect(addButton).not.toBeVisible();
+  });
+
+  test('should toggle edit mode with settings button', async ({ page }) => {
+    const hasDevice = await openFirstDeviceDetails(page);
+    if (!hasDevice) {
+      test.skip(true, 'No devices available to test edit mode');
+    }
+
+    const settingsButton = page.locator('[data-testid="preset-settings-button"]');
+    const addButton = page.locator('[data-testid="preset-add-button"]');
+    const backButton = page.locator('[data-testid="preset-back-button"]');
+    const presetSection = page.locator('[data-testid="preset-list"]');
+
+    // Initially in normal mode
+    await expect(addButton).not.toBeVisible();
+    await expect(backButton).not.toBeVisible();
+
+    // Click settings to enter edit mode
+    await settingsButton.click();
+    await page.waitForTimeout(300);
+
+    // Should show edit mode elements
+    await expect(addButton).toBeVisible();
+    await expect(backButton).toBeVisible();
+    await expect(presetSection).toHaveClass(/preset-list--edit-mode/);
+
+    // Click back to exit edit mode
+    await backButton.click();
+    await page.waitForTimeout(300);
+
+    // Should hide edit mode elements
+    await expect(addButton).not.toBeVisible();
+    await expect(backButton).not.toBeVisible();
+  });
+
+  test('should show pen icon on preset names in edit mode', async ({ page }) => {
+    const hasDevice = await openFirstDeviceDetails(page);
+    if (!hasDevice) {
+      test.skip(true, 'No devices available to test pen icon');
+    }
+
+    const presetNameButton = page.locator('[data-testid="preset-name-button"]').first();
+    if ((await presetNameButton.count()) === 0) {
+      test.skip(true, 'No presets available to test');
+    }
+
+    const penIcon = presetNameButton.locator('.preset-item__edit-icon');
+    
+    // Pen icon should not be visible in normal mode
+    await expect(penIcon).not.toBeVisible();
+
+    // Enter edit mode
+    const settingsButton = page.locator('[data-testid="preset-settings-button"]');
+    await settingsButton.click();
+    await page.waitForTimeout(300);
+
+    // Pen icon should be visible in edit mode
+    await expect(penIcon).toBeVisible();
   });
 
   test('should navigate to preset form from add button', async ({ page }) => {
@@ -83,7 +154,7 @@ test.describe('Preset Management', () => {
       });
   });
 
-  test('should open preset edit form when clicking a preset name', async ({ page }) => {
+  test('should open preset edit form when clicking a preset name in edit mode', async ({ page }) => {
     const hasDevice = await openFirstDeviceDetails(page);
     if (!hasDevice) {
       test.skip(true, 'No devices available to open preset details');
@@ -94,6 +165,11 @@ test.describe('Preset Management', () => {
       test.skip(true, 'No presets configured to edit');
     }
 
+    // Enter edit mode
+    const settingsButton = page.locator('[data-testid="preset-settings-button"]');
+    await settingsButton.click();
+    await page.waitForTimeout(300);
+
     await presetNameButton.first().click();
     await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5000 }).catch(() => {});
 
@@ -102,6 +178,11 @@ test.describe('Preset Management', () => {
   });
 
   test('should show delete confirmation dialog', async ({ page }) => {
+    // Enter edit mode
+    const settingsButton = page.locator('[data-testid="preset-settings-button"]');
+    await settingsButton.click();
+    await page.waitForTimeout(300);
+
     const hasDevice = await openFirstDeviceDetails(page);
     if (!hasDevice) {
       test.skip(true, 'No devices available for delete confirmation test');
