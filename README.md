@@ -23,6 +23,7 @@ SoundHub is a local-network control application for smart audio devices, startin
 - [Architecture Overview](docs/architecture.md) - System design and diagrams
 - [API Reference](docs/api-reference.md) - REST API documentation
 - [Device Configuration Guide](docs/device-configuration-guide.md) - User guide for managing devices
+- [Testing Guide](docs/testing-guide.md) - Unit testing, E2E testing, and mocking patterns
 - [devices.json Schema](docs/devices-schema.md) - Configuration file format
 
 ## 🌐 Web UI Routes
@@ -333,7 +334,43 @@ For detailed API documentation, see [docs/api-reference.md](docs/api-reference.m
 - **CORS**: Configured for frontend origin only
 - **HTTPS**: Enabled in production (configure certificates in appsettings)
 
-## 🤝 Contributing
+## � Testing
+
+### Run Tests
+
+**Frontend Unit Tests:**
+```bash
+cd frontend
+npx nx run-many --target=test --all    # Run all unit tests
+npx nx affected --target=test          # Run tests for affected projects
+npx nx test feature                    # Run specific library tests
+npx nx test feature --watch            # Watch mode
+```
+
+**Frontend E2E Tests:**
+```bash
+cd frontend
+npx nx e2e e2e                         # Run Playwright tests
+npx nx e2e e2e --headed                # Run with visible browser
+```
+
+**Backend Tests:**
+```bash
+cd services
+dotnet test                            # Run all .NET tests
+dotnet test --coverage                 # With coverage
+```
+
+### Testing Best Practices
+
+- **Router Mocking**: When testing components with `RouterLink`, ensure your Router mock includes: `navigate()`, `createUrlTree()`, `serializeUrl()`, and `events` observable
+- **Service Mocking**: Mock external dependencies using Jest for Angular and Moq for .NET
+- **Signal Testing**: Verify both signal state changes and computed value updates
+- **E2E Testing**: Use semantic selectors and test complete user journeys
+
+For detailed testing patterns and troubleshooting, see [docs/testing-guide.md](docs/testing-guide.md).
+
+## �🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, commit conventions, and testing practices.
 
