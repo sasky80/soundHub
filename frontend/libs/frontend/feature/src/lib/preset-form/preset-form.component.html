@@ -39,7 +39,7 @@
           [attr.aria-describedby]="form.get('id')?.invalid ? 'id-error' : null"
         >
           @for (slot of presetSlots; track slot) {
-            <option [value]="slot">{{ 'presetForm.slotNumber' | translate }} {{ slot }}</option>
+            <option [value]="slot">{{ getSlotLabel(slot) }}</option>
           }
         </select>
         @if (form.get('id')?.invalid && form.get('id')?.touched) {

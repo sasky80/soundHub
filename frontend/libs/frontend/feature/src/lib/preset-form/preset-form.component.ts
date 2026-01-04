@@ -33,6 +33,7 @@ export class PresetFormComponent implements OnInit {
   protected readonly deleting = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly showDeleteConfirm = signal(false);
+  protected readonly allPresets = signal<Preset[]>([]);
 
   protected readonly form = this.fb.group({
     id: [1, [Validators.required, Validators.min(1), Validators.max(6)]],
@@ -52,6 +53,8 @@ export class PresetFormComponent implements OnInit {
 
     if (deviceId) {
       this.deviceId.set(deviceId);
+      // Load all presets to show slot usage
+      this.loadAllPresets(deviceId);
     }
 
     if (presetIdParam && presetIdParam !== 'new') {
@@ -63,12 +66,24 @@ export class PresetFormComponent implements OnInit {
     }
   }
 
+  private loadAllPresets(deviceId: string): void {
+    this.presetService.getPresets(deviceId).subscribe({
+      next: (presets) => {
+        this.allPresets.set(presets);
+      },
+      error: (err) => {
+        console.error('Failed to load presets for slot labels:', err);
+      },
+    });
+  }
+
   private loadPreset(deviceId: string, presetId: number): void {
     this.loading.set(true);
     this.error.set(null);
 
     this.presetService.getPresets(deviceId).subscribe({
       next: (presets) => {
+        this.allPresets.set(presets);
         const preset = presets.find((p) => p.id === presetId);
         if (preset) {
           this.form.patchValue({
@@ -91,6 +106,14 @@ export class PresetFormComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  protected getSlotLabel(slotNumber: number): string {
+    const preset = this.allPresets().find(p => p.id === slotNumber);
+    if (preset) {
+      return `Slot ${slotNumber} - ${preset.name}`;
+    }
+    return `Slot ${slotNumber} - Empty`;
   }
 
   protected onSubmit(): void {

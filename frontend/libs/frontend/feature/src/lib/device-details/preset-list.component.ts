@@ -35,6 +35,7 @@ export class PresetListComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly playingPresetId = signal<number | null>(null);
+  protected readonly editMode = signal(false);
 
   constructor() {
     effect(() => {
@@ -100,7 +101,25 @@ export class PresetListComponent implements OnInit {
   }
 
   protected navigateToPreset(preset: Preset): void {
-    this.router.navigate(['/devices', this.deviceId(), 'presets', preset.id]);
+    if (this.editMode()) {
+      this.router.navigate(['/devices', this.deviceId(), 'presets', preset.id]);
+    }
+  }
+
+  protected toggleEditMode(): void {
+    this.editMode.update(mode => !mode);
+  }
+
+  protected exitEditMode(): void {
+    this.editMode.set(false);
+  }
+
+  protected onPresetNameClick(preset: Preset): void {
+    if (this.editMode()) {
+      this.navigateToPreset(preset);
+    } else {
+      this.playPreset(preset);
+    }
   }
 
   protected getPresetIcon(preset: Preset): string {

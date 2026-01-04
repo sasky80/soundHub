@@ -1,5 +1,17 @@
-<section class="preset-list" data-testid="preset-list">
-  <h3 class="preset-list__title">{{ 'presets.title' | translate }}</h3>
+<section class="preset-list" data-testid="preset-list" [class.preset-list--edit-mode]="editMode()">
+  <div class="preset-list__header">
+    <h3 class="preset-list__title">{{ 'presets.title' | translate }}</h3>
+    <button
+      type="button"
+      class="preset-list__settings-btn"
+      data-testid="preset-settings-button"
+      (click)="toggleEditMode()"
+      [attr.aria-label]="'presets.settings' | translate"
+      [attr.aria-pressed]="editMode()"
+    >
+      <span class="preset-list__settings-icon" aria-hidden="true">⚙</span>
+    </button>
+  </div>
 
   @if (loading()) {
     <div class="preset-list__loading">{{ 'common.loading' | translate }}</div>
@@ -31,8 +43,8 @@
             type="button"
             class="preset-item__name"
             data-testid="preset-name-button"
-            (click)="navigateToPreset(preset)"
-            [attr.aria-label]="('presets.edit' | translate) + ' ' + preset.name"
+            (click)="onPresetNameClick(preset)"
+            [attr.aria-label]="editMode() ? (('presets.edit' | translate) + ' ' + preset.name) : preset.name"
           >
             {{ preset.name }}
           </button>
@@ -40,18 +52,33 @@
       }
 
       <!-- Add new preset button -->
-      <div class="preset-item preset-item--add" data-testid="preset-add-item">
+      @if (editMode()) {
+        <div class="preset-item preset-item--add" data-testid="preset-add-item">
+          <button
+            type="button"
+            class="preset-item__add-btn"
+            data-testid="preset-add-button"
+            (click)="navigateToNewPreset()"
+            [attr.aria-label]="'presets.addNew' | translate"
+          >
+            <span class="preset-item__add-icon" aria-hidden="true">+</span>
+          </button>
+          <span class="preset-item__label">{{ 'presets.addNew' | translate }}</span>
+        </div>
+      }
+    </div>
+
+    @if (editMode()) {
+      <div class="preset-list__footer">
         <button
           type="button"
-          class="preset-item__add-btn"
-          data-testid="preset-add-button"
-          (click)="navigateToNewPreset()"
-          [attr.aria-label]="'presets.addNew' | translate"
+          class="preset-list__back-btn"
+          data-testid="preset-back-button"
+          (click)="exitEditMode()"
         >
-          <span class="preset-item__add-icon" aria-hidden="true">+</span>
+          {{ 'presets.backToPlayMode' | translate }}
         </button>
-        <span class="preset-item__label">{{ 'presets.addNew' | translate }}</span>
       </div>
-    </div>
+    }
   }
 </section>
