@@ -46,6 +46,9 @@
             (click)="onPresetNameClick(preset)"
             [attr.aria-label]="editMode() ? (('presets.edit' | translate) + ' ' + preset.name) : preset.name"
           >
+            @if (editMode()) {
+              <span class="preset-item__edit-icon" aria-hidden="true">✎</span>
+            }
             {{ preset.name }}
           </button>
         </div>

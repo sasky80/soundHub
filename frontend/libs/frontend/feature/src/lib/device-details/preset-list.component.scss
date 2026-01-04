@@ -201,6 +201,10 @@
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
 
     &:hover {
       color: var(--text-primary, #fff);
@@ -215,6 +219,12 @@
       text-decoration: underline;
       text-decoration-style: dotted;
     }
+  }
+
+  &__edit-icon {
+    font-size: 0.875rem;
+    color: var(--primary-color, #3498db);
+    flex-shrink: 0;
   }
 
   &__label {

@@ -73,6 +73,13 @@ The system SHALL allow users to toggle the preset list into Edit mode by clickin
 - **WHEN** the user clicks on a preset name
 - **THEN** the system navigates to the preset details page for that preset
 
+#### Scenario: Pen icon displayed in edit mode
+- **GIVEN** the user is on the device details page
+- **AND** the preset section is in edit mode
+- **WHEN** presets are displayed
+- **THEN** each preset name shows a pen icon before the text
+- **AND** the pen icon indicates that clicking will edit the preset
+
 ---
 
 ### Requirement: Navigate to add new preset page

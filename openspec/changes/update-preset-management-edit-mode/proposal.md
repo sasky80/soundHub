@@ -8,6 +8,7 @@ Currently, the preset list always shows the "Add preset" button and clicking on 
 - Clicking the settings icon toggles the preset list into "Edit mode"
 - In Edit mode:
   - Clicking on a preset opens the preset definition page for viewing/editing
+  - A pen icon appears before each preset name to indicate editability
   - The "Add preset" (+) button is only visible in Edit mode (hidden in normal mode)
   - A "Back" button appears at the bottom-right corner to exit Edit mode
 - On preset details page:
