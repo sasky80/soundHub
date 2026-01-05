@@ -380,8 +380,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, commit conven
 
 ## 🙏 Acknowledgments
 
-- Bose SoundTouch API documentation
-- Nx for monorepo tooling
+- [SoundTouch WebServices API](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus/wiki/SoundTouch-WebServices-API)
+- [Nx](https://nx.dev) for monorepo tooling
 - .NET community for clean architecture patterns
 
 ---
