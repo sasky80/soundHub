@@ -13,6 +13,10 @@ namespace SoundHub.Infrastructure.Services;
 /// </summary>
 public class EncryptedSecretsService : ISecretsService
 {
+    private const string AeadEnvelopePrefix = "v1:";
+    private const int AesGcmNonceSizeBytes = 12;
+    private const int AesGcmTagSizeBytes = 16;
+
     private readonly string _secretsFilePath;
     private readonly ILogger<EncryptedSecretsService> _logger;
     private readonly EncryptionKeyStore _keyStore;
@@ -67,7 +71,23 @@ public class EncryptedSecretsService : ISecretsService
                 return null;
             }
 
-            return await DecryptValueAsync(secret.SecretValue, ct);
+            var (plainText, wasLegacy) = await DecryptValueAsync(secret.SecretValue, ct).ConfigureAwait(false);
+            if (wasLegacy)
+            {
+                var legacyIndex = secrets.FindIndex(s => s.SecretName == secretName);
+                if (legacyIndex >= 0)
+                {
+                    secrets[legacyIndex] = new SecretEntry
+                    {
+                        SecretName = secretName,
+                        SecretValue = await EncryptValueAsync(plainText, ct).ConfigureAwait(false)
+                    };
+
+                    await SaveSecretsAsync(secrets, ct).ConfigureAwait(false);
+                }
+            }
+
+            return plainText;
         }
         finally
         {
@@ -145,41 +165,82 @@ public class EncryptedSecretsService : ISecretsService
     private async Task<string> EncryptValueAsync(string plainText, CancellationToken ct)
     {
         var key = await GetEncryptionKeyAsync(ct);
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.GenerateIV();
 
-        using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-        using var ms = new MemoryStream();
-        ms.Write(aes.IV, 0, aes.IV.Length); // Prepend IV to ciphertext
+        var nonce = RandomNumberGenerator.GetBytes(AesGcmNonceSizeBytes);
+        var plainBytes = Encoding.UTF8.GetBytes(plainText);
+        var cipherBytes = new byte[plainBytes.Length];
+        var tag = new byte[AesGcmTagSizeBytes];
 
-        using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-        using (var writer = new StreamWriter(cs))
+        using (var aesGcm = new AesGcm(key, AesGcmTagSizeBytes))
         {
-            writer.Write(plainText);
+            aesGcm.Encrypt(nonce, plainBytes, cipherBytes, tag);
         }
 
-        return Convert.ToBase64String(ms.ToArray());
+        var payload = new byte[nonce.Length + tag.Length + cipherBytes.Length];
+        Buffer.BlockCopy(nonce, 0, payload, 0, nonce.Length);
+        Buffer.BlockCopy(tag, 0, payload, nonce.Length, tag.Length);
+        Buffer.BlockCopy(cipherBytes, 0, payload, nonce.Length + tag.Length, cipherBytes.Length);
+
+        return AeadEnvelopePrefix + Convert.ToBase64String(payload);
     }
 
-    private async Task<string> DecryptValueAsync(string cipherText, CancellationToken ct)
+    private async Task<(string PlainText, bool WasLegacy)> DecryptValueAsync(string cipherText, CancellationToken ct)
     {
         var key = await GetEncryptionKeyAsync(ct);
+
+        if (cipherText.StartsWith(AeadEnvelopePrefix, StringComparison.Ordinal))
+        {
+            var payloadBase64 = cipherText[AeadEnvelopePrefix.Length..];
+            byte[] payload;
+            try
+            {
+                payload = Convert.FromBase64String(payloadBase64);
+            }
+            catch (FormatException ex)
+            {
+                throw new CryptographicException("Invalid encrypted secret format (base64).", ex);
+            }
+
+            var minLength = AesGcmNonceSizeBytes + AesGcmTagSizeBytes;
+            if (payload.Length < minLength)
+            {
+                throw new CryptographicException("Invalid encrypted secret format (payload too short).");
+            }
+
+            var nonce = payload.AsSpan(0, AesGcmNonceSizeBytes).ToArray();
+            var tag = payload.AsSpan(AesGcmNonceSizeBytes, AesGcmTagSizeBytes).ToArray();
+            var cipherBytes = payload.AsSpan(minLength).ToArray();
+            var plainBytes = new byte[cipherBytes.Length];
+
+            using (var aesGcm = new AesGcm(key, AesGcmTagSizeBytes))
+            {
+                aesGcm.Decrypt(nonce, cipherBytes, tag, plainBytes);
+            }
+
+            return (Encoding.UTF8.GetString(plainBytes), WasLegacy: false);
+        }
+
+        // Legacy format (AES-CBC): base64( IV | ciphertext )
         var fullCipher = Convert.FromBase64String(cipherText);
 
         using var aes = Aes.Create();
         aes.Key = key;
 
-        // Extract IV from the beginning of the ciphertext
         var iv = new byte[aes.BlockSize / 8];
+        if (fullCipher.Length < iv.Length)
+        {
+            throw new CryptographicException("Invalid legacy encrypted secret format.");
+        }
+
         Array.Copy(fullCipher, 0, iv, 0, iv.Length);
         aes.IV = iv;
 
         using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
         using var ms = new MemoryStream(fullCipher, iv.Length, fullCipher.Length - iv.Length);
         using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-        using var reader = new StreamReader(cs);
-        return await reader.ReadToEndAsync(ct);
+        using var reader = new StreamReader(cs, Encoding.UTF8);
+        var legacyPlainText = await reader.ReadToEndAsync(ct).ConfigureAwait(false);
+        return (legacyPlainText, WasLegacy: true);
     }
 
     private class SecretEntry

@@ -60,15 +60,15 @@ public class SoundTouchAdapter : IDeviceAdapter
 
     private async Task<string> GetAsync(string url, CancellationToken ct)
     {
-        var response = await _httpClient.GetAsync(url, ct);
+        using var response = await _httpClient.GetAsync(url, ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync(ct);
+        return await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
     }
 
     private async Task PostXmlAsync(string url, string xmlContent, CancellationToken ct)
     {
         var content = new StringContent(xmlContent, Encoding.UTF8, "application/xml");
-        var response = await _httpClient.PostAsync(url, content, ct);
+        using var response = await _httpClient.PostAsync(url, content, ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
@@ -668,10 +668,24 @@ public class SoundTouchAdapter : IDeviceAdapter
             ipRange = Enumerable.Range(1, 254).Select(i => $"{subnet}.{i}");
         }
 
-        // Scan all IPs in range
-        var tasks = ipRange.Select(ip => TryDiscoverDeviceAtIpAsync(ip, ct)).ToList();
-        var results = await Task.WhenAll(tasks);
-        devices.AddRange(results.Where(d => d != null)!);
+        // Scan all IPs in range with bounded concurrency
+        var ips = ipRange.ToList();
+        var discovered = new System.Collections.Concurrent.ConcurrentBag<Device>();
+
+        const int maxConcurrency = 25;
+        await Parallel.ForEachAsync(
+            ips,
+            new ParallelOptions { MaxDegreeOfParallelism = maxConcurrency, CancellationToken = ct },
+            async (ip, token) =>
+            {
+                var device = await TryDiscoverDeviceAtIpAsync(ip, token).ConfigureAwait(false);
+                if (device != null)
+                {
+                    discovered.Add(device);
+                }
+            }).ConfigureAwait(false);
+
+        devices.AddRange(discovered);
 
         _logger.LogInformation("Discovery complete: found {Count} SoundTouch devices", devices.Count);
         return devices;
@@ -722,11 +736,11 @@ public class SoundTouchAdapter : IDeviceAdapter
             cts.CancelAfter(TimeSpan.FromSeconds(2)); // Short timeout for discovery
 
             var url = $"http://{ip}:{DefaultPort}/info";
-            var response = await _httpClient.GetAsync(url, cts.Token);
+            using var response = await _httpClient.GetAsync(url, cts.Token).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync(cts.Token);
+                var content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
                 var xml = XDocument.Parse(content);
                 var name = xml.Root?.Element("name")?.Value ?? "Unknown Device";
                 var deviceIdAttr = xml.Root?.Attribute("deviceID")?.Value ?? Guid.NewGuid().ToString();
