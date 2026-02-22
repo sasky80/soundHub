@@ -528,10 +528,32 @@ Content-Type: application/json
 }
 ```
 
+**LOCAL_INTERNET_RADIO with Stream URL**
+
+When source is `LOCAL_INTERNET_RADIO`, you can provide a `streamUrl` instead of a `location`. The backend will create a local station JSON file and derive the `location` automatically:
+
+```http
+POST /api/devices/{id}/presets
+Content-Type: application/json
+
+{
+  "id": 3,
+  "name": "Evening Jazz",
+  "streamUrl": "http://streams.example.com/jazz",
+  "iconUrl": "https://cdn.example.com/jazz.png",
+  "type": "stationurl",
+  "source": "LOCAL_INTERNET_RADIO"
+}
+```
+
+To update an existing station file (edit mode), add `"isUpdate": true`.
+
 **Behavior**
 - `id` must be between 1 and 6 for SoundTouch devices
-- `name` and `location` are required
+- `name` is always required
+- `location` is required unless `streamUrl` is provided with source `LOCAL_INTERNET_RADIO`
 - `type` and `source` are optional; defaults are `stationurl` and `LOCAL_INTERNET_RADIO` when omitted (SoundTouch requirement)
+- When `streamUrl` is provided, the backend creates a station JSON file under `/data/presets/` and sets `location` to the public URL of that file
 
 **Response**
 - `201 Created` - Preset stored successfully (body contains the stored preset)
@@ -542,7 +564,7 @@ Content-Type: application/json
   "id": 3,
   "deviceId": "abc123",
   "name": "Evening Jazz",
-  "location": "https://radio.example.com/jazz",
+  "location": "http://mini.local/soundhub/presets/evening-jazz.json",
   "iconUrl": "https://cdn.example.com/jazz.png",
   "type": "stationurl",
   "source": "LOCAL_INTERNET_RADIO",
@@ -553,7 +575,39 @@ Content-Type: application/json
 **Error Responses**
 - `400 Bad Request` - Invalid slot id, missing fields, or slot outside 1-6
 - `404 Not Found` - Device not found
+- `409 Conflict` - A station file with the same name already exists (use `isUpdate: true` to overwrite)
 - `501 Not Implemented` - Vendor adapter missing
+
+### Get Station File
+
+Returns a locally-stored station JSON file. Used by SoundTouch devices to fetch station configuration during playback.
+
+```http
+GET /api/presets/{filename}
+```
+
+**Example**
+
+```http
+GET /api/presets/evening-jazz.json
+```
+
+**Response**
+- `200 OK` - Station file content (JSON)
+
+```json
+{
+  "name": "Evening Jazz",
+  "streamType": "radio",
+  "audio": {
+    "hasPlaylist": false,
+    "isRealtime": true,
+    "streamUrl": "http://streams.example.com/jazz"
+  }
+}
+```
+
+- `404 Not Found` - Station file does not exist
 
 ### Remove Preset
 

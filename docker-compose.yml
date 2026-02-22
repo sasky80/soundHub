@@ -12,6 +12,7 @@ services:
       - SecretsFilePath=/data/secrets.json
       - KeyDbPath=/data/key4.db
       - MasterPasswordFile=/run/secrets/master_password
+      - PUBLIC_HOST_URL=http://192.168.1.97/soundhub
     secrets:
       - master_password
     volumes:

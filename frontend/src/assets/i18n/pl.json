@@ -13,5 +13,38 @@
     "colorThemeGreen": "Zielony",
     "colorThemeAmber": "Bursztynowy",
     "colorThemeBlue": "Niebieski"
+  },
+  "presetForm": {
+    "back": "Wróć do urządzenia",
+    "createTitle": "Dodaj preset",
+    "editTitle": "Edytuj preset",
+    "slot": "Slot presetu",
+    "slotRequired": "Slot presetu jest wymagany",
+    "name": "Nazwa",
+    "nameRequired": "Nazwa jest wymagana",
+    "location": "URL lokalizacji",
+    "locationRequired": "URL lokalizacji jest wymagany",
+    "locationHint": "Bezpośredni URL do strumienia audio lub treści",
+    "streamUrl": "URL strumienia",
+    "streamUrlRequired": "URL strumienia jest wymagany (musi zaczynać się od http:// lub https://)",
+    "streamUrlHint": "URL strumienia HTTP stacji radiowej",
+    "iconUrl": "URL ikony",
+    "iconUrlHint": "Opcjonalny URL do ikony/grafiki stacji",
+    "advancedOptions": "Opcje zaawansowane",
+    "type": "Typ treści",
+    "typeHint": "Zwykle 'stationurl' dla SoundTouch",
+    "source": "Źródło",
+    "sourceHint": "Typ źródła (np. LOCAL_INTERNET_RADIO)",
+    "deleteConfirmTitle": "Usuń preset",
+    "deleteConfirmMessage": "Czy na pewno chcesz usunąć ten preset? Tej operacji nie można cofnąć."
+  },
+  "common": {
+    "loading": "Ładowanie...",
+    "saving": "Zapisywanie...",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "deleting": "Usuwanie...",
+    "close": "Zamknij"
   }
 }

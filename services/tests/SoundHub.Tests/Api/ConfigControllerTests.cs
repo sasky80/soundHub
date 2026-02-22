@@ -21,7 +21,8 @@ public class ConfigControllerTests
         _repository = Substitute.For<IDeviceRepository>();
         var adapterRegistry = new DeviceAdapterRegistry();
         var serviceLogger = Substitute.For<ILogger<DeviceService>>();
-        _deviceService = new DeviceService(_repository, adapterRegistry, serviceLogger);
+        var stationFileService = Substitute.For<IStationFileService>();
+        _deviceService = new DeviceService(_repository, adapterRegistry, stationFileService, serviceLogger);
         _controller = new ConfigController(_deviceService);
     }
 

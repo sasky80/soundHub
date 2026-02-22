@@ -340,7 +340,7 @@ CORS origins are hardcoded in Program.cs instead of being configurable.
 **Current Code:**
 ```csharp
 policy.WithOrigins(
-    "http://localhost:4200", // Angular dev server
+    "http://localhost:5002", // Angular dev server
     "http://localhost:80",   // Docker web container
     "http://localhost"
 )
@@ -916,7 +916,7 @@ public async Task<Device> AddDeviceAsync(string name, string ipAddress, string v
 {
   "Cors": {
     "AllowedOrigins": [
-      "http://localhost:4200",
+      "http://localhost:5002",
       "http://localhost:80",
       "http://localhost"
     ]

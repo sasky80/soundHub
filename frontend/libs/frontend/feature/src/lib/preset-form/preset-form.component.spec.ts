@@ -17,7 +17,7 @@ describe('PresetFormComponent', () => {
       id: 1,
       deviceId: 'test-device',
       name: 'Radio Jazz',
-      location: 'https://example.com/jazz',
+      location: 'http://host/presets/radio-jazz.json',
       iconUrl: 'https://example.com/jazz.png',
       type: 'stationurl',
       source: 'LOCAL_INTERNET_RADIO',
@@ -39,6 +39,7 @@ describe('PresetFormComponent', () => {
       getPresets: jest.fn().mockReturnValue(of(mockPresets)),
       storePreset: jest.fn().mockReturnValue(of(mockPresets[0])),
       deletePreset: jest.fn().mockReturnValue(of(void 0)),
+      getStationFile: jest.fn().mockReturnValue(of({ name: 'Radio Jazz', audio: { streamUrl: 'http://jazz.stream/live' } })),
     } as unknown as jest.Mocked<PresetService>;
 
     mockRouter = {
@@ -130,8 +131,65 @@ describe('PresetFormComponent', () => {
       fixture.detectChanges();
 
       expect(component['form'].value.name).toBe('Radio Jazz');
-      expect(component['form'].value.location).toBe('https://example.com/jazz');
       expect(component['form'].get('id')?.disabled).toBe(true);
+    });
+
+    it('should fetch station file stream URL for LOCAL_INTERNET_RADIO preset in edit mode', () => {
+      mockActivatedRoute.snapshot!.paramMap.get = jest.fn((key: string) => {
+        if (key === 'id') return 'test-device';
+        if (key === 'presetId') return '1';
+        return null;
+      });
+
+      fixture.detectChanges();
+
+      expect(mockPresetService.getStationFile).toHaveBeenCalledWith('radio-jazz.json');
+      expect(component['form'].value.streamUrl).toBe('http://jazz.stream/live');
+    });
+  });
+
+  describe('LOCAL_INTERNET_RADIO conditional fields', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+    });
+
+    it('should default to LOCAL_INTERNET_RADIO mode', () => {
+      expect(component['isLocalRadio']()).toBe(true);
+    });
+
+    it('should show streamUrl field and hide location when source is LOCAL_INTERNET_RADIO', () => {
+      component['form'].get('source')!.setValue('LOCAL_INTERNET_RADIO');
+      expect(component['isLocalRadio']()).toBe(true);
+
+      // streamUrl should be required
+      component['form'].get('streamUrl')!.setValue('');
+      expect(component['form'].get('streamUrl')!.valid).toBe(false);
+
+      // location should not be required
+      expect(component['form'].get('location')!.valid).toBe(true);
+    });
+
+    it('should show location field and hide streamUrl when source is not LOCAL_INTERNET_RADIO', () => {
+      component['form'].get('source')!.setValue('SPOTIFY');
+      expect(component['isLocalRadio']()).toBe(false);
+
+      // location should be required
+      component['form'].get('location')!.setValue('');
+      expect(component['form'].get('location')!.valid).toBe(false);
+
+      // streamUrl should not be required
+      expect(component['form'].get('streamUrl')!.valid).toBe(true);
+    });
+
+    it('should validate streamUrl starts with http://', () => {
+      component['form'].get('streamUrl')!.setValue('ftp://bad-protocol');
+      expect(component['form'].get('streamUrl')!.valid).toBe(false);
+
+      component['form'].get('streamUrl')!.setValue('http://valid.stream/live');
+      expect(component['form'].get('streamUrl')!.valid).toBe(true);
+
+      component['form'].get('streamUrl')!.setValue('https://also-valid.stream/live');
+      expect(component['form'].get('streamUrl')!.valid).toBe(true);
     });
   });
 
@@ -140,11 +198,11 @@ describe('PresetFormComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should save preset with valid form data', () => {
+    it('should save LOCAL_INTERNET_RADIO preset with streamUrl instead of location', () => {
       component['form'].patchValue({
         id: 2,
-        name: 'Test Preset',
-        location: 'https://example.com/test',
+        name: 'Test Radio',
+        streamUrl: 'http://test.stream/live',
         iconUrl: 'https://example.com/icon.png',
         type: 'stationurl',
         source: 'LOCAL_INTERNET_RADIO',
@@ -154,11 +212,34 @@ describe('PresetFormComponent', () => {
 
       expect(mockPresetService.storePreset).toHaveBeenCalledWith('test-device', {
         id: 2,
-        name: 'Test Preset',
-        location: 'https://example.com/test',
+        name: 'Test Radio',
+        streamUrl: 'http://test.stream/live',
         iconUrl: 'https://example.com/icon.png',
         type: 'stationurl',
         source: 'LOCAL_INTERNET_RADIO',
+        isUpdate: false,
+      });
+    });
+
+    it('should save non-LOCAL_INTERNET_RADIO preset with location', () => {
+      component['form'].get('source')!.setValue('SPOTIFY');
+      component['form'].patchValue({
+        id: 2,
+        name: 'Test Playlist',
+        location: 'spotify:playlist:abc',
+        type: 'stationurl',
+      });
+
+      component['onSubmit']();
+
+      expect(mockPresetService.storePreset).toHaveBeenCalledWith('test-device', {
+        id: 2,
+        name: 'Test Playlist',
+        location: 'spotify:playlist:abc',
+        iconUrl: undefined,
+        type: 'stationurl',
+        source: 'SPOTIFY',
+        isUpdate: false,
       });
     });
 
@@ -166,7 +247,7 @@ describe('PresetFormComponent', () => {
       component['form'].patchValue({
         id: 2,
         name: 'Test Preset',
-        location: 'https://example.com/test',
+        streamUrl: 'http://test.stream/live',
       });
 
       component['onSubmit']();
@@ -178,12 +259,28 @@ describe('PresetFormComponent', () => {
       component['form'].patchValue({
         id: 2,
         name: '',
-        location: '',
+        streamUrl: '',
       });
 
       component['onSubmit']();
 
       expect(mockPresetService.storePreset).not.toHaveBeenCalled();
+    });
+
+    it('should handle 409 Conflict with user-friendly error', () => {
+      mockPresetService.storePreset.mockReturnValue(
+        throwError(() => ({ status: 409, error: { message: "Station file 'test' already exists." } }))
+      );
+
+      component['form'].patchValue({
+        id: 2,
+        name: 'Duplicate Station',
+        streamUrl: 'http://test.stream/live',
+      });
+
+      component['onSubmit']();
+
+      expect(component['error']()).toBe("Station file 'test' already exists.");
     });
   });
 

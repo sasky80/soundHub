@@ -20,7 +20,8 @@ public class NetworkMaskValidationTests
         _repository = Substitute.For<IDeviceRepository>();
         _registry = new DeviceAdapterRegistry();
         _logger = Substitute.For<ILogger<DeviceService>>();
-        _service = new DeviceService(_repository, _registry, _logger);
+        var stationFileService = Substitute.For<IStationFileService>();
+        _service = new DeviceService(_repository, _registry, stationFileService, _logger);
     }
 
     [Theory]

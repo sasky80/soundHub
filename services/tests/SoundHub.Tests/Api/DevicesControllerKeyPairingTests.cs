@@ -27,7 +27,8 @@ public class DevicesControllerKeyPairingTests
         _adapterRegistry.RegisterAdapter(_adapter);
 
         var serviceLogger = Substitute.For<ILogger<DeviceService>>();
-        var deviceService = new DeviceService(_repository, _adapterRegistry, serviceLogger);
+        var stationFileService = Substitute.For<IStationFileService>();
+        var deviceService = new DeviceService(_repository, _adapterRegistry, stationFileService, serviceLogger);
 
         var controllerLogger = Substitute.For<ILogger<DevicesController>>();
         _controller = new DevicesController(deviceService, controllerLogger);

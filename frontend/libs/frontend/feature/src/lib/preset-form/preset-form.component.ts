@@ -5,6 +5,7 @@ import {
   OnInit,
   signal,
   computed,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -35,10 +36,14 @@ export class PresetFormComponent implements OnInit {
   protected readonly showDeleteConfirm = signal(false);
   protected readonly allPresets = signal<Preset[]>([]);
 
+  /** Whether the current source is LOCAL_INTERNET_RADIO (controls field visibility). */
+  protected readonly isLocalRadio = signal(true);
+
   protected readonly form = this.fb.group({
     id: [1, [Validators.required, Validators.min(1), Validators.max(6)]],
     name: ['', [Validators.required, Validators.maxLength(100)]],
-    location: ['', [Validators.required]],
+    location: [''],
+    streamUrl: [''],
     iconUrl: [''],
     type: ['stationurl'],
     source: ['LOCAL_INTERNET_RADIO'],
@@ -46,6 +51,13 @@ export class PresetFormComponent implements OnInit {
 
   // Available preset slots (1-6 for SoundTouch)
   protected readonly presetSlots = [1, 2, 3, 4, 5, 6];
+
+  constructor() {
+    // React to source field changes to toggle LOCAL_INTERNET_RADIO mode
+    effect(() => {
+      // This effect runs on init; actual form value changes are handled via valueChanges subscription
+    });
+  }
 
   ngOnInit(): void {
     const deviceId = this.route.snapshot.paramMap.get('id');
@@ -64,6 +76,38 @@ export class PresetFormComponent implements OnInit {
         this.loadPreset(deviceId!, presetId);
       }
     }
+
+    // Subscribe to source field changes to toggle field visibility and validators
+    this.form.get('source')!.valueChanges.subscribe((source) => {
+      this.updateSourceMode(source);
+    });
+
+    // Apply initial state
+    this.updateSourceMode(this.form.get('source')!.value);
+  }
+
+  /** Updates form validators and visibility based on whether source is LOCAL_INTERNET_RADIO. */
+  private updateSourceMode(source: string | null): void {
+    const localRadio = source?.toUpperCase() === 'LOCAL_INTERNET_RADIO';
+    this.isLocalRadio.set(localRadio);
+
+    const locationCtrl = this.form.get('location')!;
+    const streamUrlCtrl = this.form.get('streamUrl')!;
+
+    if (localRadio) {
+      // Stream URL required (must start with http://)
+      streamUrlCtrl.setValidators([Validators.required, Validators.pattern(/^https?:\/\/.+/)]);
+      locationCtrl.clearValidators();
+      locationCtrl.setValue('');
+    } else {
+      // Location required
+      locationCtrl.setValidators([Validators.required]);
+      streamUrlCtrl.clearValidators();
+      streamUrlCtrl.setValue('');
+    }
+
+    locationCtrl.updateValueAndValidity();
+    streamUrlCtrl.updateValueAndValidity();
   }
 
   private loadAllPresets(deviceId: string): void {
@@ -96,6 +140,11 @@ export class PresetFormComponent implements OnInit {
           });
           // Disable ID field when editing
           this.form.get('id')?.disable();
+
+          // For LOCAL_INTERNET_RADIO presets, try to fetch the stream URL from the station file
+          if (preset.source?.toUpperCase() === 'LOCAL_INTERNET_RADIO' && preset.location) {
+            this.loadStationFileStreamUrl(preset.location);
+          }
         } else {
           this.error.set('Preset not found');
         }
@@ -106,6 +155,32 @@ export class PresetFormComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  /** Extracts the station filename from a location URL and fetches the stream URL. */
+  private loadStationFileStreamUrl(location: string): void {
+    try {
+      // Extract filename from URL, e.g., "http://host/presets/jazz-fm.json" → "jazz-fm.json"
+      const url = new URL(location);
+      const pathParts = url.pathname.split('/');
+      const filename = pathParts[pathParts.length - 1];
+
+      if (filename && filename.endsWith('.json')) {
+        this.presetService.getStationFile(filename).subscribe({
+          next: (stationFile) => {
+            if (stationFile?.audio?.streamUrl) {
+              this.form.patchValue({ streamUrl: stationFile.audio.streamUrl });
+            }
+          },
+          error: () => {
+            // Station file not found — leave streamUrl empty, fall back to location
+            console.warn('Could not load station file for pre-population:', filename);
+          },
+        });
+      }
+    } catch {
+      // location is not a valid URL — ignore
+    }
   }
 
   protected getSlotLabel(slotNumber: number): string {
@@ -126,11 +201,18 @@ export class PresetFormComponent implements OnInit {
     const request: StorePresetRequest = {
       id: formValue.id!,
       name: formValue.name!,
-      location: formValue.location!,
       iconUrl: formValue.iconUrl || undefined,
       type: formValue.type || 'stationurl',
       source: formValue.source || 'LOCAL_INTERNET_RADIO',
+      isUpdate: this.isEditMode(),
     };
+
+    if (this.isLocalRadio()) {
+      request.streamUrl = formValue.streamUrl || undefined;
+      // Location is derived by the backend
+    } else {
+      request.location = formValue.location || undefined;
+    }
 
     this.presetService.storePreset(this.deviceId(), request).subscribe({
       next: () => {
@@ -138,7 +220,11 @@ export class PresetFormComponent implements OnInit {
         this.navigateBack();
       },
       error: (err) => {
-        this.error.set(err.error?.message || err.message || 'Failed to save preset');
+        if (err.status === 409) {
+          this.error.set(err.error?.message || 'A station with this name already exists. Use a different name or edit the existing preset.');
+        } else {
+          this.error.set(err.error?.message || err.message || 'Failed to save preset');
+        }
         this.saving.set(false);
       },
     });

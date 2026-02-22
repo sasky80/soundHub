@@ -63,8 +63,9 @@ public class StorePresetRequest
 
     /// <summary>
     /// URL or location of the content (e.g., stream URL, station path).
+    /// Optional when StreamUrl is provided (backend derives it automatically).
     /// </summary>
-    public required string Location { get; init; }
+    public string? Location { get; init; }
 
     /// <summary>
     /// URL to the preset icon/artwork (optional).
@@ -80,4 +81,17 @@ public class StorePresetRequest
     /// Source type (default: "LOCAL_INTERNET_RADIO" for SoundTouch).
     /// </summary>
     public string? Source { get; init; }
+
+    /// <summary>
+    /// HTTP stream URL for LOCAL_INTERNET_RADIO presets.
+    /// When provided, the backend creates a local station JSON file
+    /// and derives the Location automatically.
+    /// </summary>
+    public string? StreamUrl { get; init; }
+
+    /// <summary>
+    /// Whether this is an update to an existing preset (edit mode).
+    /// Used to determine create vs update semantics for station files.
+    /// </summary>
+    public bool IsUpdate { get; init; } = false;
 }

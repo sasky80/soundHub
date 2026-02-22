@@ -66,26 +66,51 @@
         }
       </div>
 
-      <!-- Location URL -->
-      <div class="form-group">
-        <label for="location" class="form-label">
-          {{ 'presetForm.location' | translate }}
-          <span class="required">*</span>
-        </label>
-        <input
-          id="location"
-          type="url"
-          formControlName="location"
-          class="form-input"
-          placeholder="https://example.com/stream"
-          data-testid="preset-location-input"
-          [attr.aria-describedby]="form.get('location')?.invalid ? 'location-error' : null"
-        />
-        @if (form.get('location')?.invalid && form.get('location')?.touched) {
-          <span id="location-error" class="form-error">{{ 'presetForm.locationRequired' | translate }}</span>
-        }
-        <span class="form-hint">{{ 'presetForm.locationHint' | translate }}</span>
-      </div>
+      <!-- Location URL (shown when source is NOT LOCAL_INTERNET_RADIO) -->
+      @if (!isLocalRadio()) {
+        <div class="form-group">
+          <label for="location" class="form-label">
+            {{ 'presetForm.location' | translate }}
+            <span class="required">*</span>
+          </label>
+          <input
+            id="location"
+            type="url"
+            formControlName="location"
+            class="form-input"
+            placeholder="https://example.com/stream"
+            data-testid="preset-location-input"
+            [attr.aria-describedby]="form.get('location')?.invalid ? 'location-error' : null"
+          />
+          @if (form.get('location')?.invalid && form.get('location')?.touched) {
+            <span id="location-error" class="form-error">{{ 'presetForm.locationRequired' | translate }}</span>
+          }
+          <span class="form-hint">{{ 'presetForm.locationHint' | translate }}</span>
+        </div>
+      }
+
+      <!-- Stream URL (shown when source IS LOCAL_INTERNET_RADIO) -->
+      @if (isLocalRadio()) {
+        <div class="form-group">
+          <label for="streamUrl" class="form-label">
+            {{ 'presetForm.streamUrl' | translate }}
+            <span class="required">*</span>
+          </label>
+          <input
+            id="streamUrl"
+            type="url"
+            formControlName="streamUrl"
+            class="form-input"
+            placeholder="http://streams.example.com/jazz"
+            data-testid="preset-stream-url-input"
+            [attr.aria-describedby]="form.get('streamUrl')?.invalid ? 'stream-url-error' : null"
+          />
+          @if (form.get('streamUrl')?.invalid && form.get('streamUrl')?.touched) {
+            <span id="stream-url-error" class="form-error">{{ 'presetForm.streamUrlRequired' | translate }}</span>
+          }
+          <span class="form-hint">{{ 'presetForm.streamUrlHint' | translate }}</span>
+        </div>
+      }
 
       <!-- Icon URL (optional) -->
       <div class="form-group">

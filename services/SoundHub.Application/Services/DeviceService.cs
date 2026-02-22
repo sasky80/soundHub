@@ -11,15 +11,18 @@ public class DeviceService
 {
     private readonly IDeviceRepository _repository;
     private readonly DeviceAdapterRegistry _adapterRegistry;
+    private readonly IStationFileService _stationFileService;
     private readonly ILogger<DeviceService> _logger;
 
     public DeviceService(
         IDeviceRepository repository,
         DeviceAdapterRegistry adapterRegistry,
+        IStationFileService stationFileService,
         ILogger<DeviceService> logger)
     {
         _repository = repository;
         _adapterRegistry = adapterRegistry;
+        _stationFileService = stationFileService;
         _logger = logger;
     }
 
@@ -388,7 +391,7 @@ public class DeviceService
         return await adapter.ListPresetsAsync(id, ct);
     }
 
-    public async Task<Preset> StorePresetAsync(string id, Preset preset, CancellationToken ct = default)
+    public async Task<Preset> StorePresetAsync(string id, Preset preset, StorePresetRequest? request = null, CancellationToken ct = default)
     {
         var device = await _repository.GetDeviceAsync(id, ct);
         if (device == null)
@@ -400,6 +403,37 @@ public class DeviceService
         if (adapter == null)
         {
             throw new NotSupportedException($"No adapter found for vendor {device.Vendor}");
+        }
+
+        // Handle LOCAL_INTERNET_RADIO station file creation/update
+        if (request?.StreamUrl != null &&
+            string.Equals(preset.Source, "LOCAL_INTERNET_RADIO", StringComparison.OrdinalIgnoreCase))
+        {
+            var slug = _stationFileService.Slugify(preset.Name);
+
+            if (request.IsUpdate)
+            {
+                await _stationFileService.UpdateAsync(slug, preset.Name, request.StreamUrl, ct);
+                _logger.LogInformation("Updated station file {Slug}.json for preset {PresetId} on device {DeviceId}", slug, preset.Id, id);
+            }
+            else
+            {
+                slug = await _stationFileService.CreateAsync(preset.Name, request.StreamUrl, ct);
+                _logger.LogInformation("Created station file {Slug}.json for preset {PresetId} on device {DeviceId}", slug, preset.Id, id);
+            }
+
+            // Override the location with the public URL of the station file
+            preset = new Preset
+            {
+                Id = preset.Id,
+                DeviceId = preset.DeviceId,
+                Name = preset.Name,
+                Location = _stationFileService.GetPublicUrl(slug),
+                IconUrl = preset.IconUrl,
+                Type = preset.Type,
+                Source = preset.Source,
+                IsPresetable = preset.IsPresetable,
+            };
         }
 
         return await adapter.StorePresetAsync(id, preset, ct);

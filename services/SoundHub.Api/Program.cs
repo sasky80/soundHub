@@ -61,10 +61,23 @@ builder.Services.Configure<EncryptionKeyStoreOptions>(options =>
 // Configure SoundTouch adapter options
 builder.Services.Configure<SoundTouchAdapterOptions>(builder.Configuration.GetSection("SoundTouch"));
 
+// Configure station file service
+builder.Services.Configure<StationFileServiceOptions>(options =>
+{
+    var section = builder.Configuration.GetSection("StationFiles");
+    options.PresetsDirectory = section.GetValue<string>("PresetsDirectory")
+        ?? builder.Configuration.GetValue<string>("PresetsDirectory")
+        ?? "/data/presets";
+    options.PublicHostUrl = builder.Configuration.GetValue<string>("PUBLIC_HOST_URL")
+        ?? section.GetValue<string>("PublicHostUrl")
+        ?? "http://localhost:5001";
+});
+
 // Register application services
 builder.Services.AddSingleton<EncryptionKeyStore>();
 builder.Services.AddSingleton<IDeviceRepository, FileDeviceRepository>();
 builder.Services.AddSingleton<ISecretsService, EncryptedSecretsService>();
+builder.Services.AddSingleton<IStationFileService, StationFileService>();
 builder.Services.AddScoped<DeviceService>();
 
 // Register file watcher for hot-reload of devices.json

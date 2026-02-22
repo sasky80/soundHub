@@ -120,17 +120,28 @@ Each vendor (e.g., Bose SoundTouch) implements this interface. The adapter regis
    cd soundHub
    ```
 
-2. **Start all services**
+2. **Set `PUBLIC_HOST_URL`** in `docker-compose.yml`
+
+   The API needs to know the public base URL so it can generate correct URLs for locally-stored station files (used by SoundTouch devices to fetch internet radio definitions). Set it to the Caddy address that clients will use — either the hostname or the IP:
+
+   ```yaml
+   environment:
+     - PUBLIC_HOST_URL=http://<your-host>.local/soundhub   # or http://192.168.1.x/soundhub
+   ```
+
+   > If this is not set, the API falls back to `http://localhost:5001`, which only works for local access.
+
+3. **Start all services**
    ```bash
    docker-compose up --build
    ```
 
-3. **Access the application**
+4. **Access the application**
    - Web UI: http://localhost:5002
    - API: http://localhost:5001
    - Swagger UI: http://localhost:5001/swagger
 
-4. **Stop services**
+5. **Stop services**
    ```bash
    docker-compose down
    ```
@@ -148,9 +159,16 @@ Replace `<your-host>` with your Mac's hostname (find it in **System Settings →
 
 2. **Configure `/opt/homebrew/etc/Caddyfile`**
    ```
-   http://<your-host>.local {
+   http://<your-host>.local, http://<your-ip> {
        # SoundHub frontend — redirect bare path to trailing-slash version
        redir /soundhub /soundhub/ permanent
+
+       # SoundHub local preset station files (served from disk)
+       handle /soundhub/presets/* {
+           uri strip_prefix /soundhub/presets
+           root * /path/to/soundHub/data/presets
+           file_server
+       }
 
        handle /soundhub/* {
            uri strip_prefix /soundhub
@@ -182,12 +200,12 @@ Replace `<your-host>` with your Mac's hostname (find it in **System Settings →
    brew services restart caddy
    ```
 
-4. **Access the application**
-   - Web UI: http://<your-host>.local/soundhub/
+4. **Access the application** (via hostname or IP)
+   - Web UI: http://<your-host>.local/soundhub/ or http://<your-ip>/soundhub/
    - API: http://<your-host>.local/soundhub/api/
    - Swagger UI: http://<your-host>.local/soundhub/api/swagger
 
-> `<your-host>.local` resolves automatically via mDNS/Bonjour on any macOS, iOS, or Linux client on the local network — no `/etc/hosts` changes needed on client machines.
+> `<your-host>.local` resolves automatically via mDNS/Bonjour on any macOS, iOS, or Linux client on the local network — no `/etc/hosts` changes needed on client machines. Using the IP address directly works on all platforms including Windows.
 
 ### Local Development (Without Docker)
 

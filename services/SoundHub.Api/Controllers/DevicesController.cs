@@ -575,7 +575,11 @@ public class DevicesController : ControllerBase
             return BadRequest(new { code = "INVALID_INPUT", message = "Preset name is required" });
         }
 
-        if (string.IsNullOrWhiteSpace(request.Location))
+        var source = request.Source ?? "LOCAL_INTERNET_RADIO";
+        var isLocalRadio = string.Equals(source, "LOCAL_INTERNET_RADIO", StringComparison.OrdinalIgnoreCase)
+                           && !string.IsNullOrWhiteSpace(request.StreamUrl);
+
+        if (!isLocalRadio && string.IsNullOrWhiteSpace(request.Location))
         {
             return BadRequest(new { code = "INVALID_INPUT", message = "Preset location URL is required" });
         }
@@ -587,14 +591,14 @@ public class DevicesController : ControllerBase
                 Id = request.Id,
                 DeviceId = id,
                 Name = request.Name,
-                Location = request.Location,
+                Location = request.Location ?? string.Empty,
                 IconUrl = request.IconUrl,
                 Type = request.Type ?? "stationurl",
-                Source = request.Source ?? "LOCAL_INTERNET_RADIO",
+                Source = source,
                 IsPresetable = true
             };
 
-            var storedPreset = await _deviceService.StorePresetAsync(id, preset, ct);
+            var storedPreset = await _deviceService.StorePresetAsync(id, preset, request, ct);
             return CreatedAtAction(nameof(GetPresets), new { id }, storedPreset);
         }
         catch (KeyNotFoundException)
@@ -608,6 +612,10 @@ public class DevicesController : ControllerBase
         catch (NotSupportedException ex)
         {
             return StatusCode(StatusCodes.Status501NotImplemented, new { code = "NOT_SUPPORTED", message = ex.Message });
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
+        {
+            return Conflict(new { code = "STATION_FILE_EXISTS", message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {

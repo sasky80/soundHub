@@ -29,7 +29,8 @@ public class DevicesControllerPingDiscoveryTests
         _adapterRegistry.RegisterAdapter(_mockAdapter);
 
         var serviceLogger = Substitute.For<ILogger<DeviceService>>();
-        _deviceService = new DeviceService(_repository, _adapterRegistry, serviceLogger);
+        var stationFileService = Substitute.For<IStationFileService>();
+        _deviceService = new DeviceService(_repository, _adapterRegistry, stationFileService, serviceLogger);
 
         var controllerLogger = Substitute.For<ILogger<DevicesController>>();
         _controller = new DevicesController(_deviceService, controllerLogger);

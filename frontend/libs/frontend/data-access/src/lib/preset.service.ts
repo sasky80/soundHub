@@ -16,10 +16,12 @@ export interface Preset {
 export interface StorePresetRequest {
   id: number;
   name: string;
-  location: string;
+  location?: string;
   iconUrl?: string;
   type?: string;
   source?: string;
+  streamUrl?: string;
+  isUpdate?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -41,5 +43,13 @@ export class PresetService {
 
   playPreset(deviceId: string, presetId: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${deviceId}/presets/${presetId}/play`, {});
+  }
+
+  /**
+   * Fetches a station JSON file to extract the stream URL.
+   * Used to pre-populate the stream URL field in edit mode.
+   */
+  getStationFile(filename: string): Observable<{ name: string; audio: { streamUrl: string } }> {
+    return this.http.get<{ name: string; audio: { streamUrl: string } }>(`/api/presets/${filename}`);
   }
 }

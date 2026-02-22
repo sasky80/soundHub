@@ -13,5 +13,38 @@
     "colorThemeGreen": "Green",
     "colorThemeAmber": "Amber",
     "colorThemeBlue": "Blue"
+  },
+  "presetForm": {
+    "back": "Back to device",
+    "createTitle": "Add Preset",
+    "editTitle": "Edit Preset",
+    "slot": "Preset Slot",
+    "slotRequired": "Preset slot is required",
+    "name": "Name",
+    "nameRequired": "Name is required",
+    "location": "Location URL",
+    "locationRequired": "Location URL is required",
+    "locationHint": "Direct URL to the audio stream or content",
+    "streamUrl": "Stream URL",
+    "streamUrlRequired": "Stream URL is required (must start with http:// or https://)",
+    "streamUrlHint": "HTTP stream URL for the internet radio station",
+    "iconUrl": "Icon URL",
+    "iconUrlHint": "Optional URL to the station icon/artwork",
+    "advancedOptions": "Advanced Options",
+    "type": "Content Type",
+    "typeHint": "Usually 'stationurl' for SoundTouch",
+    "source": "Source",
+    "sourceHint": "Source type (e.g. LOCAL_INTERNET_RADIO)",
+    "deleteConfirmTitle": "Delete Preset",
+    "deleteConfirmMessage": "Are you sure you want to delete this preset? This cannot be undone."
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "close": "Close"
   }
 }
