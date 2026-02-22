@@ -7,57 +7,58 @@ using SoundHub.Infrastructure.Services;
 
 namespace SoundHub.Tests.Infrastructure;
 
-public class EncryptedSecretsServiceTests
+public class EncryptedSecretsServiceTests : IDisposable
 {
-    [Fact]
-    public async Task SetSecretAsync_StoresV1Envelope_AndGetSecretAsyncRoundTrips()
-    {
-        var (secretsPath, keyDbPath) = CreateTempPaths();
+    private readonly string _secretsPath;
+    private readonly string _keyDbPath;
+    private readonly string _tempDir;
+    private readonly EncryptionKeyStore _keyStore;
+    private readonly EncryptedSecretsService _sut;
 
-        var secretsOptions = Options.Create(new SecretsServiceOptions { SecretsFilePath = secretsPath });
+    public EncryptedSecretsServiceTests()
+    {
+        _tempDir = Path.Combine(Path.GetTempPath(), "SoundHub.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_tempDir);
+
+        _secretsPath = Path.Combine(_tempDir, "secrets.json");
+        _keyDbPath = Path.Combine(_tempDir, "key4.db");
+
+        var secretsOptions = Options.Create(new SecretsServiceOptions { SecretsFilePath = _secretsPath });
         var keyOptions = Options.Create(new EncryptionKeyStoreOptions
         {
-            KeyDbPath = keyDbPath,
+            KeyDbPath = _keyDbPath,
             MasterPassword = "test-master-password"
         });
 
-        var logger = Substitute.For<ILogger<EncryptedSecretsService>>();
-        var keyLogger = Substitute.For<ILogger<EncryptionKeyStore>>();
+        _keyStore = new EncryptionKeyStore(keyOptions, Substitute.For<ILogger<EncryptionKeyStore>>());
+        _sut = new EncryptedSecretsService(secretsOptions, _keyStore, Substitute.For<ILogger<EncryptedSecretsService>>());
+    }
 
-        var keyStore = new EncryptionKeyStore(keyOptions, keyLogger);
-        var sut = new EncryptedSecretsService(secretsOptions, keyStore, logger);
+    public void Dispose()
+    {
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
+    }
 
-        await sut.SetSecretAsync("wifi", "super-secret");
+    [Fact]
+    public async Task SetSecretAsync_StoresV1Envelope_AndGetSecretAsyncRoundTrips()
+    {
+        await _sut.SetSecretAsync("wifi", "super-secret");
 
-        var json = await File.ReadAllTextAsync(secretsPath);
+        var json = await File.ReadAllTextAsync(_secretsPath);
         Assert.Contains("\"SecretName\": \"wifi\"", json);
         Assert.Contains("\"SecretValue\": \"v1:", json);
 
-        var roundTrip = await sut.GetSecretAsync("wifi");
+        var roundTrip = await _sut.GetSecretAsync("wifi");
         Assert.Equal("super-secret", roundTrip);
     }
 
     [Fact]
     public async Task GetSecretAsync_WhenCiphertextIsTampered_ThrowsCryptographicException()
     {
-        var (secretsPath, keyDbPath) = CreateTempPaths();
+        await _sut.SetSecretAsync("wifi", "super-secret");
 
-        var secretsOptions = Options.Create(new SecretsServiceOptions { SecretsFilePath = secretsPath });
-        var keyOptions = Options.Create(new EncryptionKeyStoreOptions
-        {
-            KeyDbPath = keyDbPath,
-            MasterPassword = "test-master-password"
-        });
-
-        var logger = Substitute.For<ILogger<EncryptedSecretsService>>();
-        var keyLogger = Substitute.For<ILogger<EncryptionKeyStore>>();
-
-        var keyStore = new EncryptionKeyStore(keyOptions, keyLogger);
-        var sut = new EncryptedSecretsService(secretsOptions, keyStore, logger);
-
-        await sut.SetSecretAsync("wifi", "super-secret");
-
-        var jsonText = await File.ReadAllTextAsync(secretsPath);
+        var jsonText = await File.ReadAllTextAsync(_secretsPath);
         var doc = JsonDocument.Parse(jsonText);
         var entry = doc.RootElement.EnumerateArray().Single(e => e.GetProperty("SecretName").GetString() == "wifi");
         var secretValue = entry.GetProperty("SecretValue").GetString();
@@ -68,53 +69,36 @@ public class EncryptedSecretsServiceTests
         payload[^1] ^= 0xFF; // flip a bit
         var tampered = "v1:" + Convert.ToBase64String(payload);
 
-        var tamperedJson = jsonText.Replace(secretValue!, tampered, StringComparison.Ordinal);
-        await File.WriteAllTextAsync(secretsPath, tamperedJson);
+        var secrets = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(jsonText)
+            ?? throw new InvalidOperationException("Expected secrets JSON array.");
+        var wifiSecret = secrets.Single(s => s["SecretName"] == "wifi");
+        wifiSecret["SecretValue"] = tampered;
 
-        await Assert.ThrowsAnyAsync<CryptographicException>(() => sut.GetSecretAsync("wifi"));
+        var tamperedJson = JsonSerializer.Serialize(secrets, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        await File.WriteAllTextAsync(_secretsPath, tamperedJson);
+
+        await Assert.ThrowsAnyAsync<CryptographicException>(() => _sut.GetSecretAsync("wifi"));
     }
 
     [Fact]
     public async Task GetSecretAsync_WhenLegacyCiphertext_DecryptsAndMigratesToV1()
     {
-        var (secretsPath, keyDbPath) = CreateTempPaths();
-
-        var secretsOptions = Options.Create(new SecretsServiceOptions { SecretsFilePath = secretsPath });
-        var keyOptions = Options.Create(new EncryptionKeyStoreOptions
-        {
-            KeyDbPath = keyDbPath,
-            MasterPassword = "test-master-password"
-        });
-
-        var logger = Substitute.For<ILogger<EncryptedSecretsService>>();
-        var keyLogger = Substitute.For<ILogger<EncryptionKeyStore>>();
-
-        var keyStore = new EncryptionKeyStore(keyOptions, keyLogger);
-        var key = await keyStore.GetEncryptionKeyAsync();
+        var key = await _keyStore.GetEncryptionKeyAsync();
 
         var legacyCipher = EncryptLegacyAesCbc(key, "super-secret");
         var legacyJson = "[" +
             "{\"SecretName\":\"wifi\",\"SecretValue\":\"" + legacyCipher + "\"}" +
             "]";
-        await File.WriteAllTextAsync(secretsPath, legacyJson);
+        await File.WriteAllTextAsync(_secretsPath, legacyJson);
 
-        var sut = new EncryptedSecretsService(secretsOptions, keyStore, logger);
-
-        var plainText = await sut.GetSecretAsync("wifi");
+        var plainText = await _sut.GetSecretAsync("wifi");
         Assert.Equal("super-secret", plainText);
 
-        var migratedJson = await File.ReadAllTextAsync(secretsPath);
+        var migratedJson = await File.ReadAllTextAsync(_secretsPath);
         Assert.Contains("\"SecretValue\": \"v1:", migratedJson);
-    }
-
-    private static (string SecretsPath, string KeyDbPath) CreateTempPaths()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "SoundHub.Tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-
-        var secretsPath = Path.Combine(root, "secrets.json");
-        var keyDbPath = Path.Combine(root, "key4.db");
-        return (secretsPath, keyDbPath);
     }
 
     private static string EncryptLegacyAesCbc(byte[] key, string plainText)
