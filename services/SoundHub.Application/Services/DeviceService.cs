@@ -40,6 +40,10 @@ public class DeviceService
     {
         // Resolve FQDN to IP address if needed
         var resolvedIpAddress = await ResolveHostnameAsync(ipAddress, ct);
+        if (!IpAddressValidator.IsAllowedLanAddress(resolvedIpAddress))
+        {
+            throw new ArgumentException($"Only private LAN IP addresses are allowed: {resolvedIpAddress}", nameof(ipAddress));
+        }
 
         var device = new Device
         {
@@ -76,6 +80,10 @@ public class DeviceService
 
         // Resolve FQDN to IP address if needed
         var resolvedIpAddress = await ResolveHostnameAsync(ipAddress, ct);
+        if (!IpAddressValidator.IsAllowedLanAddress(resolvedIpAddress))
+        {
+            throw new ArgumentException($"Only private LAN IP addresses are allowed: {resolvedIpAddress}", nameof(ipAddress));
+        }
 
         device.Name = name;
         device.IpAddress = resolvedIpAddress;

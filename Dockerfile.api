@@ -28,8 +28,14 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Copy published app
 COPY --from=build /app/publish .
 
+# Create app user
+RUN adduser --disabled-password --gecos "" appuser
+
 # Create data directory
-RUN mkdir -p /data && chmod 777 /data
+RUN mkdir -p /data && chown -R appuser:appuser /data
+
+# Run as non-root
+USER appuser
 
 # Expose ports
 EXPOSE 5001 5001

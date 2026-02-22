@@ -11,7 +11,7 @@ namespace SoundHub.Infrastructure.Services;
 /// Secrets service with AES-256-CBC encryption.
 /// Stores encrypted secrets in secrets.json and uses EncryptionKeyStore for key management.
 /// </summary>
-public class EncryptedSecretsService : ISecretsService
+public class EncryptedSecretsService : ISecretsService, IDisposable
 {
     private const string AeadEnvelopePrefix = "v1:";
     private const int AesGcmNonceSizeBytes = 12;
@@ -22,6 +22,7 @@ public class EncryptedSecretsService : ISecretsService
     private readonly EncryptionKeyStore _keyStore;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private byte[]? _encryptionKey;
+    private bool _disposed;
 
     public EncryptedSecretsService(
         IOptions<SecretsServiceOptions> options,
@@ -247,6 +248,24 @@ public class EncryptedSecretsService : ISecretsService
     {
         public required string SecretName { get; init; }
         public required string SecretValue { get; init; }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_encryptionKey != null)
+        {
+            CryptographicOperations.ZeroMemory(_encryptionKey);
+            _encryptionKey = null;
+        }
+
+        _lock.Dispose();
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
 

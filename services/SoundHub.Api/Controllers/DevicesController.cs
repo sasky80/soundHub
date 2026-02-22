@@ -12,6 +12,11 @@ namespace SoundHub.Api.Controllers;
 [Route("api/[controller]")]
 public class DevicesController : ControllerBase
 {
+    private const int MaxDeviceNameLength = 100;
+    private const int MaxIpAddressLength = 45;
+    private const int MaxPresetNameLength = 100;
+    private const int MaxUrlLength = 2048;
+
     private readonly DeviceService _deviceService;
     private readonly ILogger<DevicesController> _logger;
 
@@ -71,6 +76,16 @@ public class DevicesController : ControllerBase
             return BadRequest(new { code = "INVALID_INPUT", message = "Name, IpAddress, and Vendor are required" });
         }
 
+        if (request.Name.Length > MaxDeviceNameLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"Name must be {MaxDeviceNameLength} characters or fewer" });
+        }
+
+        if (request.IpAddress.Length > MaxIpAddressLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"IpAddress must be {MaxIpAddressLength} characters or fewer" });
+        }
+
         try
         {
             var device = await _deviceService.AddDeviceAsync(request.Name, request.IpAddress, request.Vendor, ct);
@@ -94,6 +109,16 @@ public class DevicesController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.IpAddress))
         {
             return BadRequest(new { code = "INVALID_INPUT", message = "Name and IpAddress are required" });
+        }
+
+        if (request.Name.Length > MaxDeviceNameLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"Name must be {MaxDeviceNameLength} characters or fewer" });
+        }
+
+        if (request.IpAddress.Length > MaxIpAddressLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"IpAddress must be {MaxIpAddressLength} characters or fewer" });
         }
 
         try
@@ -573,6 +598,26 @@ public class DevicesController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Name))
         {
             return BadRequest(new { code = "INVALID_INPUT", message = "Preset name is required" });
+        }
+
+        if (request.Name.Length > MaxPresetNameLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"Preset name must be {MaxPresetNameLength} characters or fewer" });
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Location) && request.Location.Length > MaxUrlLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"Preset location must be {MaxUrlLength} characters or fewer" });
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.IconUrl) && request.IconUrl.Length > MaxUrlLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"Preset icon URL must be {MaxUrlLength} characters or fewer" });
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.StreamUrl) && request.StreamUrl.Length > MaxUrlLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"Preset stream URL must be {MaxUrlLength} characters or fewer" });
         }
 
         var source = request.Source ?? "LOCAL_INTERNET_RADIO";

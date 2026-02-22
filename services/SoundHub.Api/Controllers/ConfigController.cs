@@ -11,6 +11,8 @@ namespace SoundHub.Api.Controllers;
 [Route("api/[controller]")]
 public class ConfigController : ControllerBase
 {
+    private const int MaxNetworkMaskLength = 18;
+
     private readonly DeviceService _deviceService;
 
     public ConfigController(DeviceService deviceService)
@@ -40,6 +42,11 @@ public class ConfigController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.NetworkMask))
         {
             return BadRequest(new { code = "INVALID_INPUT", message = "NetworkMask is required" });
+        }
+
+        if (request.NetworkMask.Length > MaxNetworkMaskLength)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = $"NetworkMask must be {MaxNetworkMaskLength} characters or fewer" });
         }
 
         try

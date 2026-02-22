@@ -120,5 +120,18 @@ public class ConfigControllerTests
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    [Fact]
+    public async Task SetNetworkMask_OversizedMask_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = new SetNetworkMaskRequest("123.123.123.123/1234");
+
+        // Act
+        var result = await _controller.SetNetworkMask(request, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
     #endregion
 }

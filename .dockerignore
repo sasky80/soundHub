@@ -29,6 +29,7 @@ Thumbs.db
 
 # Data files (will be on volumes)
 data/
+secrets/
 
 # Git
 .git/

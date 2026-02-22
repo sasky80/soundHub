@@ -22,9 +22,19 @@ public class PresetsController : ControllerBase
     /// </summary>
     [HttpGet("{filename}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStationFile(string filename, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(filename)
+            || filename.Contains("..", StringComparison.Ordinal)
+            || filename.Contains('/')
+            || filename.Contains('\\')
+            || filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            return BadRequest(new { code = "INVALID_INPUT", message = "Invalid station filename" });
+        }
+
         var content = await _stationFileService.ReadAsync(filename, ct);
         if (content == null)
         {

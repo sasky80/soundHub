@@ -48,4 +48,19 @@ public class PresetsControllerTests
         var notFound = Assert.IsType<NotFoundObjectResult>(result);
         Assert.NotNull(notFound.Value);
     }
+
+    [Theory]
+    [InlineData("../secret.json")]
+    [InlineData("..\\secret.json")]
+    [InlineData("folder/secret.json")]
+    [InlineData("folder\\secret.json")]
+    public async Task GetStationFile_PathTraversalAttempt_ReturnsBadRequest(string filename)
+    {
+        // Act
+        var result = await _controller.GetStationFile(filename, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+        await _stationFileService.DidNotReceive().ReadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
 }

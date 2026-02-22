@@ -29,7 +29,7 @@ builder.Services.AddCors(options =>
                 "http://localhost:80",   // Docker web container
                 "http://localhost"
             )
-            .AllowAnyHeader()
+            .WithHeaders("Content-Type", "Accept", "Authorization")
             .AllowAnyMethod()
             .AllowCredentials();
     });
@@ -117,8 +117,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-
-app.UseHttpsRedirection();
+// TLS is expected to be terminated by an upstream reverse proxy.
 
 app.UseAuthorization();
 

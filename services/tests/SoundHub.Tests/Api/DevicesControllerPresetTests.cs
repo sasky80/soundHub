@@ -122,6 +122,36 @@ public class DevicesControllerPresetTests
     }
 
     [Fact]
+    public async Task StorePreset_OversizedName_ReturnsBadRequest()
+    {
+        var request = new StorePresetRequest
+        {
+            Id = 2,
+            Name = new string('a', 101),
+            Location = "http://stream"
+        };
+
+        var result = await _controller.StorePreset("device-1", request, CancellationToken.None);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task StorePreset_OversizedLocation_ReturnsBadRequest()
+    {
+        var request = new StorePresetRequest
+        {
+            Id = 2,
+            Name = "Station",
+            Location = $"http://{new string('a', 2050)}"
+        };
+
+        var result = await _controller.StorePreset("device-1", request, CancellationToken.None);
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
     public async Task StorePreset_ValidRequest_UsesDefaultTypeAndSource()
     {
         var device = CreateDevice();

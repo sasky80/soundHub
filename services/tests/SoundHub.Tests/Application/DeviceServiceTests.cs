@@ -135,4 +135,37 @@ public class DeviceServiceTests
         // Assert
         Assert.False(result);
     }
+
+    [Fact]
+    public async Task AddDeviceAsync_PublicIp_ThrowsArgumentException()
+    {
+        // Act
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.AddDeviceAsync("New Speaker", "8.8.8.8", "bose-soundtouch"));
+
+        // Assert
+        Assert.Contains("Only private LAN IP addresses are allowed", ex.Message);
+    }
+
+    [Fact]
+    public async Task UpdateDeviceAsync_PublicIp_ThrowsArgumentException()
+    {
+        // Arrange
+        var existingDevice = new Device
+        {
+            Id = "123",
+            Vendor = "bose-soundtouch",
+            Name = "Test Speaker",
+            IpAddress = "192.168.1.100"
+        };
+        _repository.GetDeviceAsync("123", Arg.Any<CancellationToken>())
+            .Returns(existingDevice);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.UpdateDeviceAsync("123", "Updated", "8.8.8.8"));
+
+        // Assert
+        Assert.Contains("Only private LAN IP addresses are allowed", ex.Message);
+    }
 }

@@ -10,7 +10,7 @@ namespace SoundHub.Infrastructure.Services;
 /// SQLite-based encryption key store (key4.db NSS-style database).
 /// Derives and persists the encryption key using master password from Docker secret.
 /// </summary>
-public class EncryptionKeyStore
+public class EncryptionKeyStore : IDisposable
 {
     private const int KeySizeBytes = 32; // 256 bits for AES-256
     private const int SaltSizeBytes = 16;
@@ -22,6 +22,7 @@ public class EncryptionKeyStore
     private readonly ILogger<EncryptionKeyStore> _logger;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private byte[]? _cachedKey;
+    private bool _disposed;
 
     public EncryptionKeyStore(
         IOptions<EncryptionKeyStoreOptions> options,
@@ -81,6 +82,11 @@ public class EncryptionKeyStore
         await _lock.WaitAsync(ct);
         try
         {
+            if (_cachedKey != null)
+            {
+                CryptographicOperations.ZeroMemory(_cachedKey);
+            }
+
             var newKey = GenerateNewKey();
             await StoreKeyInDatabaseAsync(newKey, ct);
             _cachedKey = newKey;
@@ -231,6 +237,24 @@ public class EncryptionKeyStore
             iterations ?? Iterations,
             HashAlgorithmName.SHA256);
         return pbkdf2.GetBytes(KeySizeBytes);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_cachedKey != null)
+        {
+            CryptographicOperations.ZeroMemory(_cachedKey);
+            _cachedKey = null;
+        }
+
+        _lock.Dispose();
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
 
