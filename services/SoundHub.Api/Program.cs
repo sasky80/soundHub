@@ -25,7 +25,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins(
-                "http://localhost:4200", // Angular dev server
+                "http://localhost:5002", // Angular dev server
                 "http://localhost:80",   // Docker web container
                 "http://localhost"
             )

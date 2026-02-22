@@ -122,11 +122,11 @@ jobs:
     
     - name: Check API health
       run: |
-        curl -f http://localhost:5000/health || exit 1
+        curl -f http://localhost:5001/health || exit 1
     
     - name: Check Web accessibility
       run: |
-        curl -f http://localhost:4200 || exit 1
+        curl -f http://localhost:5002 || exit 1
     
     - name: Stop services
       if: always()

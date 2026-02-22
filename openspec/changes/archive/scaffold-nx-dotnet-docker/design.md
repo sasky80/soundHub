@@ -83,7 +83,7 @@ Implementations (e.g., `SoundTouchAdapter`) query each device to discover its ac
 ### 5. Local Dev Environment
 **Decision**: `docker-compose.yml` spins up API and web with hot-reload:
 - API: volume-mounted source, dotnet watch for auto-reload.
-- Web: Nx serve on port 4200, proxied via docker-compose.
+- Web: Nx serve on port 5002, proxied via docker-compose.
 
 **Rationale**: Zero-install for developers (just Docker); parity with CI/production.
 

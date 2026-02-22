@@ -100,7 +100,7 @@ public class DevicesControllerPingDiscoveryTests
         var device = CreateTestDevice("test-1");
         _repository.GetDeviceAsync("test-1", Arg.Any<CancellationToken>()).Returns(device);
         _mockAdapter.PingAsync("test-1", Arg.Any<CancellationToken>())
-            .Returns(new PingResult(false, 5000));
+            .Returns(new PingResult(false, 5001));
 
         // Act
         var result = await _controller.PingDevice("test-1", CancellationToken.None);

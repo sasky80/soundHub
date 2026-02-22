@@ -31,7 +31,7 @@ server {
 
     # API proxy (optional, for local dev)
     location /api/ {
-        proxy_pass http://api:5000/api/;
+        proxy_pass http://api:5001/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';

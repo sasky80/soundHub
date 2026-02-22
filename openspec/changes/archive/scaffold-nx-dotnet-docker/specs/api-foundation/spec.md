@@ -5,7 +5,7 @@ The system SHALL expose a RESTful Web API on .NET 8 with support for device mana
 
 #### Scenario: API starts and reports health
 - **WHEN** the API container starts
-- **THEN** it listens on port 5000 (http) and 5001 (https)
+- **THEN** it listens on port 5001 (http) and 5001 (https)
 - **AND** a GET request to `/health` returns a 200 OK response with status "Healthy"
 
 #### Scenario: List all devices
@@ -93,7 +93,7 @@ The system SHALL log API requests, errors, and device adapter interactions with 
 The system SHALL accept cross-origin requests from the frontend application and future mobile/MCP clients.
 
 #### Scenario: Frontend calls API from different origin
-- **WHEN** a browser running on port 4200 calls POST `/devices`
+- **WHEN** a browser running on port 5002 calls POST `/devices`
 - **THEN** the API returns the response with appropriate CORS headers (Access-Control-Allow-Origin, etc.)
 - **AND** the request succeeds if the origin is in the allowed list
 

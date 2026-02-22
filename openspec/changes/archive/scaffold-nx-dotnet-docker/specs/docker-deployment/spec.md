@@ -9,8 +9,8 @@ The system SHALL build and containerize the .NET Web API as a multi-stage Docker
 - **AND** the image size is < 200 MB (runtime-only, no build tools)
 
 #### Scenario: API container starts successfully
-- **WHEN** the API container is started with `docker run -p 5000:5000 soundhub-api`
-- **THEN** the API listens on port 5000 and responds to /health
+- **WHEN** the API container is started with `docker run -p 5001:5001 soundhub-api`
+- **THEN** the API listens on port 5001 and responds to /health
 - **AND** logs are written to stdout in JSON format
 
 ### Requirement: Web App Docker Image
@@ -32,8 +32,8 @@ The system SHALL provide a docker-compose.yml file that orchestrates API and web
 #### Scenario: Start development environment
 - **WHEN** a developer runs `docker-compose up` in the project root
 - **THEN** both API and web containers start
-- **AND** the web app is accessible at http://localhost:4200 (with hot-reload)
-- **AND** the API is accessible at http://localhost:5000
+- **AND** the web app is accessible at http://localhost:5002 (with hot-reload)
+- **AND** the API is accessible at http://localhost:5002
 
 #### Scenario: Hot-reload in Docker Compose
 - **WHEN** a developer modifies Angular source code or .NET controller code

@@ -13,7 +13,7 @@ async function openFirstDeviceDetails(page: Page): Promise<boolean> {
 
   await deviceCard.click();
   await page.waitForTimeout(500);
-  await page.waitForSelector('[data-testid="preset-list"], .preset-list', { timeout: 5000 }).catch(() => {});
+  await page.waitForSelector('[data-testid="preset-list"], .preset-list', { timeout: 5001 }).catch(() => {});
   return true;
 }
 
@@ -36,7 +36,7 @@ async function navigateToPresetForm(page: Page): Promise<boolean> {
   }
 
   await addButton.click();
-  await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5000 }).catch(() => {});
+  await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5001 }).catch(() => {});
   return await page.locator('[data-testid="preset-form"]').isVisible().catch(() => false);
 }
 
@@ -171,7 +171,7 @@ test.describe('Preset Management', () => {
     await page.waitForTimeout(300);
 
     await presetNameButton.first().click();
-    await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5000 }).catch(() => {});
+    await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5001 }).catch(() => {});
 
     await expect(page.locator('[data-testid="preset-form"]')).toBeVisible();
     await expect(page.locator('[data-testid="preset-delete-button"]')).toBeVisible();
@@ -194,7 +194,7 @@ test.describe('Preset Management', () => {
     }
 
     await presetNameButton.first().click();
-    await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5000 }).catch(() => {});
+    await page.waitForSelector('[data-testid="preset-form"]', { timeout: 5001 }).catch(() => {});
 
     const deleteButton = page.locator('[data-testid="preset-delete-button"]');
     await deleteButton.click();

@@ -198,7 +198,7 @@ classDiagram
 flowchart TB
     subgraph DockerCompose["docker-compose.yml"]
         subgraph APIContainer["soundhub-api"]
-            DotNetAPI[".NET 8 Web API<br/>Port 5000"]
+            DotNetAPI[".NET 8 Web API<br/>Port 5001"]
         end
 
         subgraph WebContainer["soundhub-web"]

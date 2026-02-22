@@ -126,14 +126,68 @@ Each vendor (e.g., Bose SoundTouch) implements this interface. The adapter regis
    ```
 
 3. **Access the application**
-   - Web UI: http://localhost:4200
-   - API: http://localhost:5000
-   - Swagger UI: http://localhost:5000/swagger
+   - Web UI: http://localhost:5002
+   - API: http://localhost:5001
+   - Swagger UI: http://localhost:5001/swagger
 
 4. **Stop services**
    ```bash
    docker-compose down
    ```
+
+### Reverse Proxy with Caddy (macOS / hostname.local)
+
+Use Caddy to expose the app at `http://<your-host>.local/soundhub/` instead of a bare port. This supports multiple apps running on the same host — each under its own path.
+
+Replace `<your-host>` with your Mac's hostname (find it in **System Settings → General → Sharing**, or run `hostname -s` in the terminal).
+
+1. **Install Caddy**
+   ```bash
+   brew install caddy
+   ```
+
+2. **Configure `/opt/homebrew/etc/Caddyfile`**
+   ```
+   http://<your-host>.local {
+       # SoundHub frontend — redirect bare path to trailing-slash version
+       redir /soundhub /soundhub/ permanent
+
+       handle /soundhub/* {
+           uri strip_prefix /soundhub
+           reverse_proxy localhost:5002
+       }
+
+       # SoundHub API
+       handle /soundhub/api/* {
+           uri strip_prefix /soundhub
+           reverse_proxy localhost:5001
+       }
+
+       # Add more apps here:
+       # redir /otherapp /otherapp/ permanent
+       # handle /otherapp/* {
+       #     uri strip_prefix /otherapp
+       #     reverse_proxy localhost:XXXX
+       # }
+   }
+   ```
+
+3. **Start Caddy as a background service**
+   ```bash
+   brew services start caddy
+   ```
+
+   To reload after config changes:
+   ```bash
+   brew services restart caddy
+   ```
+
+4. **Access the application**
+   - Web UI: http://<your-host>.local/soundhub/
+   - API: http://<your-host>.local/soundhub/api/
+   - Swagger UI: http://<your-host>.local/soundhub/api/swagger
+
+> `<your-host>.local` resolves automatically via mDNS/Bonjour on any macOS, iOS, or Linux client on the local network — no `/etc/hosts` changes needed on client machines.
 
 ### Local Development (Without Docker)
 
@@ -247,7 +301,7 @@ For integration testing against real Bose SoundTouch devices:
 
 2. **Add the device** via API:
    ```bash
-   curl -X POST http://localhost:5000/api/devices \
+   curl -X POST http://localhost:5001/api/devices \
      -H "Content-Type: application/json" \
      -d '{"name": "Living Room", "ipAddress": "192.168.1.100", "vendor": "bose-soundtouch", "port": 8090}'
    ```
@@ -255,26 +309,26 @@ For integration testing against real Bose SoundTouch devices:
 3. **Test device endpoints**:
    ```bash
    # Get device info
-   curl http://localhost:5000/api/devices/{id}/info
+   curl http://localhost:5001/api/devices/{id}/info
 
    # Get now playing
-   curl http://localhost:5000/api/devices/{id}/nowPlaying
+   curl http://localhost:5001/api/devices/{id}/nowPlaying
 
    # Get volume
-   curl http://localhost:5000/api/devices/{id}/volume
+   curl http://localhost:5001/api/devices/{id}/volume
 
    # Set volume to 30%
-   curl -X POST http://localhost:5000/api/devices/{id}/volume \
+   curl -X POST http://localhost:5001/api/devices/{id}/volume \
      -H "Content-Type: application/json" \
      -d '{"level": 30}'
 
    # Play preset 1
-   curl -X POST http://localhost:5000/api/devices/{id}/presets/1/play
+   curl -X POST http://localhost:5001/api/devices/{id}/presets/1/play
    ```
 
 4. **Device discovery** - Scan your local network for SoundTouch devices:
    ```bash
-   curl http://localhost:5000/api/devices/discover?vendor=bose-soundtouch
+   curl http://localhost:5001/api/devices/discover?vendor=bose-soundtouch
    ```
 
 **Note:** Integration tests require a real SoundTouch device on the network. Unit tests use mocked HTTP responses and don't require hardware.
@@ -287,8 +341,8 @@ For integration testing against real Bose SoundTouch devices:
 ## 📖 API Documentation
 
 Once the API is running, access interactive documentation:
-- Swagger UI: http://localhost:5000/swagger
-- OpenAPI JSON: http://localhost:5000/swagger/v1/swagger.json
+- Swagger UI: http://localhost:5001/swagger
+- OpenAPI JSON: http://localhost:5001/swagger/v1/swagger.json
 
 For detailed API documentation, see [docs/api-reference.md](docs/api-reference.md).
 

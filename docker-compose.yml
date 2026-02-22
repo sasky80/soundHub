@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.api
     container_name: soundhub-api
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - DevicesFilePath=/data/devices.json
@@ -20,7 +20,7 @@ services:
     networks:
       - soundhub-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -32,7 +32,7 @@ services:
       dockerfile: Dockerfile.web
     container_name: soundhub-web
     ports:
-      - "4200:80"
+      - "5002:80"
     depends_on:
       api:
         condition: service_healthy

@@ -4,7 +4,7 @@ This guide explains how to manage your audio devices in SoundHub, including addi
 
 ## Accessing Device Configuration
 
-1. Open SoundHub in your browser (default: `http://localhost:4200`)
+1. Open SoundHub in your browser (default: `http://localhost:5002`)
 2. Click on **Settings** from the landing page
 3. Navigate to **Device Configuration** or click on **Manage Devices**
 

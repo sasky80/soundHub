@@ -118,7 +118,7 @@ test.describe('Device Configuration - Add Device Flow', () => {
     await saveButton.click();
 
     // Wait for API response (form should close)
-    await page.waitForResponse((response) => response.url().includes('/api/devices') && response.status() === 201, { timeout: 5000 }).catch(() => {
+    await page.waitForResponse((response) => response.url().includes('/api/devices') && response.status() === 201, { timeout: 5001 }).catch(() => {
       // API might not be running in test environment
     });
   });
@@ -224,7 +224,7 @@ test.describe('Device Configuration - Ping Functionality', () => {
       await pingButton.click();
 
       // Wait for ping response
-      await page.waitForResponse((response) => response.url().includes('/ping'), { timeout: 15000 }).catch(() => {
+      await page.waitForResponse((response) => response.url().includes('/ping'), { timeout: 15001 }).catch(() => {
         // API might not be running
       });
     }
@@ -265,7 +265,7 @@ test.describe('Device Configuration - Discovery', () => {
         await saveButton.click();
 
         // Wait for API response
-        await page.waitForResponse((response) => response.url().includes('/network-mask'), { timeout: 5000 }).catch(() => {
+        await page.waitForResponse((response) => response.url().includes('/network-mask'), { timeout: 5001 }).catch(() => {
           // API might not be running
         });
       }

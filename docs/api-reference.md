@@ -5,7 +5,7 @@ This document provides detailed documentation for the SoundHub REST API endpoint
 ## Base URL
 
 ```
-http://localhost:5000/api
+http://localhost:5001/api
 ```
 
 ## Authentication

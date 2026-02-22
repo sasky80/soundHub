@@ -33,7 +33,7 @@ SoundHub is a web app for controlling audio devices on your local network (for e
 - Your phone/tablet/computer is on the same local network as the audio device(s).
 - A modern browser (Chrome, Edge, Firefox, Safari).
 
-**Note:** In a typical local setup, SoundHub is available at `http://localhost:4200`.
+**Note:** In a typical local setup, SoundHub is available at `http://localhost:5002`.
 
 ## Quick start (first successful use)
 **Goal:** Open the app, add one device, and change volume.

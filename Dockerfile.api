@@ -32,16 +32,16 @@ COPY --from=build /app/publish .
 RUN mkdir -p /data && chmod 777 /data
 
 # Expose ports
-EXPOSE 5000 5001
+EXPOSE 5001 5001
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_URLS=http://+:5001
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DevicesFilePath=/data/devices.json
 ENV SecretsFilePath=/data/secrets.json
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:5000/health || exit 1
+  CMD curl -f http://localhost:5001/health || exit 1
 
 ENTRYPOINT ["dotnet", "SoundHub.Api.dll"]
